@@ -2,7 +2,7 @@
 
 Claude Code plugin bundling the `aws-bedrock-agentcore-skill` skill (`skills/aws-bedrock-agentcore-skill/`):
 a source-cited playbook for building AI agents on AWS (Strands Agents, Amazon Bedrock, Bedrock
-AgentCore). See `README.md`. Repo: https://github.com/ferdinandobons/AWSBedrockAgentCoreSkill (private).
+AgentCore). See `README.md`. Repo: https://github.com/ferdinandobons/AWSBedrockAgentCoreSkill (public).
 
 ## Maintenance & freshness — IMPORTANT
 
@@ -42,4 +42,4 @@ bug-free** — every QA pass so far found real runtime bugs in freshly-added cod
 /plugin marketplace add ferdinandobons/AWSBedrockAgentCoreSkill
 /plugin install aws-bedrock-agentcore-skill@aws-agent-skills
 ```
-Repo is private — make it public (`gh repo edit --visibility public`) for others to install.
+The repo is public, so anyone can install it with the two commands above.

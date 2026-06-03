@@ -36,8 +36,6 @@ Building agents on AWS has a steep, fast-changing learning curve, and a model an
 
 Then describe the agent you want to build. The skill triggers automatically (see [How it triggers](#how-it-triggers)). Full install options, including local testing, are [below](#install-options).
 
-> The repository is currently private. Run `gh repo edit ferdinandobons/AWSBedrockAgentCoreSkill --visibility public` to let others install it.
-
 ## How it triggers
 
 The skill is description-driven: Claude consults it whenever a task involves building, configuring, deploying, securing, monitoring, or debugging an AI agent on AWS, even when the specific service is not named. You can also invoke it explicitly with `/aws-bedrock-agentcore-skill:aws-bedrock-agentcore-skill`.
