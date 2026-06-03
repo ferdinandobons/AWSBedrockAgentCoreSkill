@@ -10,7 +10,9 @@ A Claude Code plugin (and agent skill) that puts the best practices for building
 
 ## What it is
 
-It is not a single template or a code generator. It is a routing layer plus a reference library:
+It is a **Distilled Knowledge Skill (DKS)**: an entire domain — Strands Agents, Amazon Bedrock, Bedrock AgentCore — reduced to its executable essence, and kept current as the surface shifts month to month. The research is already done; you skip straight to building.
+
+Concretely, it is not a single template or a code generator. It is a routing layer plus a reference library:
 
 - a `SKILL.md` that acts as a decision tree: it maps the user's use case to a recommended stack and to the exact reference files to open;
 - **20 reference files** (~19,000 lines) covering each area in depth, with an inline `_Source:` URL on every best practice and code snippet;
