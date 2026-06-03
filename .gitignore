@@ -1,0 +1,10 @@
+# Internal research / build artifacts (not part of the plugin)
+.aws-research/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+.idea/
+.vscode/

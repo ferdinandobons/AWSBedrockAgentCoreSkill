@@ -1,0 +1,23 @@
+{
+  "name": "aws-ai-agent-architect",
+  "displayName": "AWS AI Agent Architect",
+  "version": "0.1.0",
+  "description": "Authoritative, source-cited playbook that lets a coding agent autonomously design, configure, deploy, and troubleshoot production-grade AI agents on AWS — Strands Agents SDK, Amazon Bedrock (Converse, Guardrails, Knowledge Bases), and Bedrock AgentCore (Runtime, Memory, Gateway, Identity, Browser/Code Interpreter) — with Terraform-first IaC and CloudWatch/OpenTelemetry observability. Every recommendation traces to an official AWS source.",
+  "author": {
+    "name": "Ferdinando Bons"
+  },
+  "license": "MIT",
+  "keywords": [
+    "aws",
+    "amazon-bedrock",
+    "bedrock-agentcore",
+    "strands-agents",
+    "ai-agents",
+    "rag",
+    "knowledge-bases",
+    "guardrails",
+    "terraform",
+    "observability",
+    "skill"
+  ]
+}

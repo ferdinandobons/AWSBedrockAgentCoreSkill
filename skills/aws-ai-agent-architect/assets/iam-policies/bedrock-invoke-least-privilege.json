@@ -1,0 +1,110 @@
+{
+  "_comment": "Three-statement IAM policy pattern for Bedrock InvokeModel with full cross-region inference coverage: (1) standard on-demand invocation via exact model ARN, (2) geographic/regional cross-region inference profile, (3) global cross-region inference (three required ARN forms). Global CRIS requires ALL three statements — missing even one causes AccessDeniedException. Source: https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html and https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "InvokeModelDirectOnDemand",
+      "_comment": "Standard on-demand invocation. Scoped to a specific foundation model ARN. Do NOT use arn:aws:bedrock:*::foundation-model/* — that grants access to any model. Replace <MODEL_ID> with e.g. anthropic.claude-sonnet-4-6 or anthropic.claude-opus-4-6-v1.",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:<REGION>::foundation-model/<MODEL_ID>"
+      ]
+    },
+    {
+      "Sid": "GrantGlobalCrisInferenceProfileRegionAccess",
+      "_comment": "Statement 1 of 3 required for Global cross-region inference. References the inference-profile ARN in the source region with aws:RequestedRegion condition. Replace <MODEL_ID> with e.g. anthropic.claude-sonnet-4-6 (the global. prefix is used in the resource ARN).",
+      "Effect": "Allow",
+      "Action": "bedrock:InvokeModel",
+      "Resource": [
+        "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:inference-profile/global.<MODEL_ID>"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "<REGION>"
+        }
+      }
+    },
+    {
+      "Sid": "GrantGlobalCrisInferenceProfileInRegionModelAccess",
+      "_comment": "Statement 2 of 3 required for Global cross-region inference. References the foundation model in the source region, constrained to the inference profile ARN.",
+      "Effect": "Allow",
+      "Action": "bedrock:InvokeModel",
+      "Resource": [
+        "arn:aws:bedrock:<REGION>::foundation-model/<MODEL_ID>"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "<REGION>",
+          "bedrock:InferenceProfileArn": "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:inference-profile/global.<MODEL_ID>"
+        }
+      }
+    },
+    {
+      "Sid": "GrantGlobalCrisInferenceProfileGlobalModelAccess",
+      "_comment": "Statement 3 of 3 required for Global cross-region inference. References the global foundation model ARN (no region, no account — this is intentional). Uses aws:RequestedRegion='unspecified' which is the value AWS sets when a request is globally routed. SCPs must explicitly allow 'unspecified' in their region whitelist or Global CRIS will be blocked.",
+      "Effect": "Allow",
+      "Action": "bedrock:InvokeModel",
+      "Resource": [
+        "arn:aws:bedrock:::foundation-model/<MODEL_ID>"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "unspecified",
+          "bedrock:InferenceProfileArn": "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:inference-profile/global.<MODEL_ID>"
+        }
+      }
+    },
+    {
+      "Sid": "BedrockAgentsServiceRolePermissions",
+      "_comment": "Minimum permissions for the Bedrock Agents classic service role. Attach this to the role named AmazonBedrockExecutionRoleForAgents_<AGENT_NAME>. Add optional statements (Retrieve, ApplyGuardrail, s3:GetObject for OpenAPI schema) as needed.",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:<REGION>::foundation-model/<MODEL_ID>"
+      ]
+    },
+    {
+      "Sid": "AgentKnowledgeBaseQuery",
+      "_comment": "Optional: include only if the agent uses a knowledge base.",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:Retrieve",
+        "bedrock:RetrieveAndGenerate"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:knowledge-base/<KNOWLEDGE_BASE_ID>"
+      ]
+    },
+    {
+      "Sid": "AgentApplyGuardrail",
+      "_comment": "Optional: include only if the agent has a guardrail attached.",
+      "Effect": "Allow",
+      "Action": "bedrock:ApplyGuardrail",
+      "Resource": [
+        "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:guardrail/<GUARDRAIL_ID>"
+      ]
+    },
+    {
+      "Sid": "AgentActionGroupS3Schema",
+      "_comment": "Optional: include only if the agent uses an action group with an OpenAPI schema on S3. The aws:ResourceAccount condition ensures only same-account S3 resources are accessible.",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::<S3_BUCKET_NAME>/<OPENAPI_SCHEMA_KEY>"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceAccount": "<ACCOUNT_ID>"
+        }
+      }
+    }
+  ]
+}
