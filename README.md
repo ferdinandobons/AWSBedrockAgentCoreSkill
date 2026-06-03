@@ -2,7 +2,7 @@
 
 [![version](https://img.shields.io/badge/version-0.1.0-blue)](.claude-plugin/plugin.json) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-orange)](https://code.claude.com/docs/en/plugins)
 
-A Claude Code plugin (and agent skill) that gives a coding agent the official, source-cited best practices for building AI agents on AWS. With it installed, the agent can design, configure, deploy, and debug an agent on AWS by applying current AWS guidance instead of relying on its training data, and it can show you the official source behind every recommendation.
+A Claude Code plugin (and agent skill) that puts the best practices for building AI agents on AWS, with Amazon Bedrock AgentCore at the center, in one place. Instead of sending the coding agent to search across dozens of AWS docs or work things out by trial and error, it hands over a consolidated, official, source-cited playbook so the agent goes straight to the right approach and can show you the source behind every recommendation.
 
 **Scope:** Strands Agents, Amazon Bedrock (Converse, Guardrails, Knowledge Bases), and Amazon Bedrock AgentCore (Runtime, Memory, Gateway, Identity, Browser/Code Interpreter), plus Terraform-first IaC and CloudWatch/OpenTelemetry observability.
 
@@ -19,8 +19,9 @@ The agent loads only the files a task needs (progressive disclosure), so it stay
 
 ## Why use it
 
-Building agents on AWS has a steep, fast-changing learning curve, and a model answering from memory tends to get the version-specific details wrong. This skill exists to close that gap:
+Building agents on AWS (especially Bedrock AgentCore) means a lot of scattered documentation and a fast-changing API surface. Left on its own, a coding agent either crawls across many pages or proceeds by trial and error, and still gets the version-specific details wrong. This skill removes both problems:
 
+- **The best practices are already gathered and organized.** The agent does not have to research half the internet: the relevant official guidance for each area is collected in one place and routed by use case, so it goes straight to the right approach instead of probing around.
 - **It is current and source-cited.** Bedrock AgentCore is recent and changes often. The skill encodes today's official answers and attaches the documentation URL to each one, so the agent (and you) can verify a recommendation instead of trusting it blindly. There are **636 inline source citations** across the reference files.
 - **It prevents the common, non-obvious mistakes.** These are the kind of errors that look correct in review and only fail at deploy: using the legacy `InvokeModel` instead of the Converse API, passing `serviceTier` as a bare string, calling a deprecated `structured_output()`, setting a 1-hour prompt-cache TTL on a model that only supports 5 minutes, ignoring the ARM64 AgentCore runtime contract, or mis-sizing `max_tokens` and hitting the 5x token burndown. The skill documents the correct form for each.
 - **It picks the right pattern, not just the API.** The decision tree distinguishes a simple chatbot from a tool-using agent, RAG, a multi-agent system, a serverless production deployment, and so on, and points to the matching reference. It also covers when a managed alternative (Bedrock Agents, Flows, the Responses API) fits better than the code-first path.
