@@ -6,6 +6,8 @@ A Claude Code plugin (and agent skill) that puts the best practices for building
 
 **Scope:** Strands Agents, Amazon Bedrock (Converse, Guardrails, Knowledge Bases), and Amazon Bedrock AgentCore (Runtime, Memory, Gateway, Identity, Browser/Code Interpreter), plus Terraform-first IaC and CloudWatch/OpenTelemetry observability.
 
+> **Built and verified with Claude Code multi-agent workflows:** ~140 subagents, ~15M tokens, and 800+ official-documentation reads went into researching, writing, and adversarially QA-ing this skill.
+
 ## What it is
 
 It is not a single template or a code generator. It is a routing layer plus a reference library:
