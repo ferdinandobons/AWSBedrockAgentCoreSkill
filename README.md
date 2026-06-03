@@ -6,7 +6,7 @@
 
 This repository is a **Claude Code plugin** that bundles the `aws-ai-agent-architect` skill. Hand it to a coding agent and, knowing nothing about AWS agents up front, it can stand up the *right* agent for the user's use case — applying official AWS best practices instead of guessing.
 
-It is **not** a single template. It is a decision engine + reference library: a routing `SKILL.md`, 17 deep reference files, ready-to-adapt assets, and a 327-URL official source index.
+It is **not** a single template. It is a decision engine + reference library: a routing `SKILL.md`, 20 deep reference files, ready-to-adapt assets, and a 369-URL official source index.
 
 ---
 
@@ -107,6 +107,9 @@ The `SKILL.md` decision tree routes across the full realistic use-case space:
 | Safety / compliance | Bedrock Guardrails |
 | Observability | AgentCore Observability · CloudWatch GenAI · OpenTelemetry · Evaluations |
 | Infrastructure as Code | **Terraform-first** (`hashicorp/aws` + `awscc`); CDK secondary |
+| Host any framework on AgentCore | LangGraph · CrewAI · LlamaIndex · Google ADK · Strands (framework-agnostic Runtime) |
+| Test & safe rollout | Local testing · unit tests · AgentCore Evaluations in CI · versioned endpoints + canary |
+| Batch · cost-routing · custom models | Batch inference · Intelligent Prompt Router · fine-tuning + Provisioned Throughput |
 | Security · IAM · cost · quotas | Least-privilege IAM, KMS, VPC PrivateLink, token burndown, prompt caching |
 
 ---
@@ -121,16 +124,19 @@ The `SKILL.md` decision tree routes across the full realistic use-case space:
 ├── skills/
 │   └── aws-ai-agent-architect/
 │       ├── SKILL.md             # Routing layer: decision tree + playbooks + 12 cross-cutting rules
-│       ├── references/          # 17 deep, source-cited reference files
+│       ├── references/          # 20 deep, source-cited reference files
 │       │   ├── strands.md
 │       │   ├── bedrock.md                 # models, Converse, prompt caching + Knowledge Bases/RAG
+│       │   ├── bedrock-platform.md         # Intelligent Prompt Router, batch, fine-tuning, data residency
 │       │   ├── agentcore-runtime.md
+│       │   ├── frameworks-on-agentcore.md  # host LangGraph/CrewAI/LlamaIndex/Google ADK/Strands
 │       │   ├── memory.md
 │       │   ├── gateway-identity.md
 │       │   ├── tools.md                   # Strands @tool & MCP
 │       │   ├── agentcore-tools.md         # Browser & Code Interpreter
 │       │   ├── multi-agent.md
 │       │   ├── observability.md
+│       │   ├── testing-and-rollout.md      # local testing, Evaluations in CI, versioned endpoints, canary
 │       │   ├── security-iam-cost.md
 │       │   ├── guardrails.md
 │       │   ├── managed-alternatives.md    # managed Agents, Flows, Responses API, Policy, Evaluations
@@ -138,7 +144,7 @@ The `SKILL.md` decision tree routes across the full realistic use-case space:
 │       │   ├── deployment-best-practices.md
 │       │   ├── deployment-cdk.md          # CDK (secondary)
 │       │   ├── deployment-frameworks.md   # Lambda / Fargate / EKS
-│       │   └── sources.md                 # central official-source index (327 URLs)
+│       │   └── sources.md                 # central official-source index (369 URLs)
 │       ├── assets/
 │       │   ├── service-selection-matrix.md
 │       │   ├── model-selection-guide.md
@@ -150,7 +156,7 @@ The `SKILL.md` decision tree routes across the full realistic use-case space:
 └── LICENSE
 ```
 
-**At a glance:** 1 router + **17 reference files** (~16,700 lines), **14 assets**, **506 inline source citations**, **327 unique official source URLs**.
+**At a glance:** 1 router + **20 reference files** (~19,000 lines), **14 assets**, **636 inline source citations**, **369 unique official source URLs**.
 
 ---
 

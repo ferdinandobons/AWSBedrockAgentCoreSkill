@@ -26,6 +26,11 @@
 | **Migrating an OpenAI-SDK app to Bedrock** | **Amazon Bedrock Responses API** (`bedrock-mantle`, OpenAI-compatible, stateful) | Bedrock Responses API | GA (Dec 2025) | For greenfield AWS-native agents prefer Strands + AgentCore for tighter control/integration. See [managed-alternatives.md](../references/managed-alternatives.md). |
 | **Deterministic tool-call authorization** (regulated / multi-tenant) | **AgentCore Policy** (Cedar) on top of AgentCore Gateway — complements any framework | AgentCore Policy, AgentCore Gateway | GA (Mar 2026) | If app-level checks suffice and you have no compliance mandate, the Gateway's standard auth may be enough. See [managed-alternatives.md](../references/managed-alternatives.md). |
 | **Automated agent quality scoring / eval** | **AgentCore Evaluations** (online + CI regression, built-in + custom evaluators) — complements any framework | AgentCore Evaluations, OpenTelemetry | GA (Mar 2026) | For traces alone (no scoring) plain Observability suffices. See [managed-alternatives.md](../references/managed-alternatives.md). |
+| **Host a non-Strands framework** (LangGraph, CrewAI, LlamaIndex, Google ADK) | Wrap it in `BedrockAgentCoreApp` (or any server meeting the contract) on **AgentCore Runtime** (framework-agnostic) | AgentCore Runtime, AgentCore CLI | GA | If the framework needs no AWS-managed hosting, run it on your own Fargate/EKS instead. See [frameworks-on-agentcore.md](../references/frameworks-on-agentcore.md). |
+| **Test before deploy + safe rollout** | Local test (AgentCore CLI) → unit tests / Strands Evals → AgentCore Evaluations in CI → versioned endpoints + canary | AgentCore Runtime versions/endpoints, AgentCore Evaluations | GA (Gateway A/B + bundle rollback: Preview) | Don't pin prod traffic to the auto-updating DEFAULT endpoint. See [testing-and-rollout.md](../references/testing-and-rollout.md). |
+| **Large offline / batch jobs** | **Bedrock Batch inference** (asynchronous, ~50% cheaper) | Bedrock batch inference, S3 | GA | Not for interactive agents; no tool calling, structured output, or prompt caching in batch. See [bedrock-platform.md](../references/bedrock-platform.md). |
+| **Auto-route across models for cost/quality** | **Bedrock Intelligent Prompt Router** (two models, same family) | Bedrock Intelligent Prompt Router | GA (Apr 2025) | English-optimized; for a single fixed model just call it directly. See [bedrock-platform.md](../references/bedrock-platform.md). |
+| **Fine-tuned / custom model** | Custom model + **Provisioned Throughput** (required for custom-model inference) | Bedrock custom models, Provisioned Throughput | GA | Custom models have no on-demand path — Provisioned Throughput is mandatory and costs per model-unit/hour. See [bedrock-platform.md](../references/bedrock-platform.md). |
 
 ---
 
@@ -49,6 +54,9 @@
 | Apply IaC best practices (remote state, least-priv IAM via Terraform, ARM64 build, CI/CD) | [`references/deployment-best-practices.md`](../references/deployment-best-practices.md) |
 | Use AWS CDK (secondary IaC option) with L2/alpha constructs | [`references/deployment-cdk.md`](../references/deployment-cdk.md) |
 | Deploy a Strands agent to Lambda, Fargate-ECS, or EKS (non-AgentCore hosting) | [`references/deployment-frameworks.md`](../references/deployment-frameworks.md) |
+| Host any framework (LangGraph/CrewAI/LlamaIndex/Google ADK) on AgentCore, or check Python vs TypeScript SDK differences | [`references/frameworks-on-agentcore.md`](../references/frameworks-on-agentcore.md) |
+| Test an agent before deploy (local, unit tests, Evaluations in CI) and roll it out safely (versioned endpoints, canary) | [`references/testing-and-rollout.md`](../references/testing-and-rollout.md) |
+| Use Intelligent Prompt Router, batch inference, fine-tuning/custom models, or check a data-residency checklist | [`references/bedrock-platform.md`](../references/bedrock-platform.md) |
 | Re-read or verify any official source URL | [`references/sources.md`](../references/sources.md) |
 
 ---

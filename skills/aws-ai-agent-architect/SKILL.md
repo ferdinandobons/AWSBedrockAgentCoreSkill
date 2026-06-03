@@ -87,7 +87,11 @@ START: What does the user need the agent to do?
    • Low-code, AWS-managed agent     → Amazon Bedrock managed Agents (InvokeAgent / action groups).
    • Fixed visual pipeline (a DAG)    → Amazon Bedrock Flows.
    • Migrating an OpenAI-SDK app      → Amazon Bedrock Responses API (bedrock-mantle, OpenAI-compatible).
+   • Non-Strands framework (LangGraph/CrewAI/LlamaIndex/Google ADK) → host it on AgentCore Runtime
+                                        (framework-agnostic) → frameworks-on-agentcore.md.
      For the managed/alternative paths, open: managed-alternatives.md
+     Language note: Python is primary; for TypeScript-SDK differences (Workflow is Python-only, Graph
+     edge semantics differ), see frameworks-on-agentcore.md.
 
 1. Single-turn or simple chat, NO tools?
    → Bedrock Converse API directly (boto3) OR a minimal Strands Agent.
@@ -135,13 +139,22 @@ START: What does the user need the agent to do?
        • Need automated quality scoring / regression testing (not just traces)? → AgentCore Evaluations.
      Open: observability.md   (+ managed-alternatives.md for AgentCore Evaluations)
 
-10. ALWAYS before shipping → security-iam-cost.md (least-privilege IAM, KMS, VPC PrivateLink,
+10. Test it and roll it out safely?
+    → Local test (AgentCore CLI) → unit-test tools / Strands Evals → AgentCore Evaluations in CI →
+      versioned endpoints + canary / weighted rollout.
+      Open: testing-and-rollout.md
+
+11. Offline/batch jobs, cost-routing across models, or a fine-tuned/custom model?
+    → Batch inference (async, ~50% cheaper) | Intelligent Prompt Router | custom model + Provisioned Throughput.
+      Open: bedrock-platform.md
+
+12. ALWAYS before shipping → security-iam-cost.md (least-privilege IAM, KMS, VPC PrivateLink,
     quotas, token burndown, prompt caching) and deployment-iac.md + deployment-best-practices.md
     (Terraform-first deploy).
 ```
 
 Most real agents combine several branches (e.g. a production RAG chatbot with memory and guardrails
-= 1 + 3 + 5 + 6 + 8 + 9 + 10). Compose the stacks; open each matching reference.
+= 1 + 3 + 5 + 6 + 8 + 9 + 10 + 12). Compose the stacks; open each matching reference.
 
 ## Use-case playbooks
 
@@ -206,6 +219,16 @@ strategy is active feed LTM; only `conversational` payloads are processed; prefe
 `GetWorkloadAccessTokenForJWT` and deny `GetWorkloadAccessTokenForUserId` in production.
 **Open:** [memory.md](references/memory.md), [gateway-identity.md](references/gateway-identity.md).
 
+### G. Test & safely roll out
+**Stack:** local testing (AgentCore CLI) + unit tests / Strands Evals + AgentCore Evaluations (CI) +
+versioned AgentCore Runtime endpoints with canary / weighted rollout.
+**Order:** run & invoke locally first → unit-test `@tool` functions and agent behavior → add AgentCore
+Evaluations (on-demand for CI regression, online in production) → cut an immutable version → shift
+traffic gradually via a pinned endpoint / weighted split → watch Evaluations + Observability, roll back on regression.
+**Watch:** the DEFAULT endpoint auto-updates (don't rely on it for pinned prod traffic); some rollout
+features (Gateway A/B, configuration-bundle rollback) are **Preview** — label them; AgentCore Evaluations is GA.
+**Open:** [testing-and-rollout.md](references/testing-and-rollout.md), [observability.md](references/observability.md).
+
 ## Top cross-cutting best practices
 
 The 12 rules that matter most across every agent. Full detail + sources in the references.
@@ -267,13 +290,16 @@ Open only what the task needs.
 |---|---|
 | [references/strands.md](references/strands.md) | Building any Strands agent: agent loop, `Agent` class, model providers, streaming, hooks, structured output, conversation/state/session management. |
 | [references/bedrock.md](references/bedrock.md) | Choosing/using models, the Converse API, inference profiles, prompt caching, reasoning, service tiers — and **RAG with Knowledge Bases**. |
+| [references/bedrock-platform.md](references/bedrock-platform.md) | Intelligent Prompt Router, batch inference, fine-tuning / custom models, and a data-residency checklist. |
 | [references/agentcore-runtime.md](references/agentcore-runtime.md) | Hosting an agent serverless on AgentCore Runtime: the service contract, sessions, streaming, versioning, deploy. |
+| [references/frameworks-on-agentcore.md](references/frameworks-on-agentcore.md) | Hosting **any** framework (LangGraph, CrewAI, LlamaIndex, Google ADK, Strands) on AgentCore Runtime; Python vs TypeScript SDK differences. |
 | [references/memory.md](references/memory.md) | Adding short-term and long-term memory (AgentCore Memory) or Strands sessions. |
 | [references/gateway-identity.md](references/gateway-identity.md) | Turning APIs/Lambda/OpenAPI into MCP tools (Gateway) and handling auth/OAuth/credentials (Identity). |
 | [references/tools.md](references/tools.md) | Defining Strands tools (`@tool`, `TOOL_SPEC`, MCP integration, human-in-the-loop consent). |
 | [references/agentcore-tools.md](references/agentcore-tools.md) | Using AgentCore built-in tools: sandboxed Browser and Code Interpreter. |
 | [references/multi-agent.md](references/multi-agent.md) | Orchestrating multiple agents: Graph, Swarm, Workflow, Agents-as-Tools, A2A. |
 | [references/observability.md](references/observability.md) | Tracing, metrics, logging: AgentCore Observability, CloudWatch GenAI, OpenTelemetry/ADOT. |
+| [references/testing-and-rollout.md](references/testing-and-rollout.md) | Testing before deploy (local, unit tests, Evaluations in CI) and safe rollout (versioned endpoints, canary). |
 | [references/security-iam-cost.md](references/security-iam-cost.md) | IAM roles/policies, KMS, VPC PrivateLink, quotas, token burndown, cost optimization. |
 | [references/guardrails.md](references/guardrails.md) | Safety/compliance: content filters, denied topics, PII, contextual grounding, `ApplyGuardrail`. |
 | [references/managed-alternatives.md](references/managed-alternatives.md) | Choosing a **managed/low-code** path (Bedrock managed Agents, Flows, Responses API) or complementary capabilities (AgentCore Policy/Cedar, Evaluations, Prompt Management). |
