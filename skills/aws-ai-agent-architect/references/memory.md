@@ -328,7 +328,8 @@ data_client.create_event(
         }
     ]
     # Optional: metadata for STM filtering (NOT encrypted with KMS, NOT sent to LTM)
-    # eventMetadata={'ticketType': 'shipping'}
+    # metadata parameter name is 'metadata' (NOT 'eventMetadata'); value shape is {key: {stringValue: str}}
+    # metadata={'ticketType': {'stringValue': 'shipping'}}
 )
 ```
 
@@ -396,8 +397,8 @@ pref_response = data_client.retrieve_memory_records(
     }
 )
 for record in pref_response.get('memoryRecordSummaries', []):
-    # relevanceScore is cosine similarity (NOT a percentage)
-    print(f"Score: {record.get('relevanceScore')} | {record.get('content')}")
+    # score is cosine similarity (NOT a percentage) — field name is 'score' per MemoryRecordSummary API
+    print(f"Score: {record.get('score')} | {record.get('content')}")
 
 # Example 2: Retrieve across all sessions for an actor (namespacePath prefix search)
 issue_response = data_client.retrieve_memory_records(
@@ -426,15 +427,19 @@ memory_id = 'mem-xxxxxxxxxxxx'
 
 response = control_client.update_memory(
     memoryId=memory_id,
-    memoryStrategies=[
-        {
-            'summaryMemoryStrategy': {
-                'name': 'SessionSummarizer',
-                'description': 'Summarizes conversation sessions for context',
-                'namespaceTemplates': ['/summaries/{actorId}/{sessionId}/']
+    # memoryStrategies for UpdateMemory is a ModifyMemoryStrategies object, NOT a plain array.
+    # Use addMemoryStrategies / deleteMemoryStrategies / modifyMemoryStrategies keys.
+    memoryStrategies={
+        'addMemoryStrategies': [
+            {
+                'summaryMemoryStrategy': {
+                    'name': 'SessionSummarizer',
+                    'description': 'Summarizes conversation sessions for context',
+                    'namespaceTemplates': ['/summaries/{actorId}/{sessionId}/']
+                }
             }
-        }
-    ]
+        ]
+    }
 )
 
 # NOTE: Only events created AFTER the new strategy becomes ACTIVE will be processed.
@@ -934,27 +939,32 @@ memories = client.retrieve_memories(
 )
 
 # Low-level session manager (for multi-turn incremental writes)
+# MemorySessionManager takes memory_id; actor_id/session_id are passed to each method call.
+# There is no create_memory_session factory — methods are invoked directly on the manager.
 session_mgr = MemorySessionManager(memory_id=memory.get('id'), region_name='us-east-1')
-session = session_mgr.create_memory_session(actor_id='User84', session_id='Session2')
 
 # Add turns individually
-session.add_turns(messages=[
-    ConversationalMessage('Hello!', MessageRole.USER),
-    ConversationalMessage('Hi, how can I help?', MessageRole.ASSISTANT),
-])
+session_mgr.add_turns(
+    actor_id='User84',
+    session_id='Session2',
+    messages=[
+        ConversationalMessage('Hello!', MessageRole.USER),
+        ConversationalMessage('Hi, how can I help?', MessageRole.ASSISTANT),
+    ],
+)
 
 # Retrieve last N turns from STM
-turns = session.get_last_k_turns(k=5)
+turns = session_mgr.get_last_k_turns(actor_id='User84', session_id='Session2', k=5)
 
 # Semantic search on LTM
-results = session.search_long_term_memories(
-    namespace='/summaries/User84/Session2/',
+results = session_mgr.search_long_term_memories(
     query='What topics were discussed?',
+    namespace='/summaries/User84/Session2/',
     top_k=3
 )
 
 # List LTM records under namespace hierarchy
-all_records = session.list_long_term_memory_records(namespace_path='/')
+all_records = session_mgr.list_long_term_memory_records(namespace_path='/')
 ```
 
 _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-sdk-memory.html_
@@ -1014,7 +1024,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore
 
 - **`appendToPrompt` REPLACES (not appends to) the default system prompt** — despite the parameter name, the official docs confirm it replaces the default instructions entirely. Always pass the complete combined text (base prompt + your domain additions). Also NEVER rename the consolidation operations `AddMemory` or `UpdateMemory` — this silently breaks the LTM pipeline. The output schema is also not editable in built-in with overrides mode.
 
-- **The relevance score returned by `RetrieveMemoryRecords` is a cosine similarity value, NOT a percentage**. Values near 0.2 are often already highly relevant for well-formed queries.
+- **The relevance score returned by `RetrieveMemoryRecords` is a cosine similarity value, NOT a percentage**. The field is named `score` on each `MemoryRecordSummary` object (per the API type definition — not `relevanceScore`). Values near 0.2 are often already highly relevant for well-formed queries.
 
 - **Namespace templates must start AND end with `/`**. However, IAM condition key values for `bedrock-agentcore:namespace` and `bedrock-agentcore:namespacePath` are expressed WITHOUT a leading slash (official docs show `summaries/agent1/` and `summaries/agent1/*`).
 

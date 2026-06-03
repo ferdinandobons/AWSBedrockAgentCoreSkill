@@ -401,19 +401,20 @@ response = bedrock.create_guardrail(
     # Note: does not apply to tool_use (function call) output parameters
     sensitiveInformationPolicyConfig={
         'piiEntitiesConfig': [
-            {'type': 'NAME',                       'inputAction': 'ANONYMIZE', 'inputEnabled': True,  'outputAction': 'ANONYMIZE', 'outputEnabled': True},
-            {'type': 'EMAIL',                      'inputAction': 'ANONYMIZE', 'inputEnabled': True,  'outputAction': 'ANONYMIZE', 'outputEnabled': True},
-            {'type': 'PHONE',                      'inputAction': 'ANONYMIZE', 'inputEnabled': True,  'outputAction': 'ANONYMIZE', 'outputEnabled': True},
-            {'type': 'US_SOCIAL_SECURITY_NUMBER',  'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
-            {'type': 'CREDIT_DEBIT_CARD_NUMBER',   'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
-            {'type': 'AWS_ACCESS_KEY',             'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
-            {'type': 'AWS_SECRET_KEY',             'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
-            {'type': 'PASSWORD',                   'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
+            {'type': 'NAME',                       'action': 'ANONYMIZE', 'inputAction': 'ANONYMIZE', 'inputEnabled': True,  'outputAction': 'ANONYMIZE', 'outputEnabled': True},
+            {'type': 'EMAIL',                      'action': 'ANONYMIZE', 'inputAction': 'ANONYMIZE', 'inputEnabled': True,  'outputAction': 'ANONYMIZE', 'outputEnabled': True},
+            {'type': 'PHONE',                      'action': 'ANONYMIZE', 'inputAction': 'ANONYMIZE', 'inputEnabled': True,  'outputAction': 'ANONYMIZE', 'outputEnabled': True},
+            {'type': 'US_SOCIAL_SECURITY_NUMBER',  'action': 'BLOCK',     'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
+            {'type': 'CREDIT_DEBIT_CARD_NUMBER',   'action': 'BLOCK',     'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
+            {'type': 'AWS_ACCESS_KEY',             'action': 'BLOCK',     'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
+            {'type': 'AWS_SECRET_KEY',             'action': 'BLOCK',     'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
+            {'type': 'PASSWORD',                   'action': 'BLOCK',     'inputAction': 'BLOCK',     'inputEnabled': True,  'outputAction': 'BLOCK',     'outputEnabled': True},
         ],
         'regexesConfig': [
             {
                 'name': 'BookingID',
                 'pattern': r'BK-[0-9]{8}',  # max 500 chars; no regex lookaround supported
+                'action': 'ANONYMIZE',       # required legacy field; use inputAction/outputAction for per-direction control
                 'description': 'Internal booking identifier',
                 'inputAction': 'ANONYMIZE',
                 'inputEnabled': True,
@@ -560,9 +561,14 @@ response = bedrock_runtime.converse(
 output_text = response['output']['message']['content'][0]['text']
 
 # Check trace for guardrail details
+# GuardrailTraceAssessment has: actionReason, inputAssessment, outputAssessments, modelOutput
+# It does NOT have an 'action' field — check stopReason on the top-level response instead
 if 'trace' in response:
     guardrail_trace = response['trace'].get('guardrail', {})
-    print(f'Guardrail action: {guardrail_trace.get("action", "NONE")}')
+    action_reason = guardrail_trace.get('actionReason', '')
+    print(f'Guardrail actionReason: {action_reason}')
+# The authoritative intervention check is stopReason on the top-level response:
+print(f'Stop reason: {response.get("stopReason", "")}')  # 'guardrail_intervened' if blocked
 ```
 
 _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use.html_
@@ -695,8 +701,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Creat
       "Resource": "*"
     },
     {
-      "Sid": "TagGuardrails",
-      "Comment": "Required separately when passing tags in CreateGuardrail. Omitting causes AccessDeniedException.",
+      "Sid": "TagGuardrailsRequiredSeparatelyOmittingCausesAccessDeniedException",
       "Effect": "Allow",
       "Action": [
         "bedrock:TagResource"
@@ -704,8 +709,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Creat
       "Resource": "*"
     },
     {
-      "Sid": "ApplyGuardrailOnly",
-      "Comment": "Use this when calling ApplyGuardrail independently (no FM invocation). Can be scoped to specific guardrail ARN.",
+      "Sid": "ApplyGuardrailOnlyCanBeScopedToSpecificGuardrailARN",
       "Effect": "Allow",
       "Action": [
         "bedrock:ApplyGuardrail"
@@ -713,8 +717,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_Creat
       "Resource": "arn:aws:bedrock:us-east-1:123456789012:guardrail/abc123xyz"
     },
     {
-      "Sid": "InvokeModelWithGuardrail",
-      "Comment": "Required when using guardrails inline with Bedrock FMs via InvokeModel or Converse",
+      "Sid": "InvokeModelWithGuardrailRequiredForInlineGuardrailsViaInvokeModelOrConverse",
       "Effect": "Allow",
       "Action": [
         "bedrock:InvokeModel",

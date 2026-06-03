@@ -146,7 +146,7 @@ _Source: [Understanding intelligent prompt routing in Amazon Bedrock](https://do
 |---|---|---|
 | `promptRouterName` | string | Unique name for the router resource |
 | `models[].modelArn` | string | ARN of the secondary model (cheaper / faster) |
-| `fallbackModel[].modelArn` | string | ARN of the primary (higher-quality) model; used when routing criteria not met |
+| `fallbackModel.modelArn` | string | ARN of the primary (higher-quality) model; used when routing criteria not met |
 | `routingCriteria.responseQualityDifference` | float (0–100) | Threshold: how much better the fallback model must be for requests to stay on it. Lower = route to cheaper model more aggressively. The value is a percentage: 0.5 means 0.5%, 50 means 50% |
 | `description` | string (optional) | Human-readable description |
 
@@ -340,7 +340,7 @@ For Provisioned Throughput IaC, see [`deployment-iac.md`](./deployment-iac.md). 
 | Field | Description |
 |---|---|
 | `baseModelIdentifier` | Foundation model ARN to fine-tune from |
-| `customizationType` | `FINE_TUNING`, `CONTINUED_PRE_TRAINING`, `DISTILLATION`, or `REINFORCED_FINE_TUNING` |
+| `customizationType` | `FINE_TUNING`, `CONTINUED_PRE_TRAINING`, `DISTILLATION`, or `REINFORCEMENT_FINE_TUNING` |
 | `trainingDataConfig.s3Uri` | S3 path to training JSONL |
 | `validationDataConfig.validators[].s3Uri` | S3 path to validation JSONL (recommended) |
 | `outputDataConfig.s3Uri` | S3 path for output custom model artifacts |

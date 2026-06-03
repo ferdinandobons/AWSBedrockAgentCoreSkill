@@ -773,7 +773,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-manag
 ```python
 from strands import Agent
 from strands.session.file_session_manager import FileSessionManager
-from strands.multiagent import Graph
+from strands.multiagent.graph import Graph
 
 # SINGLE AGENT
 session_manager = FileSessionManager(

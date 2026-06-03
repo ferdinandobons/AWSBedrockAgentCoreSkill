@@ -55,7 +55,7 @@ The control plane (create/delete/list resources) uses `boto3.client('bedrock-age
 Each session (Browser or Code Interpreter) runs in a dedicated microVM with isolated CPU, memory, and filesystem. On session termination the microVM is shut down and memory sanitized — no data survives between different sessions. Hardware: Browser = 1 vCPU/4 GB per session; Code Interpreter = 2 vCPU/8 GB per session. Maximum 1,000 concurrent sessions per account per tool (default, increasable via ticket). Session data TTL: 30 days.
 
 **Session timeout configurable**
-Default: 900 seconds (15 minutes). Maximum: 8 hours (28,800 seconds). The parameter is `sessionTimeoutSeconds` in `start_browser_session` and `start_code_interpreter_session`. Sessions auto-terminate at timeout and resources are released automatically. Disk per session: 10 GB (not increasable).
+Default: 3600 seconds (1 hour) for Browser; 900 seconds (15 minutes) for Code Interpreter. Maximum: 8 hours (28,800 seconds) for both. The parameter is `sessionTimeoutSeconds` in `start_browser_session` and `start_code_interpreter_session`. Sessions auto-terminate at timeout and resources are released automatically. Disk per session: 10 GB (not increasable).
 
 **CDP WebSocket Automation Endpoint (Browser)**
 A Browser session exposes two streams: (1) `automationStream` via WebSocket WSS for CDP — Playwright, Nova Act, browser-use connect here; (2) `liveViewStream` via HTTPS for human live view. The WebSocket URL has the form `wss://bedrock-agentcore.{REGION}.amazonaws.com/browser-streams/{browser_id}/sessions/{session_id}/automation`. The SDK method `generate_ws_headers()` returns `(ws_url, headers)` already SigV4-signed.
@@ -884,7 +884,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/browser-q
 }
 ```
 
-_Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-resource-session-management.html_
+_Source (user policy): https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-resource-session-management.html — Source (execution role trust policy for S3 access): https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-interpreter-s3-integration.html_
 
 ---
 
@@ -894,7 +894,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/code-inte
 |------|-------------|-------------------|
 | `browserIdentifier` | Identifier of the Browser tool to use in `start_browser_session`, `get_browser_session`, `stop_browser_session`, `invoke_browser`. Use `'aws.browser.v1'` for the default System ARN, or the `browserId` of a custom browser. | `aws.browser.v1` |
 | `codeInterpreterIdentifier` | Identifier of the Code Interpreter to use in `start_code_interpreter_session`, `invoke_code_interpreter`, `stop_code_interpreter_session`. Use `'aws.codeinterpreter.v1'` for the default System ARN, or a custom `codeInterpreterId`. | `aws.codeinterpreter.v1` |
-| `sessionTimeoutSeconds` | Session timeout in seconds. The session auto-terminates at expiry. Valid for both Browser and Code Interpreter. | Default: `900` (15 min); Max: `28800` (8h) |
+| `sessionTimeoutSeconds` | Session timeout in seconds. The session auto-terminates at expiry. Valid for both Browser and Code Interpreter. | Default: `3600` (1 h) for Browser; `900` (15 min) for Code Interpreter. Max: `28800` (8h) |
 | `viewPort` (Browser) | Browser viewport size. Coordinates for InvokeBrowser must be in the range `1 < x < viewportWidth-2` and `1 < y < viewportHeight-2`. | `{"width": 1456, "height": 819}` |
 | `networkMode` (Code Interpreter) | Network mode for the sandbox. `SANDBOX`: no internet access, only internal AWS access via execution role. `PUBLIC`: full internet access. | `SANDBOX` \| `PUBLIC` |
 | `networkMode` (Browser) | The Browser Tool supports only PUBLIC network mode (required for web browsing). | `PUBLIC` |

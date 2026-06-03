@@ -631,8 +631,8 @@ bundle = client.create_configuration_bundle(
     components={
         "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/my-agent": {
             "configuration": {
-                "systemPrompt": "You are a helpful customer support agent...",
-                "modelId": "anthropic.claude-sonnet-4-5",
+                "system_prompt": "You are a helpful customer support agent...",
+                "model_id": "anthropic.claude-sonnet-4-5",
             }
         }
     },
@@ -646,8 +646,8 @@ updated = client.update_configuration_bundle(
     components={
         "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/my-agent": {
             "configuration": {
-                "systemPrompt": "You are an expert customer support agent...",
-                "modelId": "anthropic.claude-sonnet-4-5",
+                "system_prompt": "You are an expert customer support agent...",
+                "model_id": "anthropic.claude-sonnet-4-5",
             }
         }
     },

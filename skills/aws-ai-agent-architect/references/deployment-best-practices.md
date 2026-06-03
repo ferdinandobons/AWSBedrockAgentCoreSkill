@@ -542,6 +542,7 @@ Use `aws_cdk.aws_bedrockagentcore` (NOT the alpha module for Runtime). Only Poli
 ```python
 # cdk_stack.py — STABLE module for Runtime (migrated from alpha to stable)
 # Import aws_cdk.aws_bedrockagentcore, NOT aws_cdk.aws_bedrock_agentcore_alpha
+import aws_cdk as cdk
 import aws_cdk.aws_bedrockagentcore as agentcore
 import aws_cdk.aws_ecr as ecr
 
@@ -580,14 +581,14 @@ _Source: https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagen
 | Name | Description | Default / example |
 |------|-------------|-------------------|
 | `agent_runtime_artifact.container_configuration.container_uri` | ECR URI of the ARM64 image (e.g. `123456.dkr.ecr.us-east-1.amazonaws.com/myagent:tag`). Required for CONTAINER source type. From hashicorp/aws 6.22+, `container_configuration` is optional (to allow `code_configuration`). | `"${aws_ecr_repository.agent.repository_url}:${var.image_tag}"` |
-| `agent_runtime_artifact.code_configuration` (hashicorp/aws >= 6.22) | Alternative to container: uses a ZIP on S3. Added in hashicorp/aws v6.22.0. Contains `s3_uri` (S3 path of the ZIP), `entrypoint` (Python entry file, e.g. `main.py`), `runtime` (Python version, e.g. `python-3-13`). The ZIP must contain ARM64 dependencies. | `code_configuration { s3_uri = "s3://mybucket/agent.zip", entrypoint = "main.py", runtime = "python-3-13" }` |
+| `agent_runtime_artifact.code_configuration` (hashicorp/aws >= 6.22) | Alternative to container: uses a ZIP on S3. Added in hashicorp/aws v6.22.0. Contains `entry_point` (list of 1-2 strings, e.g. `["main.py"]`), `runtime` (enum, e.g. `PYTHON_3_13`), and a nested `code { s3 { bucket = "...", prefix = "..." } }` block. The ZIP must contain ARM64 dependencies. Valid `runtime` values: `PYTHON_3_10`, `PYTHON_3_11`, `PYTHON_3_12`, `PYTHON_3_13`. | `code_configuration { entry_point = ["main.py"] runtime = "PYTHON_3_13" code { s3 { bucket = "mybucket" prefix = "agent.zip" } } }` |
 | `role_arn` | ARN of the IAM execution role that AgentCore assumes to run the container. Must have trust policy with `bedrock-agentcore.amazonaws.com` and conditions `aws:SourceAccount` (StringEquals) + `aws:SourceArn` (ArnLike). | `aws_iam_role.agentcore_execution.arn` |
 | `network_configuration.network_mode` | `PUBLIC` (direct internet access) or `VPC` (requires `security_groups` and `subnets`). Choose VPC for production with sensitive data. NOTE: known bug #46569 with VPC: multiple subnets not sent correctly to the API. Monitor fix in provider. | `"PUBLIC"` \| `"VPC"` |
 | `lifecycle_configuration.idle_runtime_session_timeout` | Seconds of inactivity before the session is terminated. Min 60, max 28800 (8 hours). Default 900 (15 min). MUST be <= `max_lifetime`. ALWAYS specify both values to avoid bug #45290. | `900` |
 | `lifecycle_configuration.max_lifetime` | Maximum absolute duration of a session in seconds. Min 60, max 28800 (8 hours). Default 28800. MUST be >= `idle_runtime_session_timeout`. ALWAYS specify both values to avoid bug #45290. | `28800` |
 | `environment_variables` | Map of environment variables injected into the container at deploy time. Use a hash of the source code as `_CODE_VERSION` to force re-deploy when code changes without touching the image URI. | `{ _CODE_VERSION = sha256(source_hash) }` |
 | `aws_bedrockagent_agent.foundation_model` | Foundation model ID for classic Bedrock Agent. Use cross-region inference profile (`us.anthropic.claude-*`) for regional resilience. | `"us.anthropic.claude-sonnet-4-20250514-v1:0"` |
-| `aws_bedrockagent_agent.idle_session_ttl_in_seconds` | Session TTL for classic Bedrock Agent. Max 3600. | `600` |
+| `aws_bedrockagent_agent.idle_session_ttl_in_seconds` | Session TTL for classic Bedrock Agent. Min 60, max 5400 (per Bedrock Agents API). | `600` |
 | `backend s3 use_lockfile` | Enables S3 native locking. Introduced in Terraform 1.10.0; GA in Terraform 1.11.0 (DynamoDB locking formally deprecated in 1.11). For new projects use `required_version >= 1.11`. _Sources: https://github.com/hashicorp/terraform/releases/tag/v1.10.0 — https://github.com/hashicorp/terraform/releases/tag/v1.11.0_ | `true` |
 | `provider aws assume_role.role_arn` | Role ARN to assume in every Terraform operation. Preferred over long-term access keys. The role must have a trust policy allowing the CI/CD runner to assume it via OIDC or instance profile. | `"arn:aws:iam::ACCOUNT_ID:role/terraform-execution-prod"` |
 
@@ -672,7 +673,7 @@ Re-check the following in the provider CHANGELOG / Terraform Registry before rel
 
 5. **Native Terraform support for AgentCore Observability** (CloudWatch Transaction Search, endpoint observability): issue #44742 tracks support for the `observability` block. Verify current status.
 
-6. **`aws_bedrockagentcore_agent_runtime` CODE source type (S3 ZIP) via `code_configuration` block** added from version 6.22 (issue #45040). Verify that all parameters (`runtime`, `entrypoint`) are stable in the provider version in use.
+6. **`aws_bedrockagentcore_agent_runtime` CODE source type (S3 ZIP) via `code_configuration` block** added from version 6.22 (issue #45040). Confirmed parameter names: `entry_point` (list), `runtime` (enum e.g. `PYTHON_3_13`), `code { s3 { bucket, prefix } }`. Verify stability in the provider version in use.
 
 7. **When will CDK PolicyEngine be GA or stable?** Currently remains in `aws_cdk.aws_bedrock_agentcore_alpha` without a public timeline.
 

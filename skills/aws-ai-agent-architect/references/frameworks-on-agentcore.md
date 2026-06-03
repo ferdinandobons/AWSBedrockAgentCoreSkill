@@ -549,7 +549,7 @@ response = client.invoke_agent_runtime(
     runtimeSessionId="session-uuid-here",
     payload=json.dumps({"prompt": "What is the weather in Seattle?"}).encode(),
 )
-print(response["body"].read().decode())
+print(response["response"].read().decode())
 ```
 
 ### ARM64 Dockerfile (Python — uv)

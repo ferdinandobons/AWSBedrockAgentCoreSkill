@@ -389,21 +389,21 @@ import { Swarm } from '@strands-agents/sdk/multiagent'
 // Omitting agentId produces the final Swarm result.
 
 const researcher = new Agent({
-  name: 'researcher',
+  id: 'researcher',
   systemPrompt: `You are a research specialist.
     When done researching, return: { agentId: "analyst", message: "<findings>" }
     to hand off to the analyst.`
 })
 
 const analyst = new Agent({
-  name: 'analyst',
+  id: 'analyst',
   systemPrompt: `You are an analyst.
     When analysis is complete, return: { agentId: "writer", message: "<analysis>" }
     to hand off to the writer.`
 })
 
 const writer = new Agent({
-  name: 'writer',
+  id: 'writer',
   systemPrompt: `You are a writer. Write the final report and return:
     { message: "<final report>" } (no agentId — this ends the swarm).`
 })
@@ -423,12 +423,14 @@ const result = await swarm.invoke('Research and analyze AI impact on healthcare'
 console.log(result.status)
 
 // Streaming
+// NOTE: TypeScript uses PascalCase class-based event types (camelCase .type strings),
+// unlike Python which uses snake_case string keys (e.g. 'multiagent_handoff').
 for await (const event of swarm.stream('Analyze Q3 financials')) {
-  if (event.type === 'multiagent_node_start') {
-    console.log(`Agent ${event.nodeId} starting`)
-  } else if (event.type === 'multiagent_handoff') {
-    console.log(`Handoff: ${event.fromNodeIds} -> ${event.toNodeIds}`)
-  } else if (event.type === 'multiagent_result') {
+  if (event.type === 'nodeResultEvent') {
+    console.log(`Agent ${event.nodeId} done`)
+  } else if (event.type === 'multiAgentHandoffEvent') {
+    console.log(`Handoff: ${event.source} -> ${event.targets.join(', ')}`)
+  } else if (event.type === 'multiAgentResultEvent') {
     console.log(`Final: ${event.result.status}`)
   }
 }
@@ -629,13 +631,15 @@ const result = await graph.invoke('Write an article about AI safety')
 console.log(result.status)
 
 // Streaming
+// NOTE: TypeScript uses PascalCase class-based event types (camelCase .type strings),
+// unlike Python which uses snake_case string keys (e.g. 'multiagent_node_start').
 for await (const event of graph.stream('Write about quantum computing')) {
-  if (event.type === 'multiagent_node_start') {
-    console.log(`Node ${event.nodeId} starting`)
-  } else if (event.type === 'multiagent_handoff') {
-    console.log(`Handoff: ${event.fromNodeIds} -> ${event.toNodeIds}`)
-  } else if (event.type === 'multiagent_node_stop') {
+  if (event.type === 'nodeResultEvent') {
     console.log(`Node ${event.nodeId} done`)
+  } else if (event.type === 'multiAgentHandoffEvent') {
+    console.log(`Handoff: ${event.source} -> ${event.targets.join(', ')}`)
+  } else if (event.type === 'multiAgentResultEvent') {
+    console.log(`Final status: ${event.result.status}`)
   }
 }
 ```
@@ -915,7 +919,7 @@ strands_telemetry.setup_otlp_exporter()  # requires OTEL_EXPORTER_OTLP_ENDPOINT
 # S3SessionManager — IAM required: s3:PutObject, s3:GetObject, s3:DeleteObject, s3:ListBucket
 s3_session_manager = S3SessionManager(
     session_id="customer-session-uuid-here",
-    bucket_name="my-agent-sessions-bucket"
+    bucket="my-agent-sessions-bucket"
 )
 
 # Internal agents: NO session manager (otherwise ValueError!)

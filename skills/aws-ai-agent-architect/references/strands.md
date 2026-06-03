@@ -85,7 +85,7 @@ The main class in `strands.agent`. Constructor with ~20 key parameters. Two invo
 
 ### Model Provider Abstraction
 
-All providers implement the `Model` interface and are interchangeable. **Default:** `BedrockModel` with Claude Sonnet 4, uses the Bedrock Converse API (not legacy InvokeModel).
+All providers implement the `Model` interface and are interchangeable. **Default:** `BedrockModel` with Claude Sonnet 4.6 (`anthropic.claude-sonnet-4-6`), uses the Bedrock Converse API (not legacy InvokeModel).
 
 **Official GA providers — Python:**
 - `BedrockModel`, `AnthropicModel`, `OpenAIModel`, `OpenAIResponsesModel`
@@ -139,7 +139,7 @@ Automatic persistence of the complete state (conversation history + agent state 
 
 ### Snapshots (take_snapshot / load_snapshot)
 
-API for manual in-memory state control, distinct from session management. `take_snapshot(preset, include, exclude, app_data)`: preset `'session'` captures `messages`, `state`, `conversation_manager_state`, `interrupt_state`, `system_prompt`. `load_snapshot(snapshot)` restores only the fields present in the snapshot. `app_data` lets you attach transparent application metadata (labels, workflow steps, user preferences — Strands passes it through verbatim without reading it). Useful for explicit save-points, undo/redo, and state inspection. Distinct from session management which is automatic.
+API for manual in-memory state control, distinct from session management. `take_snapshot(preset, include, exclude, app_data)`: preset `'session'` captures `messages`, `state`, `conversation_manager_state`, `interrupt_state`. Note: `system_prompt` is NOT included by default in Python — add it explicitly with `include=["system_prompt"]` if needed. `load_snapshot(snapshot)` restores only the fields present in the snapshot. `app_data` lets you attach transparent application metadata (labels, workflow steps, user preferences — Strands passes it through verbatim without reading it). Useful for explicit save-points, undo/redo, and state inspection. Distinct from session management which is automatic.
 
 ### Streaming (Async Iterator and Callback Handler)
 
@@ -162,7 +162,7 @@ Built-in plugin (`strands.vended_plugins.context_offloader`) that prevents conte
 
 ## Best practices
 
-- **Use `BedrockModel` as the default provider on AWS; specify `model_id` as a string in the `Agent` constructor for simplicity** — Does not require extra imports; credential resolution happens automatically via boto3 (IAM role > env var > AWS profile). Works on ECS/Lambda/EC2 without explicit configuration. `Agent(model='anthropic.claude-sonnet-4-20250514-v1:0')` is equivalent to `Agent(model=BedrockModel(model_id='...'))`. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
+- **Use `BedrockModel` as the default provider on AWS; specify `model_id` as a string in the `Agent` constructor for simplicity** — Does not require extra imports; credential resolution happens automatically via boto3 (IAM role > env var > AWS profile). Works on ECS/Lambda/EC2 without explicit configuration. `Agent(model='anthropic.claude-sonnet-4-6')` is equivalent to `Agent(model=BedrockModel(model_id='...'))`. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
 
 - **Always set `region_name` on `BedrockModel` or `AWS_DEFAULT_REGION` explicitly; do not rely on `AWS_REGION`** — boto3 has a non-obvious priority order: `BedrockModel(region_name=...)` > boto3 session region (AWS_DEFAULT_REGION or profile) > `AWS_REGION` > default (us-west-2). `AWS_REGION` is the lowest-priority fallback (just above the hardcoded default) and can cause surprises in production; prefer `AWS_DEFAULT_REGION` or `BedrockModel(region_name=...)`. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
 
@@ -236,7 +236,7 @@ _Source: https://pypi.org/project/strands-agents/_
 ```python
 from strands import Agent
 
-# BedrockModel + Claude Sonnet 4 are the default
+# BedrockModel + Claude Sonnet 4.6 are the default
 # BedrockModel uses the Bedrock Converse API internally (not legacy InvokeModel)
 # Requires: AWS credentials configured (IAM role, env var, or aws configure)
 agent = Agent()
@@ -246,7 +246,7 @@ print(result.stop_reason)   # 'end_turn'
 print(result.metrics.get_summary())  # latency, token usage, tool stats
 
 # Shortcut: model as string automatically creates BedrockModel
-agent2 = Agent(model="anthropic.claude-sonnet-4-20250514-v1:0")
+agent2 = Agent(model="anthropic.claude-sonnet-4-6")
 
 # Debug logging
 import logging
@@ -272,7 +272,7 @@ from strands.types.agent import ConcurrentInvocationMode
 from strands_tools import calculator, current_time
 
 model = BedrockModel(
-    model_id="anthropic.claude-sonnet-4-20250514-v1:0",
+    model_id="anthropic.claude-sonnet-4-6",
     region_name="us-east-1",
     temperature=0.3,
     max_tokens=4096,
@@ -324,7 +324,7 @@ boto_config = BotocoreConfig(
 
 # Standard configuration with caching and guardrails
 model = BedrockModel(
-    model_id="anthropic.claude-sonnet-4-20250514-v1:0",
+    model_id="anthropic.claude-sonnet-4-6",
     region_name="us-east-1",
     temperature=0.3,
     top_p=0.8,
@@ -350,9 +350,9 @@ model = BedrockModel(
 
 agent = Agent(model=model)
 
-# With reasoning/extended thinking (Claude 4 Sonnet)
+# With reasoning/extended thinking (Claude Sonnet 4.6)
 model_reasoning = BedrockModel(
-    model_id="us.anthropic.claude-sonnet-4-20250514-v1:0",
+    model_id="us.anthropic.claude-sonnet-4-6",
     region_name="us-east-1",
     additional_request_fields={
         "thinking": {
@@ -362,9 +362,9 @@ model_reasoning = BedrockModel(
     },
 )
 
-# Interleaved thinking (Claude 4) — also requires anthropic_beta
+# Interleaved thinking (Claude Sonnet 4.6) — also requires anthropic_beta
 model_interleaved = BedrockModel(
-    model_id="us.anthropic.claude-sonnet-4-20250514-v1:0",
+    model_id="us.anthropic.claude-sonnet-4-6",
     additional_request_fields={
         "anthropic_beta": ["interleaved-thinking-2025-05-14"],
         "thinking": {"type": "enabled", "budget_tokens": 8000},
@@ -377,7 +377,7 @@ session = boto3.Session(
     region_name="us-east-1",
 )
 model_with_session = BedrockModel(
-    model_id="anthropic.claude-sonnet-4-20250514-v1:0",
+    model_id="anthropic.claude-sonnet-4-6",
     boto_session=session,
 )
 ```
@@ -868,7 +868,9 @@ agent("Remember that my name is Alice")
 
 # Capture snapshot (in-memory, manual control)
 # preset='session' includes: messages, state, conversation_manager_state,
-#                            interrupt_state, system_prompt
+#                            interrupt_state
+# Note: system_prompt is NOT included by default in Python.
+# To include it: agent.take_snapshot(preset="session", include=["system_prompt"])
 snapshot = agent.take_snapshot(preset="session")
 
 # With custom app_data — Strands does not read it, passes through verbatim
@@ -1020,8 +1022,8 @@ agent_file = Agent(
     plugins=[
         ContextOffloader(
             storage=FileStorage("./artifacts"),
-            max_result_tokens=5_000,   # offloading threshold (default: 10k)
-            preview_tokens=2_000,      # preview kept in context (default: 500)
+            max_result_tokens=5_000,   # offloading threshold (default: 2500)
+            preview_tokens=2_000,      # preview kept in context (default: 1000)
             include_retrieval_tool=True,
         )
     ],
@@ -1094,7 +1096,7 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 | `AWS_BEARER_TOKEN_BEDROCK` | Bearer token for alternative authentication to Bedrock (not SigV4). Alternative to IAM keys. | `export AWS_BEARER_TOKEN_BEDROCK=<token>` |
 | `ANTHROPIC_API_KEY` | API key for `AnthropicModel` (direct access, not via Bedrock). Required when using `strands.models.anthropic`. | `export ANTHROPIC_API_KEY=sk-ant-...` |
 | `OPENAI_API_KEY` | API key for `OpenAIModel`. Can also be passed via `client_args={'api_key': ...}`. | `export OPENAI_API_KEY=sk-...` |
-| `BedrockModel.model_id` | Bedrock model ID. Default: Claude Sonnet 4 us cross-region inference. Cross-region requires regional prefix. | `anthropic.claude-sonnet-4-20250514-v1:0` \| `us.anthropic.claude-sonnet-4-20250514-v1:0` |
+| `BedrockModel.model_id` | Bedrock model ID. Default: Claude Sonnet 4.6. Cross-region inference requires geo prefix. | `anthropic.claude-sonnet-4-6` \| `us.anthropic.claude-sonnet-4-6` |
 | `BedrockModel.region_name` | Bedrock region. Highest priority in resolution after BedrockModel constructor. Default: `us-west-2`. | `us-east-1` |
 | `BedrockModel.temperature` | Model output randomness (0.0–1.0). Lower values = more deterministic. | `0.3` |
 | `BedrockModel.max_tokens` | Maximum number of tokens to generate in the response. | `4096` |
@@ -1131,7 +1133,7 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 
 - `MaxTokensReachedException` / `stop_reason='max_tokens'` is NOT recoverable within the current loop. The loop ends immediately. `Limits` (`limit_turns`, `limit_total_tokens`, `limit_output_tokens`) are different: they terminate gracefully and leave `agent.messages` in a reinvocable state.
 
-- `Agent` constructor with `model=None` uses `BedrockModel` as default. Passing `model='model-id-string'` automatically creates a `BedrockModel` with that `model_id`. These two patterns are equivalent: `Agent()` and `Agent(model='anthropic.claude-sonnet-4-20250514-v1:0')`.
+- `Agent` constructor with `model=None` uses `BedrockModel` as default. Passing `model='model-id-string'` automatically creates a `BedrockModel` with that `model_id`. These two patterns are equivalent: `Agent()` and `Agent(model='anthropic.claude-sonnet-4-6')`.
 
 - `invocation_state` is a dictionary **shared by reference** between all hooks and tools during the same invocation. Changes in one hook are visible to subsequent hooks and tools. Not thread-safe if using `UNSAFE_REENTRANT`.
 

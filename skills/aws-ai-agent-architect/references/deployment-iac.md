@@ -532,8 +532,8 @@ resource "awscc_bedrock_flow_version" "v1" {
 }
 
 resource "awscc_bedrock_flow_alias" "prod" {
-  flow_identifier = aws_bedrockagent_flow.this.id
-  name            = "prod"
+  flow_arn = aws_bedrockagent_flow.this.arn
+  name     = "prod"
   routing_configuration = [{
     flow_version = awscc_bedrock_flow_version.v1.version
   }]
@@ -598,7 +598,7 @@ resource "aws_bedrock_custom_model" "finetune" {
     s3_uri = "s3://${aws_s3_bucket.training.id}/output/"
   }
 
-  hyper_parameters = {
+  hyperparameters = {
     epochCount             = "1"
     batchSize              = "8"
     learningRate           = "0.00001"
@@ -1061,10 +1061,12 @@ resource "aws_bedrockagentcore_gateway_target" "lambda_target" {
             description = "Retrieve current weather for a location"
             input_schema {
               type = "object"
-              properties = jsonencode({
-                location = { type = "string", description = "City and country" }
-              })
-              required = ["location"]
+              property {
+                name        = "location"
+                type        = "string"
+                description = "City and country"
+                required    = true
+              }
             }
           }
         }
