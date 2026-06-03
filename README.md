@@ -2,89 +2,50 @@
 
 [![version](https://img.shields.io/badge/version-0.1.0-blue)](.claude-plugin/plugin.json) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-orange)](https://code.claude.com/docs/en/plugins)
 
-> The **definitive, source-cited playbook** that lets a coding agent (especially Claude) **autonomously design, configure, deploy, and troubleshoot production-grade AI agents on AWS** — with every recommendation traceable to an official AWS source it can re-open.
+> **Your coding agent already "knows" AWS agents. That is the problem.**
 
-This repository is a **Claude Code plugin** that bundles the `aws-bedrock-agentcore-skill` skill. Hand it to a coding agent and, knowing nothing about AWS agents up front, it can stand up the *right* agent for the user's use case — applying official AWS best practices instead of guessing.
+Ask a generic LLM to build an agent on AWS and it will confidently write code from stale training data: `InvokeModel` where the Converse API is required, a bare-string `serviceTier` that throws `ParamValidationError`, a deprecated `structured_output()`, an `agentRuntimeVersion="v2"` the API rejects, a 1-hour prompt-cache TTL on a model that only supports 5 minutes. It reads fine in review. It breaks on deploy, and you lose the afternoon finding out why.
 
-It is **not** a single template. It is a decision engine + reference library: a routing `SKILL.md`, 20 deep reference files, ready-to-adapt assets, and a 369-URL official source index.
+**AWSBedrockAgentCoreSkill** is a Claude Code plugin that hands the agent the *current, official* answer for each of those, with the source URL attached, so it builds the right agent the first time instead of guessing.
 
----
+It is not a single template. It is a **decision engine plus a reference library**: a routing `SKILL.md` that maps a use case to the right stack and the exact files to open, 20 deep reference files, copy-paste assets, and a 369-URL official source index. Every recommendation is traceable to an official AWS source the agent can re-open.
 
-## Why this exists
+Scope: **Strands Agents**, **Amazon Bedrock** (Converse, Guardrails, Knowledge Bases), and **Amazon Bedrock AgentCore** (Runtime, Memory, Gateway, Identity, Browser/Code Interpreter), with Terraform-first IaC and CloudWatch/OpenTelemetry observability.
 
-AWS agent APIs are full of version-specific gotchas that generic model knowledge gets wrong — Converse vs the legacy `InvokeModel`, the 5× token burndown, the boto3 region-resolution order, the ARM64 AgentCore runtime contract, asynchronous long-term memory, prompt-cache TTL support per model. This skill encodes the **current, official** answers and, crucially, **cites the source for each one** so the agent (and you) can verify and re-read it.
-
-Design principles baked in:
-
-- **Official sources only.** Every best practice and code snippet carries an inline `_Source:_` URL. Provenance is tiered (AWS service docs, the Strands SDK site, the official Terraform registry, AWS GitHub orgs); the two non-AWS sources (the cross-vendor A2A protocol spec and an optional Langfuse OTEL backend) are explicitly labelled, and third-party blogs are excluded.
-- **Autonomous building.** A primary decision tree maps a use case → recommended stack → exactly which reference files to open (progressive disclosure).
-- **Maturity-aware.** Every feature is labelled **GA / Preview**; Preview is never proposed as a production default.
-- **Data-aware.** Volatile facts (live prices, default quotas, current model IDs/regions) are deliberately deferred to the AWS console / model cards instead of being hard-coded to rot.
-- **Conflict rule.** If two parts disagree, the detailed `references/` file wins over the summary/matrices; when unsure, re-verify the official URL in `references/sources.md`.
-
----
-
-## Install
-
-This repo is both a **plugin** and a single-plugin **marketplace** (`aws-agent-skills`).
-
-### From a Git host (recommended)
+## Quickstart
 
 ```text
-# 1) Add this repo as a marketplace
 /plugin marketplace add ferdinandobons/AWSBedrockAgentCoreSkill
-
-# 2) Install the plugin
 /plugin install aws-bedrock-agentcore-skill@aws-agent-skills
-
-# 3) Confirm
-/plugin list
 ```
 
-> `/plugin marketplace add` also accepts a full Git URL (`https://github.com/ferdinandobons/AWSBedrockAgentCoreSkill.git`) or a `owner/repo@ref` form. The repository is currently **private** — make it public (`gh repo edit --visibility public`) for others to install, or installers must have repo access.
+Then just describe the agent you want ("build a support agent on AWS that answers from our PDFs and remembers each customer"). The skill triggers automatically and routes the agent to the right pattern. Detailed install options are [below](#install-options).
 
-### Try it locally (no install)
-
-```bash
-# From the repository root
-claude --plugin-dir "/path/to/AWSBedrockAgentCoreSkill"
-# After edits, inside the session:
-/reload-plugins
-```
-
-### Validate the plugin
-
-```bash
-claude plugin validate .
-```
-
-### Use it as a plain skill (without the plugin system)
-
-Copy the skill directory into your skills folder:
-
-```bash
-cp -r skills/aws-bedrock-agentcore-skill ~/.claude/skills/
-```
-
-### Uninstall
-
-```text
-/plugin uninstall aws-bedrock-agentcore-skill@aws-agent-skills
-# or temporarily:
-/plugin disable aws-bedrock-agentcore-skill
-```
+> The repository is currently **private**. Run `gh repo edit ferdinandobons/AWSBedrockAgentCoreSkill --visibility public` to let others install it.
 
 ---
 
-## How it triggers
+## Why it is different from "just ask the model"
 
-The skill is description-driven: Claude consults it automatically whenever a task involves building, configuring, deploying, securing, monitoring, or debugging an AI agent on AWS — even if the specific service isn't named. You can also invoke it explicitly with `/aws-bedrock-agentcore-skill:aws-bedrock-agentcore-skill`.
+- **Every claim cites an official source.** 636 inline `_Source:` citations across 20 reference files, indexed in [`sources.md`](skills/aws-bedrock-agentcore-skill/references/sources.md) (369 unique official URLs). When the agent recommends something, it can show you the page it came from, and re-open it when it needs more.
+- **It chooses the pattern, not just the API.** A decision tree routes the use case (chatbot, tool-using agent, RAG, multi-agent, serverless production, memory, auth, guardrails, observability, IaC) to a recommended stack and the exact reference files to open. No dumping 19,000 lines into context: it opens only what the task needs.
+- **Built to be correct, then adversarially checked.** Researched from official docs, then run through a build-simulation audit ("could an agent build this use case from the skill alone?"), a full cross-file review, and a pass that verified **292 code snippets piece by piece against official documentation** (by reading the docs, not executing code). That pass alone caught real runtime bugs: wrong `serviceTier` shape, deprecated `structured_output`, `response['body']` vs `response['response']`, list-vs-dict configuration bundles, `agentRuntimeVersion` format.
+- **Maturity-aware.** Every feature is labelled **GA** or **Preview**, and Preview is never proposed as a production default.
+- **Honest on purpose.** Volatile facts (live prices, default quotas, current model IDs and regions) are deferred to the AWS console instead of being hard-coded to rot. Anything no official page could confirm is flagged "verify live" rather than asserted as fact.
 
-**Example prompts that activate it:**
+These are exactly the version-specific traps that cost hours when an agent gets them wrong, and the reason a source-cited skill beats generic model knowledge for this domain.
+
+---
+
+## What you type, what it does
+
+The skill is description-driven: Claude consults it automatically whenever a task involves building, configuring, deploying, securing, monitoring, or debugging an AI agent on AWS, even if the specific service is not named. You can also invoke it explicitly with `/aws-bedrock-agentcore-skill:aws-bedrock-agentcore-skill`.
+
+Prompts that activate it:
 
 - "Build a customer-support agent on AWS that answers from our PDFs and remembers each customer across sessions."
 - "Productionize my Strands agent on AgentCore Runtime with guardrails and observability, deployed with Terraform."
-- "I need 3 specialist agents with conditional routing — which Strands pattern, and how do I stop it looping forever?"
+- "I need 3 specialist agents with conditional routing. Which Strands pattern, and how do I stop it looping forever?"
 - "Which inference profile and model should I use on Bedrock to control cost?"
 - "Write least-privilege IAM for a Bedrock agent."
 
@@ -160,19 +121,60 @@ The `SKILL.md` decision tree routes across the full realistic use-case space:
 
 ---
 
-## Provenance & maintenance
+## How it was built and verified
 
-- **Provenance:** see [`skills/aws-bedrock-agentcore-skill/references/sources.md`](skills/aws-bedrock-agentcore-skill/references/sources.md) for the full topic → official-URL map and the source policy.
-- **Built and audited with multi-agent workflows:** the content was researched from official docs, then put through a build-simulation audit (can an agent build autonomously from it alone?), a full cross-file review (bugs, contradictions, unverified sources, coverage), and a verified fix pass. Source claims were checked against live AWS docs.
-- **Data-aware:** model IDs, prices, and quotas change — the skill points to the live model cards, Bedrock pricing page, and Service Quotas console for exact numbers. Re-verify time-sensitive facts before relying on them.
-- **Maturity labels** track AWS GA/Preview status as of mid-2026; re-check the cited page for the current state.
+This is not a one-shot generation. The content was researched from official documentation, then put through several adversarial passes, each one fixing real defects:
+
+1. **Build-simulation audit:** an agent tried to build each use case using only the skill, and logged every point where it had to guess or leave the skill.
+2. **Full cross-file review:** per-file checks for bugs, contradictions, unverified sources, and coverage gaps, plus cross-file consistency.
+3. **Snippet verification:** 292 code snippets checked one by one against the official API references, SDK docs, and provider registries (no code executed).
+
+Source claims were checked against live AWS and Strands docs throughout. See [`sources.md`](skills/aws-bedrock-agentcore-skill/references/sources.md) for the full topic to official-URL map and the provenance policy (AWS service docs, the Strands SDK site, the official Terraform registry, and AWS GitHub orgs; the two non-AWS sources, the cross-vendor A2A protocol spec and an optional Langfuse OTEL backend, are explicitly labelled; third-party blogs are excluded).
+
+## What it does not do (so you can trust what it does)
+
+- **It does not execute code against a live account.** Snippets are verified against official docs, which catches API-shape and naming errors but not account-specific issues. Validate the generated config on a real account before production (IAM actually attaches, quotas, region availability, cost).
+- **It does not freeze AWS in time.** AgentCore ships features monthly. Treat maturity labels and version-specific facts as suspect after roughly 3 to 6 months and re-verify via the cited sources. Maintenance guidance lives in [`CLAUDE.md`](CLAUDE.md).
+- **It is not an official AWS distribution.** It is an independent, source-cited best-practices skill.
+
+---
+
+## Install options
+
+This repo is both a **plugin** and a single-plugin **marketplace** (`aws-agent-skills`).
+
+**From a Git host (recommended):**
+
+```text
+/plugin marketplace add ferdinandobons/AWSBedrockAgentCoreSkill
+/plugin install aws-bedrock-agentcore-skill@aws-agent-skills
+/plugin list
+```
+
+`/plugin marketplace add` also accepts a full Git URL (`https://github.com/ferdinandobons/AWSBedrockAgentCoreSkill.git`) or an `owner/repo@ref` form.
+
+**Try it locally (no install):**
+
+```bash
+claude --plugin-dir "/path/to/AWSBedrockAgentCoreSkill"
+# after edits, inside the session:
+/reload-plugins
+```
+
+**Validate the plugin:** `claude plugin validate .`
+
+**Use it as a plain skill (without the plugin system):** `cp -r skills/aws-bedrock-agentcore-skill ~/.claude/skills/`
+
+**Uninstall:** `/plugin uninstall aws-bedrock-agentcore-skill@aws-agent-skills` (or `/plugin disable aws-bedrock-agentcore-skill` to keep it installed but off).
+
+---
 
 ## Versioning
 
-Semantic versioning in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). Current: **0.1.0** (initial release). Bump on every change you want to ship to installers.
+Semantic versioning in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). Current: **0.1.0** (initial release). Bump on every change you ship to installers.
 
 ## License
 
 [MIT](LICENSE) © 2026 Ferdinando Bons.
 
-> Strands Agents, Amazon Bedrock, and Amazon Bedrock AgentCore are products of Amazon Web Services. This is an independent, source-cited best-practices skill and is not an official AWS distribution.
+> Strands Agents, Amazon Bedrock, and Amazon Bedrock AgentCore are products of Amazon Web Services. This is an independent, source-cited best-practices skill, not an official AWS distribution.
