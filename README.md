@@ -31,8 +31,8 @@ This repo is both a **plugin** and a single-plugin **marketplace** (`aws-agent-s
 ### From a Git host (recommended)
 
 ```text
-# 1) Add this repo as a marketplace (replace with your fork/remote)
-/plugin marketplace add <your-username>/aws-ai-agent-architect
+# 1) Add this repo as a marketplace
+/plugin marketplace add ferdinandobons/aws-ai-agent-architect
 
 # 2) Install the plugin
 /plugin install aws-ai-agent-architect@aws-agent-skills
@@ -41,7 +41,7 @@ This repo is both a **plugin** and a single-plugin **marketplace** (`aws-agent-s
 /plugin list
 ```
 
-> `/plugin marketplace add` also accepts a full Git URL (`https://github.com/<you>/aws-ai-agent-architect.git`) or a `owner/repo@ref` form.
+> `/plugin marketplace add` also accepts a full Git URL (`https://github.com/ferdinandobons/aws-ai-agent-architect.git`) or a `owner/repo@ref` form. The repository is currently **private** — make it public (`gh repo edit --visibility public`) for others to install, or installers must have repo access.
 
 ### Try it locally (no install)
 

@@ -6,6 +6,8 @@
   "author": {
     "name": "Ferdinando Bons"
   },
+  "homepage": "https://github.com/ferdinandobons/aws-ai-agent-architect",
+  "repository": "https://github.com/ferdinandobons/aws-ai-agent-architect",
   "license": "MIT",
   "keywords": [
     "aws",
