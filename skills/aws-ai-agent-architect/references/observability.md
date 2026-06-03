@@ -496,7 +496,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observabi
 
 ```python
 # requirements.txt:
-# bedrock-agentcore-starter-toolkit
+# bedrock-agentcore   # deploy via the AgentCore CLI (npm i -g @aws/agentcore); the starter-toolkit is legacy
 # strands-agents[otel]
 # langfuse
 # boto3
@@ -523,8 +523,8 @@ os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = (
 )
 
 # Step 4: Pass DISABLE_ADOT_OBSERVABILITY=true in AgentCore Runtime env vars
-# This goes in env_vars at runtime launch time (NOT as local os.environ)
-# Example with bedrock-agentcore-starter-toolkit:
+# This goes in env_vars at deploy/launch time (NOT as a local os.environ)
+# Set it via the AgentCore CLI runtime config (or, with the bedrock-agentcore SDK, at launch):
 # runtime.launch(
 #     env_vars={
 #         "DISABLE_ADOT_OBSERVABILITY": "true",

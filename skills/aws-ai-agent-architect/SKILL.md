@@ -87,8 +87,8 @@ START: What does the user need the agent to do?
    • Low-code, AWS-managed agent     → Amazon Bedrock managed Agents (InvokeAgent / action groups).
    • Fixed visual pipeline (a DAG)    → Amazon Bedrock Flows.
    • Migrating an OpenAI-SDK app      → Amazon Bedrock Responses API (bedrock-mantle, OpenAI-compatible).
-   • Non-Strands framework (LangGraph/CrewAI/LlamaIndex/Google ADK) → host it on AgentCore Runtime
-                                        (framework-agnostic) → frameworks-on-agentcore.md.
+   • Non-Strands framework (LangGraph/CrewAI/LlamaIndex/Google ADK/OpenAI Agents SDK/…) → host it on
+                                        AgentCore Runtime (framework-agnostic) → frameworks-on-agentcore.md.
      For the managed/alternative paths, open: managed-alternatives.md
      Language note: Python is primary; for TypeScript-SDK differences (Workflow is Python-only, Graph
      edge semantics differ), see frameworks-on-agentcore.md.

@@ -138,7 +138,7 @@ The `agentcore dev` command:
 - Starts a local HTTP server on `http://localhost:8080` that exposes `/invocations` (POST) and `/ping` (GET) — the exact contract required by AgentCore Runtime.
 - Supports hot-reload. Use `--logs` to tail server logs in non-interactive mode.
 
-> The `bedrock-agentcore-starter-toolkit` package is **deprecated**. Uninstall it to avoid conflicts: `pip uninstall bedrock-agentcore-starter-toolkit`. _Source: [strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
+> The `bedrock-agentcore-starter-toolkit` package's deployment and scaffolding path is **replaced** by the AgentCore CLI. Its `Evaluation` class remains a valid on-demand evaluation interface. Uninstall it only if you encounter import conflicts with the new `bedrock-agentcore` SDK: `pip uninstall bedrock-agentcore-starter-toolkit`. _Source: [strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
 ### BedrockAgentCoreApp SDK wrapper (manual)
 
@@ -308,7 +308,7 @@ Ten built-in evaluators use an LLM as judge (default: Claude 4 via Amazon Bedroc
 | `ToolSelectionAccuracyEvaluator` | Was choosing this tool justified? |
 | `ToolParameterAccuracyEvaluator` | Were the tool parameters correct? |
 | `GoalSuccessRateEvaluator` | Did the user achieve their goal across the session? |
-| `CorrectnessEvaluator` | Factual accuracy |
+| `CorrectnessEvaluator` | Factual accuracy (verify exact class name before use) |
 
 ```python
 from strands import Agent
@@ -397,7 +397,7 @@ _Source: [strandsagents.com/blog/toolsimulator-scalable-tool-testing-ai-agents/]
 
 ## Phase 3 — Pre-production evaluation with AgentCore Evaluations
 
-AgentCore Evaluations (GA) computes goal attainment, tool invocation accuracy, and custom metrics against agent traces stored in CloudWatch. It works with agents hosted on AgentCore Runtime **and** agents hosted externally. Supported frameworks: Strands Agents and LangGraph.
+AgentCore Evaluations (GA) computes goal attainment, tool invocation accuracy, and custom metrics against agent traces stored in CloudWatch. It works with agents hosted on AgentCore Runtime **and** agents hosted externally. It works for any agent emitting OpenTelemetry spans to CloudWatch (Strands, LangGraph, CrewAI, Google ADK, etc.).
 
 See [observability.md](observability.md) for how to enable ADOT instrumentation and CloudWatch Transaction Search.
 
@@ -442,7 +442,7 @@ session_id = "test-session-18a1dba0-62a0-462g"
 response = agent_core_client.invoke_agent_runtime(
     agentRuntimeArn="arn:aws:...",
     runtimeSessionId=session_id,
-    payload=json.dumps({"prompt": "Analyze this text..."}),
+    payload=json.dumps({"prompt": "Analyze this text..."}).encode(),
     qualifier="DEFAULT",
 )
 
@@ -491,7 +491,7 @@ AgentCore Runtime versions are **immutable** — every configuration change (con
 
 _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html)_
 
-**Endpoint lifecycle states:** `CREATING` → `READY` → `UPDATING` → `READY` (or `CREATE_FAILED` / `UPDATE_FAILED`). Updates happen without downtime.
+**Endpoint lifecycle states:** `CREATING` → `READY` → `UPDATING` → `READY` → `DELETING` (or `CREATE_FAILED` / `UPDATE_FAILED`). Updates happen without downtime.
 
 _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html)_
 
@@ -515,8 +515,8 @@ client = boto3.client("bedrock-agentcore", region_name="us-west-2")
 # Create a production endpoint pinned to V2
 client.create_agent_runtime_endpoint(
     agentRuntimeId="agent-runtime-12345",
-    endpointName="production-endpoint",
-    agentRuntimeVersion="v2",
+    name="production-endpoint",
+    agentRuntimeVersion="2",
     description="Stable production endpoint",
 )
 
@@ -524,7 +524,7 @@ client.create_agent_runtime_endpoint(
 client.update_agent_runtime_endpoint(
     agentRuntimeId="agent-runtime-12345",
     endpointName="production-endpoint",
-    agentRuntimeVersion="v3",
+    agentRuntimeVersion="3",
     description="Promoted after staging eval passed",
 )
 ```
@@ -537,7 +537,7 @@ _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-ve
 response = agent_core_client.invoke_agent_runtime(
     agentRuntimeArn="arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/...",
     runtimeSessionId="session-abc-123-...",
-    payload=json.dumps({"prompt": "Hello"}),
+    payload=json.dumps({"prompt": "Hello"}).encode(),
     qualifier="DEFAULT",          # or "production-endpoint", "staging-endpoint"
 )
 ```
@@ -628,15 +628,14 @@ client = boto3.client("bedrock-agentcore-control", region_name="us-east-1")
 # Create a bundle
 bundle = client.create_configuration_bundle(
     bundleName="my_agent_config",
-    components=[
-        {
-            "resourceArn": "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/my-agent",
+    components={
+        "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/my-agent": {
             "configuration": {
                 "systemPrompt": "You are a helpful customer support agent...",
                 "modelId": "anthropic.claude-sonnet-4-5",
-            },
+            }
         }
-    ],
+    },
 )
 
 # Update the bundle (creates a new immutable version)
@@ -644,15 +643,14 @@ updated = client.update_configuration_bundle(
     bundleId=bundle["bundleId"],
     parentVersionIds=[bundle["versionId"]],
     commitMessage="Optimized system prompt for helpfulness",
-    components=[
-        {
-            "resourceArn": "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/my-agent",
+    components={
+        "arn:aws:bedrock-agentcore:us-east-1:123456789012:runtime/my-agent": {
             "configuration": {
                 "systemPrompt": "You are an expert customer support agent...",
                 "modelId": "anthropic.claude-sonnet-4-5",
-            },
+            }
         }
-    ],
+    },
 )
 
 # Rollback: just reference the previous versionId in your endpoint or A/B test
@@ -724,6 +722,7 @@ client.update_agent_runtime_endpoint(
     description=f"Promoted to production: v{new_version}",
 )
 print(f"Production endpoint updated to version {new_version}")
+# Usage: python promote_to_production.py my-agent-id 3
 ```
 
 _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html)_
@@ -791,6 +790,7 @@ _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/dataset-evaluati
 | `READY` | Accepting requests |
 | `UPDATING` | Being updated to a new version |
 | `UPDATE_FAILED` | Update failed |
+| `DELETING` | Endpoint deletion in progress |
 
 _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html)_
 
@@ -798,7 +798,7 @@ _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-w
 
 ## Gotchas
 
-1. **The `bedrock-agentcore-starter-toolkit` is deprecated.** Uninstall it before installing the new `bedrock-agentcore` SDK and AgentCore CLI to avoid import conflicts. _Source: [strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
+1. **The `bedrock-agentcore-starter-toolkit`'s deployment/scaffolding path is replaced by the AgentCore CLI.** Its `Evaluation` class remains a valid on-demand evaluation interface. Uninstall it only on import conflicts with the new `bedrock-agentcore` SDK: `pip uninstall bedrock-agentcore-starter-toolkit`. _Source: [strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
 2. **CloudWatch Transaction Search must be enabled before evaluating.** Evaluation jobs query span data from CloudWatch. If Transaction Search is disabled, spans are never written and evaluation returns empty results with no obvious error. _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-on-demand.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-on-demand.html)_
 

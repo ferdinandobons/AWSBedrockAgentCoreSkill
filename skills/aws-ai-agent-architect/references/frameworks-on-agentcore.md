@@ -162,6 +162,7 @@ response = client.create_agent_runtime(
         }
     },
     networkConfiguration={"networkMode": "PUBLIC"},
+    protocolConfiguration={"serverProtocol": "HTTP"},
     roleArn="arn:aws:iam::123456789012:role/AgentCoreRuntimeRole",
 )
 ```
@@ -214,7 +215,7 @@ app = BedrockAgentCoreApp()
 def agent_invocation(payload, context):
     user_message = payload.get("prompt", "No prompt provided")
     result = agent(user_message)
-    return {"result": result.message}
+    return {"result": str(result)}
 
 app.run()
 ```
@@ -319,7 +320,7 @@ app = BedrockAgentCoreApp()
 @app.entrypoint
 async def agent_invocation(payload, context):
     response = await agent.run(payload.get("prompt", ""))
-    return response.response.content
+    return {"result": str(response)}
 
 app.run()
 ```
@@ -424,7 +425,7 @@ _Source: [TypeScript deployment — Strands Agents Docs](https://strandsagents.c
 
 ## Strands Python vs TypeScript SDK differences
 
-This section summarizes the key behavioral differences between the Strands Agents Python SDK (`strands-agents` v1.42.0, June 2026) and the TypeScript SDK (`@strands-agents/sdk` v1.3.0, May 2026).
+This section summarizes the key behavioral differences between the Strands Agents Python SDK (`strands-agents` v1.42.0, June 2026) and the TypeScript SDK (`@strands-agents/sdk` v1.4.0, June 2026; re-verify — changes frequently).
 
 > The TypeScript SDK is the active codebase; the original `sdk-typescript` repository has been archived and development moved to the `strands-agents/harness-sdk` monorepo.
 
@@ -463,7 +464,7 @@ _Source: [Graph — Strands Agents TypeScript API](https://strandsagents.com/doc
 | Streaming | `agent.stream_async()` | `agent.stream()` (AsyncGenerator) |
 | AgentCore CLI scaffolding | `agentcore create --framework Strands` | `agentcore create … --language TypeScript --framework Strands` |
 
-_Sources: [Strands Python SDK — GitHub](https://github.com/strands-agents/sdk-python), [Strands TypeScript SDK — GitHub](https://github.com/strands-agents/sdk-typescript), [AgentCore CLI get started (TypeScript)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli-typescript.html)_
+_Sources: [Strands Python SDK — GitHub](https://github.com/strands-agents/sdk-python), [Strands TypeScript SDK — GitHub](https://github.com/strands-agents/sdk-typescript) (archived; active repo: [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk)), [AgentCore CLI get started (TypeScript)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli-typescript.html)_
 
 ### Current SDK versions (June 2026)
 
@@ -471,7 +472,7 @@ _Sources: [Strands Python SDK — GitHub](https://github.com/strands-agents/sdk-
 |---|---|---|
 | `strands-agents` (Python) | 1.42.0 | `pip install strands-agents` |
 | `strands-agents-tools` (Python) | 0.7.0 | `pip install strands-agents-tools` |
-| `@strands-agents/sdk` (TypeScript) | 1.3.0 | `npm install @strands-agents/sdk` |
+| `@strands-agents/sdk` (TypeScript) | 1.4.0 | `npm install @strands-agents/sdk` |
 | `bedrock-agentcore` (Python SDK) | 1.13.0 | `pip install bedrock-agentcore` |
 | AgentCore CLI | latest | `npm install -g @aws/agentcore` |
 
@@ -726,4 +727,4 @@ _Source: [Graph user guide — SDK Differences section](https://strandsagents.co
 - [strands-agents-tools — PyPI](https://pypi.org/project/strands-agents-tools/)
 - [bedrock-agentcore — PyPI](https://pypi.org/project/bedrock-agentcore/)
 - [strands-agents/sdk-python — GitHub](https://github.com/strands-agents/sdk-python)
-- [strands-agents/sdk-typescript — GitHub](https://github.com/strands-agents/sdk-typescript)
+- [strands-agents/sdk-typescript — GitHub](https://github.com/strands-agents/sdk-typescript) _(archived; development moved to [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk) monorepo, `strands-ts/` directory)_

@@ -114,7 +114,7 @@ Do **not** use Intelligent Prompt Router when:
 aws bedrock create-prompt-router \
     --prompt-router-name my-claude-router \
     --models '[{"modelArn": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0"}]' \
-    --fallback-model '[{"modelArn": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0"}]' \
+    --fallback-model '{"modelArn": "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-haiku-20241022-v1:0"}' \
     --routing-criteria '{"responseQualityDifference": 0.5}'
 ```
 _Source: [Understanding intelligent prompt routing in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-routing.html)_
@@ -136,7 +136,7 @@ response = bedrock.converse(
 
 # The response includes the actual model used
 print(response["output"]["message"]["content"][0]["text"])
-# response["metrics"] contains routing metadata
+# response["trace"]["promptRouter"]["invokedModelId"] holds the ARN of the model actually invoked
 ```
 _Source: [Understanding intelligent prompt routing in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-routing.html)_
 
@@ -147,7 +147,7 @@ _Source: [Understanding intelligent prompt routing in Amazon Bedrock](https://do
 | `promptRouterName` | string | Unique name for the router resource |
 | `models[].modelArn` | string | ARN of the secondary model (cheaper / faster) |
 | `fallbackModel[].modelArn` | string | ARN of the primary (higher-quality) model; used when routing criteria not met |
-| `routingCriteria.responseQualityDifference` | float (0–1) | Threshold: how much better the fallback model must be for requests to stay on it. Lower = route to cheaper model more aggressively |
+| `routingCriteria.responseQualityDifference` | float (0–100) | Threshold: how much better the fallback model must be for requests to stay on it. Lower = route to cheaper model more aggressively. The value is a percentage: 0.5 means 0.5%, 50 means 50% |
 | `description` | string (optional) | Human-readable description |
 
 _Source: [CreatePromptRouter API Reference](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_CreatePromptRouter.html)_
@@ -203,7 +203,7 @@ Do **not** use batch inference for:
 - **Use cross-region inference profiles** as the `modelId` to benefit from multi-region compute capacity and faster processing of large batch jobs.
   _Source: [Geographic cross-Region inference](https://docs.aws.amazon.com/bedrock/latest/userguide/geographic-cross-region-inference.html)_
 
-- **Set a `timeoutDurationInHours`** on long jobs to avoid runaway charges if the job stalls.
+- **Set a `timeoutDurationInHours`** on long jobs to avoid runaway charges if the job stalls. The enforced range is Minimum 24 hours / Maximum 168 hours.
   _Source: [Create a batch inference job](https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-create.html)_
 
 - **Tag batch jobs** for cost attribution (`bedrock:TagResource`). Verify your tagging taxonomy from [`security-iam-cost.md`](./security-iam-cost.md).
@@ -265,7 +265,7 @@ _Source: [Process multiple prompts with batch inference](https://docs.aws.amazon
 | `inputDataConfig.s3InputDataConfig.s3Uri` | Yes | S3 prefix or file path to JSONL input |
 | `outputDataConfig.s3OutputDataConfig.s3Uri` | Yes | S3 prefix for output files |
 | `outputDataConfig.s3OutputDataConfig.s3EncryptionKmsKeyId` | No | KMS CMK ARN for output encryption |
-| `timeoutDurationInHours` | No | Abort the job after this many hours |
+| `timeoutDurationInHours` | No | Abort the job after this many hours. Enforced range: Minimum 24, Maximum 168 |
 | `vpcConfig.subnetIds` | No | VPC subnets for network isolation (API-only) |
 | `vpcConfig.securityGroupIds` | No | Security groups for VPC isolation (API-only) |
 | `clientRequestToken` | No | Idempotency token |
@@ -358,7 +358,7 @@ _Source: [create_model_customization_job](https://docs.aws.amazon.com/boto3/late
 | `modelUnits` | Number of MUs to purchase |
 | `modelId` | Custom model name or ARN |
 | `provisionedModelName` | Name for the provisioned throughput resource |
-| `commitmentDuration` | `NO_COMMITMENT`, `ONE_MONTH`, `SIX_MONTHS` |
+| `commitmentDuration` | `OneMonth` \| `SixMonths`. Omit this field entirely for no-commitment Provisioned Throughput |
 
 _Source: [CreateProvisionedModelThroughput API](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_CreateProvisionedModelThroughput.html)_
 
@@ -387,12 +387,14 @@ _Source: [Geographic cross-Region inference](https://docs.aws.amazon.com/bedrock
 
 Three profile scopes are available:
 
-| Scope | Geo boundary | ID prefix example |
-|---|---|---|
-| Geographic (US) | US Regions only | `us.anthropic.claude-...` |
-| Geographic (EU) | EU Regions only | `eu.anthropic.claude-...` |
-| Geographic (APAC) | APAC Regions only | `apac.anthropic.claude-...` |
-| Global | All commercial Regions | No fixed prefix; currently Claude Sonnet 4 in select source Regions |
+| Scope | Geo boundary | ID prefix example | Notes |
+|---|---|---|---|
+| Geographic (US) | US Regions only | `us.anthropic.claude-...` | Available for all current Claude models |
+| Geographic (EU) | EU Regions only | `eu.anthropic.claude-...` | Available for all current Claude models |
+| Geographic (APAC) | APAC Regions only | `apac.anthropic.claude-...` | Used by Claude Sonnet 4; superseded by `au.` and `jp.` for Claude 4.5+ |
+| Geographic (AU) | Australia/Pacific Regions | `au.anthropic.claude-...` | Claude 4.5 and newer; separate boundary from `apac.` |
+| Geographic (JP) | Japan Regions | `jp.anthropic.claude-...` | Claude 4.5 and newer; separate boundary from `apac.` |
+| Global | All commercial Regions | `global.anthropic.claude-...` | Currently Claude Sonnet 4/4.5+ in select source Regions; destination Regions can expand |
 
 _Source: [Supported Regions and models for inference profiles](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-support.html)_
 
@@ -497,8 +499,8 @@ _Source: [Use interface VPC endpoints (AWS PrivateLink)](https://docs.aws.amazon
 
 | Control | How to configure | Notes |
 |---|---|---|
-| **Geo inference profile** | Use `eu.*`, `us.*`, or `apac.*` prefixed model ID as `modelId` | Fixed destination Regions; preferred over Global for residency |
-| **Global inference profile** | Use `global.*` prefixed model ID | Currently limited to Claude Sonnet 4; destination Regions can expand |
+| **Geo inference profile** | Use `us.*`, `eu.*`, `apac.*` (Claude Sonnet 4), `au.*`, or `jp.*` (Claude 4.5+) prefixed model ID as `modelId` | Fixed destination Regions; preferred over Global for residency. Check each model's detail page for supported prefixes |
+| **Global inference profile** | Use `global.*` prefixed model ID | Currently available for Claude Sonnet 4 and Claude 4.5+; destination Regions can expand |
 | **VPC PrivateLink — bedrock** | Create VPC interface endpoint: `com.amazonaws.{region}.bedrock` | Control plane API (CreateAgent, etc.) |
 | **VPC PrivateLink — bedrock-runtime** | `com.amazonaws.{region}.bedrock-runtime` | InvokeModel, Converse |
 | **VPC PrivateLink — bedrock-agent** | `com.amazonaws.{region}.bedrock-agent` | Agents build-time API |
