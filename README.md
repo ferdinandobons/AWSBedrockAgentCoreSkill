@@ -1,6 +1,6 @@
 # AWS Bedrock AgentCore Skill
 
-[![version](https://img.shields.io/badge/version-0.1.0-blue)](.claude-plugin/plugin.json) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-orange)](https://code.claude.com/docs/en/plugins)
+[![version](https://img.shields.io/badge/version-0.1.1-blue)](.claude-plugin/plugin.json) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-orange)](https://code.claude.com/docs/en/plugins)
 
 A Claude Code plugin (and agent skill) that puts the best practices for building AI agents on AWS, with Amazon Bedrock AgentCore at the center, in one place. Instead of sending the coding agent to search across dozens of AWS docs or work things out by trial and error, it hands over a consolidated, official, source-cited playbook so the agent goes straight to the right approach and can show you the source behind every recommendation.
 
@@ -165,7 +165,7 @@ claude --plugin-dir "/path/to/AWSBedrockAgentCoreSkill"
 
 ## Versioning
 
-Semantic versioning in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). Current: 0.1.0 (initial release). Bump on every change you ship to installers.
+Semantic versioning in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). Current: 0.1.1. Bump on every change you ship to installers.
 
 ## License
 
