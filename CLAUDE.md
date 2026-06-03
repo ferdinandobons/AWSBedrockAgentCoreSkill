@@ -1,8 +1,8 @@
-# Project memory — aws-ai-agent-architect
+# Project memory — aws-bedrock-agentcore-skill
 
-Claude Code plugin bundling the `aws-ai-agent-architect` skill (`skills/aws-ai-agent-architect/`):
+Claude Code plugin bundling the `aws-bedrock-agentcore-skill` skill (`skills/aws-bedrock-agentcore-skill/`):
 a source-cited playbook for building AI agents on AWS (Strands Agents, Amazon Bedrock, Bedrock
-AgentCore). See `README.md`. Repo: https://github.com/ferdinandobons/aws-ai-agent-architect (private).
+AgentCore). See `README.md`. Repo: https://github.com/ferdinandobons/AWSBedrockAgentCoreSkill (private).
 
 ## Maintenance & freshness — IMPORTANT
 
@@ -39,7 +39,7 @@ bug-free** — every QA pass so far found real runtime bugs in freshly-added cod
 ## Install (reminder)
 
 ```
-/plugin marketplace add ferdinandobons/aws-ai-agent-architect
-/plugin install aws-ai-agent-architect@aws-agent-skills
+/plugin marketplace add ferdinandobons/AWSBedrockAgentCoreSkill
+/plugin install aws-bedrock-agentcore-skill@aws-agent-skills
 ```
 Repo is private — make it public (`gh repo edit --visibility public`) for others to install.

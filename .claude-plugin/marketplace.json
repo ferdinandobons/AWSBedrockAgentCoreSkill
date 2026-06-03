@@ -1,12 +1,12 @@
 {
   "name": "aws-agent-skills",
-  "description": "Marketplace for the AWS AI Agent Architect skill — official-source best practices for building production AI agents on AWS.",
+  "description": "Marketplace for the AWSBedrockAgentCoreSkill skill — official-source best practices for building production AI agents on AWS.",
   "owner": {
     "name": "Ferdinando Bons"
   },
   "plugins": [
     {
-      "name": "aws-ai-agent-architect",
+      "name": "aws-bedrock-agentcore-skill",
       "source": "./",
       "description": "Source-cited best-practices skill: lets a coding agent autonomously build the right AI agent on AWS (Strands, Bedrock, AgentCore) for any use case.",
       "keywords": [

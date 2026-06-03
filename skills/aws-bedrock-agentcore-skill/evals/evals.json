@@ -1,0 +1,23 @@
+{
+  "skill_name": "aws-bedrock-agentcore-skill",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're a B2B SaaS company and I need to build a customer-support agent on AWS. It has to answer questions from our product manuals (a few hundred PDFs sitting in an S3 bucket) and it needs to remember each customer's past tickets and preferences across separate chat sessions. It'll run behind our web app's backend, so it needs to scale and not cost a fortune when idle. I've never used Bedrock or AgentCore before — what's the right architecture and how do I wire it up? Python.",
+      "expected_output": "Recommends: Bedrock Knowledge Base (RAG over the S3 PDFs) + AgentCore Memory (long-term, per-user namespaces) + a Strands agent on AgentCore Runtime (serverless, scale-to-zero). Uses BedrockModel/Converse (not InvokeModel). Calls out: explicit region, model access before deploy, async LTM extraction, session-to-user mapping in the backend, IAM least-privilege, ARM64 runtime contract. Points to the relevant reference files and official sources. Should not invent APIs.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Here's a Strands agent I hacked together that runs fine on my laptop (BedrockModel + a couple of @tool functions). I need to get it into production on AgentCore Runtime. It has to have content safety guardrails (no medical/legal advice, redact PII) and I need to be able to see traces and debug it when something goes wrong. Can you tell me exactly what I need to change, what infra to stand up, and the gotchas? We deploy everything with Terraform.",
+      "expected_output": "Wraps the agent in BedrockAgentCoreApp respecting the contract (POST /invocations, GET /ping, port 8080, ARM64, no main-thread blocking). Adds a Bedrock Guardrail (denied topics for medical/legal, PII redaction) referenced by a NUMBERED version, applied via Converse or ApplyGuardrail. Enables AgentCore Observability + CloudWatch Transaction Search BEFORE deploy, OTEL/ADOT traces. Terraform-first deploy: aws/awscc hybrid provider or aws-ia module, honest about AgentCore IaC version caveats and workarounds. Least-privilege execution role with aws:SourceAccount/aws:SourceArn. Cites official sources.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I'm designing a system where a 'router' agent decides which of three specialist agents (billing, technical, account-changes) should handle an incoming request, and some requests need two of them in sequence. Should I use a swarm, a graph, agents-as-tools, or something else? How do I actually configure it in Strands so it doesn't loop forever or blow up my token bill? And how would I trace what each agent did?",
+      "expected_output": "Recommends Graph (deterministic/conditional routing) over Swarm for this case, explains the trade-offs vs agents-as-tools and swarm. Uses GraphBuilder (not deprecated agent_graph). Sets production limits (max node executions, reset_on_revisit, timeouts) to prevent infinite loops/token blowup. SessionManager only on the orchestrator. Cross-agent OTEL tracing. Notes Python OR vs TS AND edge semantics. Cites official sources.",
+      "files": []
+    }
+  ]
+}

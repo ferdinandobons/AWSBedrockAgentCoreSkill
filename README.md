@@ -1,10 +1,10 @@
-# AWS AI Agent Architect
+# AWSBedrockAgentCoreSkill
 
 [![version](https://img.shields.io/badge/version-0.1.0-blue)](.claude-plugin/plugin.json) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-orange)](https://code.claude.com/docs/en/plugins)
 
 > The **definitive, source-cited playbook** that lets a coding agent (especially Claude) **autonomously design, configure, deploy, and troubleshoot production-grade AI agents on AWS** — with every recommendation traceable to an official AWS source it can re-open.
 
-This repository is a **Claude Code plugin** that bundles the `aws-ai-agent-architect` skill. Hand it to a coding agent and, knowing nothing about AWS agents up front, it can stand up the *right* agent for the user's use case — applying official AWS best practices instead of guessing.
+This repository is a **Claude Code plugin** that bundles the `aws-bedrock-agentcore-skill` skill. Hand it to a coding agent and, knowing nothing about AWS agents up front, it can stand up the *right* agent for the user's use case — applying official AWS best practices instead of guessing.
 
 It is **not** a single template. It is a decision engine + reference library: a routing `SKILL.md`, 20 deep reference files, ready-to-adapt assets, and a 369-URL official source index.
 
@@ -32,22 +32,22 @@ This repo is both a **plugin** and a single-plugin **marketplace** (`aws-agent-s
 
 ```text
 # 1) Add this repo as a marketplace
-/plugin marketplace add ferdinandobons/aws-ai-agent-architect
+/plugin marketplace add ferdinandobons/AWSBedrockAgentCoreSkill
 
 # 2) Install the plugin
-/plugin install aws-ai-agent-architect@aws-agent-skills
+/plugin install aws-bedrock-agentcore-skill@aws-agent-skills
 
 # 3) Confirm
 /plugin list
 ```
 
-> `/plugin marketplace add` also accepts a full Git URL (`https://github.com/ferdinandobons/aws-ai-agent-architect.git`) or a `owner/repo@ref` form. The repository is currently **private** — make it public (`gh repo edit --visibility public`) for others to install, or installers must have repo access.
+> `/plugin marketplace add` also accepts a full Git URL (`https://github.com/ferdinandobons/AWSBedrockAgentCoreSkill.git`) or a `owner/repo@ref` form. The repository is currently **private** — make it public (`gh repo edit --visibility public`) for others to install, or installers must have repo access.
 
 ### Try it locally (no install)
 
 ```bash
 # From the repository root
-claude --plugin-dir "/path/to/aws-ai-agent-architect"
+claude --plugin-dir "/path/to/AWSBedrockAgentCoreSkill"
 # After edits, inside the session:
 /reload-plugins
 ```
@@ -63,22 +63,22 @@ claude plugin validate .
 Copy the skill directory into your skills folder:
 
 ```bash
-cp -r skills/aws-ai-agent-architect ~/.claude/skills/
+cp -r skills/aws-bedrock-agentcore-skill ~/.claude/skills/
 ```
 
 ### Uninstall
 
 ```text
-/plugin uninstall aws-ai-agent-architect@aws-agent-skills
+/plugin uninstall aws-bedrock-agentcore-skill@aws-agent-skills
 # or temporarily:
-/plugin disable aws-ai-agent-architect
+/plugin disable aws-bedrock-agentcore-skill
 ```
 
 ---
 
 ## How it triggers
 
-The skill is description-driven: Claude consults it automatically whenever a task involves building, configuring, deploying, securing, monitoring, or debugging an AI agent on AWS — even if the specific service isn't named. You can also invoke it explicitly with `/aws-ai-agent-architect:aws-ai-agent-architect`.
+The skill is description-driven: Claude consults it automatically whenever a task involves building, configuring, deploying, securing, monitoring, or debugging an AI agent on AWS — even if the specific service isn't named. You can also invoke it explicitly with `/aws-bedrock-agentcore-skill:aws-bedrock-agentcore-skill`.
 
 **Example prompts that activate it:**
 
@@ -122,7 +122,7 @@ The `SKILL.md` decision tree routes across the full realistic use-case space:
 │   ├── plugin.json              # Plugin manifest
 │   └── marketplace.json         # Single-plugin marketplace (aws-agent-skills)
 ├── skills/
-│   └── aws-ai-agent-architect/
+│   └── aws-bedrock-agentcore-skill/
 │       ├── SKILL.md             # Routing layer: decision tree + playbooks + 12 cross-cutting rules
 │       ├── references/          # 20 deep, source-cited reference files
 │       │   ├── strands.md
@@ -162,7 +162,7 @@ The `SKILL.md` decision tree routes across the full realistic use-case space:
 
 ## Provenance & maintenance
 
-- **Provenance:** see [`skills/aws-ai-agent-architect/references/sources.md`](skills/aws-ai-agent-architect/references/sources.md) for the full topic → official-URL map and the source policy.
+- **Provenance:** see [`skills/aws-bedrock-agentcore-skill/references/sources.md`](skills/aws-bedrock-agentcore-skill/references/sources.md) for the full topic → official-URL map and the source policy.
 - **Built and audited with multi-agent workflows:** the content was researched from official docs, then put through a build-simulation audit (can an agent build autonomously from it alone?), a full cross-file review (bugs, contradictions, unverified sources, coverage), and a verified fix pass. Source claims were checked against live AWS docs.
 - **Data-aware:** model IDs, prices, and quotas change — the skill points to the live model cards, Bedrock pricing page, and Service Quotas console for exact numbers. Re-verify time-sensitive facts before relying on them.
 - **Maturity labels** track AWS GA/Preview status as of mid-2026; re-check the cited page for the current state.
