@@ -1,6 +1,6 @@
 # Security, IAM, Cost & Quotas for AWS AI Agents
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -25,7 +25,7 @@
   - [AgentCore Runtime execution role (container deploy)](#agentcore-runtime-execution-role-container-deploy)
   - [Bedrock Agents service role](#bedrock-agents-service-role)
   - [VPC endpoint for Bedrock Runtime](#vpc-endpoint-for-bedrock-runtime)
-  - [AgentCore PrivateLink — three required endpoints](#agentcore-privatelink--three-required-endpoints)
+  - [AgentCore PrivateLink - three required endpoints](#agentcore-privatelink--three-required-endpoints)
   - [VPC endpoint policy for AgentCore (SigV4 + OAuth)](#vpc-endpoint-policy-for-agentcore-sigv4--oauth)
   - [VPC endpoint policy for Bedrock Runtime](#vpc-endpoint-policy-for-bedrock-runtime)
   - [Prompt caching with Converse API (Python)](#prompt-caching-with-converse-api-python)
@@ -47,7 +47,7 @@
 
 Complete operational guide for configuring least-privilege IAM, KMS encryption, VPC/PrivateLink, data privacy, and cost optimization for AI agents on Amazon Bedrock and Amazon Bedrock AgentCore Runtime. Covers the real execution roles for both Bedrock Agents and AgentCore Runtime, `bedrock:InvokeModel` / `bedrock-agentcore:*` permissions, token-based quotas (TPM/TPD with 5x burndown rate for Claude 3.7+), cost-saving strategies via prompt caching, intelligent prompt routing, cross-region inference, batch inference, and Provisioned Throughput. Includes the three specific AgentCore PrivateLink endpoints and AgentCore Runtime quotas (active sessions, TPS, hardware allocation).
 
-**Maturity note:** All features covered are **GA** as of June 2026, with the following exceptions: Claude 3.5 Sonnet v2 prompt caching is listed as "Preview" in the official `prompt-caching.html` table. **AgentCore Harness and AgentCore Payments are still in Preview** (4–5 regions) — do not use for production without verifying regional availability. Agent Registry is in Preview in 5 regions. Claude Mythos is in Gated Research Preview in us-east-1 only.
+**Maturity note:** All features covered are **GA** as of June 2026, with the following exceptions: Claude 3.5 Sonnet v2 prompt caching is listed as "Preview" in the official `prompt-caching.html` table. **AgentCore Harness and AgentCore Payments are still in Preview** (4–5 regions) - do not use for production without verifying regional availability. Agent Registry is in Preview in 5 regions. Claude Mythos is in Gated Research Preview in us-east-1 only.
 
 ---
 
@@ -63,7 +63,7 @@ IAM service role assumed by `bedrock.amazonaws.com` to orchestrate traditional a
 
 ### BedrockAgentCoreFullAccess managed policy
 
-AWS managed policy for dev/quick-start covering `bedrock-agentcore:*`, `iam` (PassRole scoped to `*BedrockAgentCore*`), `secretsmanager` (prefix `bedrock-agentcore`), `kms` (decrypt same-account), `s3`, `lambda`, `logs`, `xray`, `ecr`, `cloudwatch`. **Does NOT include `iam:CreateRole`.** In production replace with a custom least-privilege policy — the managed policy includes `GetWorkloadAccessTokenForUserId` which is unsafe in production.
+AWS managed policy for dev/quick-start covering `bedrock-agentcore:*`, `iam` (PassRole scoped to `*BedrockAgentCore*`), `secretsmanager` (prefix `bedrock-agentcore`), `kms` (decrypt same-account), `s3`, `lambda`, `logs`, `xray`, `ecr`, `cloudwatch`. **Does NOT include `iam:CreateRole`.** In production replace with a custom least-privilege policy - the managed policy includes `GetWorkloadAccessTokenForUserId` which is unsafe in production.
 
 ARN: `arn:aws:iam::aws:policy/BedrockAgentCoreFullAccess`
 
@@ -73,15 +73,15 @@ Multiplicative factor with which output tokens consume TPM/TPD quota. For Claude
 
 `max_tokens` is deducted from the TPM quota at request start (before generation completes); excess is returned at completion. Billing is on actual use only.
 
-**Formula — initial quota reservation (at request start):**
+**Formula - initial quota reservation (at request start):**
 ```
 InputTokenCount + CacheWriteInputTokens + (max_tokens × burndown_rate)
 ```
-**Formula — final quota consumed (after completion):**
+**Formula - final quota consumed (after completion):**
 ```
 InputTokenCount + CacheWriteInputTokens + (OutputTokenCount × burndown_rate)
 ```
-**Formula — billing:**
+**Formula - billing:**
 ```
 inputTokens (standard rate) + cacheWriteInputTokens (cache-write rate)
   + cacheReadInputTokens (reduced cache-read rate) + outputTokens (output rate)
@@ -110,8 +110,8 @@ Single serverless endpoint that predicts per-request which model in the same fam
 ### Cross-Region Inference Profiles
 
 Two variants:
-- **Geographic profiles** (`us.`, `eu.`, `au.`, `jp.` prefix) — routing stays within the specified geography, for data residency requirements. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-4-6.html (Geo inference IDs listed as `us.`, `eu.`, `au.`, `jp.` — `apac.` is not a valid prefix)_
-- **Global profiles** (`global.` prefix) — routes worldwide on the AWS backbone; ~10% cost saving confirmed for Claude Sonnet 4.5. No additional routing cost.
+- **Geographic profiles** (`us.`, `eu.`, `au.`, `jp.` prefix) - routing stays within the specified geography, for data residency requirements. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-4-6.html (Geo inference IDs listed as `us.`, `eu.`, `au.`, `jp.` - `apac.` is not a valid prefix)_
+- **Global profiles** (`global.` prefix) - routes worldwide on the AWS backbone; ~10% cost saving confirmed for Claude Sonnet 4.5. No additional routing cost.
 
 Data stays on the AWS network, encrypted in transit. Requests are logged in CloudTrail in the source region with `additionalEventData.inferenceRegion`.
 
@@ -147,7 +147,7 @@ Three distinct endpoints:
 | `com.amazonaws.{region}.bedrock-agentcore-control` | Control plane: Runtime and Memory management |
 | `com.amazonaws.{region}.bedrock-agentcore.gateway` | AgentCore Gateway (MCP tools) |
 
-**Critical:** VPC endpoint policies cannot restrict OAuth callers — only SigV4. For OAuth callers the `Principal` must be `"*"` in the endpoint policy.
+**Critical:** VPC endpoint policies cannot restrict OAuth callers - only SigV4. For OAuth callers the `Principal` must be `"*"` in the endpoint policy.
 
 ### KMS Customer Managed Key for Bedrock
 
@@ -193,9 +193,9 @@ Four tiers available via the `serviceTier` parameter in runtime API calls:
 | Tier | API value | Cost vs Standard | Notes |
 |---|---|---|---|
 | Reserved | `reserved` | Committed capacity pricing | Min 100K input TPM + 10K output TPM; 1 or 3 month commitment; 99.5% uptime target; contact AWS team |
-| Priority | `priority` | Price premium — see the [Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/) | No reservation needed |
+| Priority | `priority` | Price premium - see the [Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/) | No reservation needed |
 | Standard | `default` | Baseline | Default if `serviceTier` is omitted |
-| Flex | `flex` | Price discount — see the [Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/) | Higher latency variability; on-demand quota shared with Priority/Standard |
+| Flex | `flex` | Price discount - see the [Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/) | Higher latency variability; on-demand quota shared with Priority/Standard |
 
 On-demand quota is shared across Priority, Standard, and Flex. Reserved has a separate quota pool.
 
@@ -209,39 +209,39 @@ On-demand quota is shared across Priority, Standard, and Flex. Reserved has a se
 
 ## Best practices
 
-- **Use the trust policy with `aws:SourceAccount` + `aws:SourceArn` on ALL Bedrock and AgentCore execution roles** — Prevents the confused deputy attack: without these conditions, a malicious service could impersonate `bedrock.amazonaws.com` or `bedrock-agentcore.amazonaws.com` and assume your role with elevated privileges. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html_
+- **Use the trust policy with `aws:SourceAccount` + `aws:SourceArn` on ALL Bedrock and AgentCore execution roles** - Prevents the confused deputy attack: without these conditions, a malicious service could impersonate `bedrock.amazonaws.com` or `bedrock-agentcore.amazonaws.com` and assume your role with elevated privileges. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html_
 
-- **Do not use AgentCore CLI-generated policies in production** — CLI policies have broad scope (`resource: *`) for prototyping convenience. In production every statement must reference specific runtime ARNs, not wildcards. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html_
+- **Do not use AgentCore CLI-generated policies in production** - CLI policies have broad scope (`resource: *`) for prototyping convenience. In production every statement must reference specific runtime ARNs, not wildcards. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html_
 
-- **In production (JWT always available): use `GetWorkloadAccessTokenForJWT` and explicitly deny `GetWorkloadAccessTokenForUserId`** — `GetWorkloadAccessTokenForUserId` accepts any opaque string without IdP verification, exposing the runtime to user impersonation. `GetWorkloadAccessTokenForJWT` validates the JWT signature, issuer, and expiry. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
+- **In production (JWT always available): use `GetWorkloadAccessTokenForJWT` and explicitly deny `GetWorkloadAccessTokenForUserId`** - `GetWorkloadAccessTokenForUserId` accepts any opaque string without IdP verification, exposing the runtime to user impersonation. `GetWorkloadAccessTokenForJWT` validates the JWT signature, issuer, and expiry. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
 
-- **Restrict `bedrock:InvokeModel` to the exact model ARN(s) required, never use `arn:aws:bedrock:*::foundation-model/*`** — The wildcard grants invocation of any model (including the most expensive ones). Specific ARNs prevent accidental cost escalation and block data exfiltration to unapproved models. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html_
+- **Restrict `bedrock:InvokeModel` to the exact model ARN(s) required, never use `arn:aws:bedrock:*::foundation-model/*`** - The wildcard grants invocation of any model (including the most expensive ones). Specific ARNs prevent accidental cost escalation and block data exfiltration to unapproved models. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html_
 
-- **Enable private DNS on Bedrock and AgentCore VPC endpoints; do NOT hardcode `endpoint_url` in code** — With private DNS enabled, code uses standard DNS names with no modifications. Hardcoding the `vpce-id`-based endpoint URL creates a runtime dependency that breaks portability. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/vpc-interface-endpoints.html_
+- **Enable private DNS on Bedrock and AgentCore VPC endpoints; do NOT hardcode `endpoint_url` in code** - With private DNS enabled, code uses standard DNS names with no modifications. Hardcoding the `vpce-id`-based endpoint URL creates a runtime dependency that breaks portability. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/vpc-interface-endpoints.html_
 
-- **For AgentCore VPC endpoints with OAuth: set `Principal: "*"` in the endpoint policy for actions that use Bearer Tokens** — VPC endpoint policies can only restrict SigV4 callers via IAM principals. OAuth calls only pass through if `Principal = "*"`. Without this, OAuth callers receive 403. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-interface-endpoints.html_
+- **For AgentCore VPC endpoints with OAuth: set `Principal: "*"` in the endpoint policy for actions that use Bearer Tokens** - VPC endpoint policies can only restrict SigV4 callers via IAM principals. OAuth calls only pass through if `Principal = "*"`. Without this, OAuth callers receive 403. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-interface-endpoints.html_
 
-- **Reduce `max_tokens` to the approximate real completion size — never set 32768 "to be safe"** — `max_tokens` is deducted from the TPM quota at request start before any response is generated. An excessively high value reduces concurrent request capacity even if actual completions use few tokens. Calibrate using the CloudWatch `OutputTokenCount` metric. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-token-burndown.html_
+- **Reduce `max_tokens` to the approximate real completion size - never set 32768 "to be safe"** - `max_tokens` is deducted from the TPM quota at request start before any response is generated. An excessively high value reduces concurrent request capacity even if actual completions use few tokens. Calibrate using the CloudWatch `OutputTokenCount` metric. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-token-burndown.html_
 
-- **Place cache checkpoints after static content (tools → system → messages) and before variable content** — Sections are processed in order: tools → system → messages. Modifying an upstream section invalidates the cache for all downstream sections. Variable content (user queries) must come AFTER the last checkpoint. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html_
+- **Place cache checkpoints after static content (tools → system → messages) and before variable content** - Sections are processed in order: tools → system → messages. Modifying an upstream section invalidates the cache for all downstream sections. Variable content (user queries) must come AFTER the last checkpoint. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html_
 
-- **Monitor `CacheReadInputTokens` and `CacheWriteInputTokens` via CloudWatch to measure prompt caching ROI** — Cache writes can cost more than standard input tokens on some models. Real savings depend on the read/write ratio. Without monitoring you may pay more rather than less. For Reserved tier, sum `InputTokenCount + CacheWriteInputTokens` to estimate capacity to reserve. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-token-burndown.html_
+- **Monitor `CacheReadInputTokens` and `CacheWriteInputTokens` via CloudWatch to measure prompt caching ROI** - Cache writes can cost more than standard input tokens on some models. Real savings depend on the read/write ratio. Without monitoring you may pay more rather than less. For Reserved tier, sum `InputTokenCount + CacheWriteInputTokens` to estimate capacity to reserve. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-token-burndown.html_
 
-- **Use geographic inference profiles (`us.`, `eu.`, `au.`, `jp.`) when data residency is required; use global profiles for maximum throughput and ~10% cost reduction** — Geographic profiles guarantee data stays within the specified geography. Global profiles route across any AWS commercial region but only on the AWS backbone (never public internet) and offer ~10% savings (confirmed for Claude Sonnet 4.5). _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html; geo prefixes confirmed at https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-4-6.html_
+- **Use geographic inference profiles (`us.`, `eu.`, `au.`, `jp.`) when data residency is required; use global profiles for maximum throughput and ~10% cost reduction** - Geographic profiles guarantee data stays within the specified geography. Global profiles route across any AWS commercial region but only on the AWS backbone (never public internet) and offer ~10% savings (confirmed for Claude Sonnet 4.5). _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html; geo prefixes confirmed at https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-4-6.html_
 
-- **For Global cross-region inference IAM policy: include ALL THREE required statements** — Global CRIS requires three distinct resource ARNs: inference profile in the source region, FM in-region, and FM global (ARN without region or account). Missing even one causes `AccessDeniedException`. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html_
+- **For Global cross-region inference IAM policy: include ALL THREE required statements** - Global CRIS requires three distinct resource ARNs: inference profile in the source region, FM in-region, and FM global (ARN without region or account). Missing even one causes `AccessDeniedException`. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html_
 
-- **Apply SCP at the Organization/OU level to restrict `bedrock:*` to approved regions, explicitly allowing `"unspecified"` for Global inference** — Without SCP, users/roles can invoke Bedrock models in non-compliant regions. SCPs are the only control that applies to child accounts. Global CRIS requests use `aws:RequestedRegion = "unspecified"` — an SCP blocking all unlisted regions must include `"unspecified"` in the exception or it blocks Global routing. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/data-perimeter-for-amazon-bedrock/regional-boundary-enforcement.html_
+- **Apply SCP at the Organization/OU level to restrict `bedrock:*` to approved regions, explicitly allowing `"unspecified"` for Global inference** - Without SCP, users/roles can invoke Bedrock models in non-compliant regions. SCPs are the only control that applies to child accounts. Global CRIS requests use `aws:RequestedRegion = "unspecified"` - an SCP blocking all unlisted regions must include `"unspecified"` in the exception or it blocks Global routing. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/data-perimeter-for-amazon-bedrock/regional-boundary-enforcement.html_
 
-- **Start with `BedrockAgentCoreFullAccess` as a baseline, then create a customer-managed policy removing unused actions** — The managed policy is immediately available and reduces early errors, but it includes broad permissions (`GetWorkloadAccessTokenForUserId`, `iam:PassRole` on `*BedrockAgentCore*`). For production, copy only the needed statements. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security-iam-awsmanpol.html_
+- **Start with `BedrockAgentCoreFullAccess` as a baseline, then create a customer-managed policy removing unused actions** - The managed policy is immediately available and reduces early errors, but it includes broad permissions (`GetWorkloadAccessTokenForUserId`, `iam:PassRole` on `*BedrockAgentCore*`). For production, copy only the needed statements. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security-iam-awsmanpol.html_
 
-- **For VPC-mode agents, configure VPC endpoints for ECR (`dkr` + `api`), S3 (gateway), and CloudWatch Logs; restrict the S3 gateway policy to the ECR layer bucket only** — Without the S3 gateway endpoint, ECR image pulls transit through the NAT gateway incurring per-GB cost. The restricted policy prevents the endpoint from allowing access to any arbitrary S3 bucket. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html_
+- **For VPC-mode agents, configure VPC endpoints for ECR (`dkr` + `api`), S3 (gateway), and CloudWatch Logs; restrict the S3 gateway policy to the ECR layer bucket only** - Without the S3 gateway endpoint, ECR image pulls transit through the NAT gateway incurring per-GB cost. The restricted policy prevents the endpoint from allowing access to any arbitrary S3 bucket. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html_
 
-- **For non-time-sensitive batch workloads, use batch inference instead of on-demand** — Batch inference costs approximately 50% less than on-demand and processes up to 10,000 records per job on S3. No throttling or quota management needed. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/capacity-limits-cost-optimization.html_
+- **For non-time-sensitive batch workloads, use batch inference instead of on-demand** - Batch inference costs approximately 50% less than on-demand and processes up to 10,000 records per job on S3. No throttling or quota management needed. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/capacity-limits-cost-optimization.html_
 
-- **Use IAM Access Analyzer to validate policies before deploying to production** — Access Analyzer runs over 100 automatic checks on policy JSON and flags excessive permissions, unnecessary resource wildcards, and insecure patterns. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html_
+- **Use IAM Access Analyzer to validate policies before deploying to production** - Access Analyzer runs over 100 automatic checks on policy JSON and flags excessive permissions, unnecessary resource wildcards, and insecure patterns. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html_
 
-- **For Reserved tier capacity planning, sum `InputTokenCount + CacheWriteInputTokens` (not just `InputTokenCount`) to estimate capacity to reserve** — The service-tiers documentation explicitly confirms that Reserved tier consumes both `InputTokenCount` and `CacheWriteInputTokens`. Underestimating leads to frequent overflow onto the Standard tier. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html_
+- **For Reserved tier capacity planning, sum `InputTokenCount + CacheWriteInputTokens` (not just `InputTokenCount`) to estimate capacity to reserve** - The service-tiers documentation explicitly confirms that Reserved tier consumes both `InputTokenCount` and `CacheWriteInputTokens`. Underestimating leads to frequent overflow onto the Standard tier. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html_
 
 ---
 
@@ -252,7 +252,7 @@ On-demand quota is shared across Priority, Standard, and Flex. Reserved has a se
 Trust policy and minimum permission policy for a container-based AgentCore Runtime agent.
 
 ```json
-// TRUST POLICY — attach to the IAM role
+// TRUST POLICY - attach to the IAM role
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -269,7 +269,7 @@ Trust policy and minimum permission policy for a container-based AgentCore Runti
   ]
 }
 
-// PERMISSION POLICY — attach as inline or customer-managed policy
+// PERMISSION POLICY - attach as inline or customer-managed policy
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -404,7 +404,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/agents-permissions
 Create the endpoint via AWS CLI and use it with boto3.
 
 ```bash
-# Create the endpoint (private DNS enabled — recommended)
+# Create the endpoint (private DNS enabled - recommended)
 aws ec2 create-vpc-endpoint \
   --vpc-id vpc-0abcdef1234567890 \
   --service-name com.amazonaws.us-east-1.bedrock-runtime \
@@ -444,7 +444,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/vpc-interface-endp
 
 ---
 
-### AgentCore PrivateLink — three required endpoints
+### AgentCore PrivateLink - three required endpoints
 
 ```bash
 # Data plane endpoint (Runtime, Memory, Built-in Tools, Identity, Gateway, Policy)
@@ -851,7 +851,7 @@ import boto3
 
 client = boto3.client("bedrock-runtime", region_name="us-east-1")
 
-# Standard tier (default) — same as not specifying serviceTier at all.
+# Standard tier (default) - same as not specifying serviceTier at all.
 # serviceTier is a TOP-LEVEL Converse request parameter (not inside additionalModelRequestFields).
 response = client.converse(
     modelId="anthropic.claude-sonnet-4-6",
@@ -859,7 +859,7 @@ response = client.converse(
     serviceTier={"type": "default"}  # Standard
 )
 
-# Flex tier — -50% vs Standard price, higher latency variability
+# Flex tier - -50% vs Standard price, higher latency variability
 response_flex = client.converse(
     modelId="anthropic.claude-sonnet-4-6",
     messages=[{"role": "user", "content": [{"text": "Batch summarize this document"}]}],
@@ -871,7 +871,7 @@ response_flex = client.converse(
 print(response["output"]["message"]["content"][0]["text"])
 ```
 
-_Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html — `serviceTier` is a top-level JSON body field (type: ServiceTier object with required `type` string); valid values: `priority | default | flex | reserved`. It is NOT passed inside `additionalModelRequestFields`._
+_Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Converse.html - `serviceTier` is a top-level JSON body field (type: ServiceTier object with required `type` string); valid values: `priority | default | flex | reserved`. It is NOT passed inside `additionalModelRequestFields`._
 
 ---
 
@@ -883,13 +883,13 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Con
 | `customModelKmsKeyId` (CreateModelCustomizationJob) | ARN of the KMS CMK to encrypt the custom model and fine-tuning job output. | `arn:aws:kms:us-east-1:123456789012:key/mrk-abc123` |
 | `kmsKeyArn` (CreateDataSource / UpdateDataSource) | ARN of the KMS CMK to encrypt a Bedrock knowledge base data source. | `arn:aws:kms:us-east-1:123456789012:key/mrk-abc123` |
 | `cachePoint.type` (Converse API) | Defines a cache checkpoint in the Converse request. Fixed value: `"default"`. | `{"type": "default"}` or `{"type": "default", "ttl": "1h"}` |
-| `cachePoint.ttl` (Converse API) | TTL for the cache checkpoint. `"5m"` (default for all) or `"1h"` (supported: Claude Opus 4.5, Haiku 4.5, Sonnet 4.5 only — Sonnet 4.6 and Opus 4.6 support 5m only). If `"1h"` is specified on an unsupported model, it is silently ignored. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html_ | `"5m"` or `"1h"` |
+| `cachePoint.ttl` (Converse API) | TTL for the cache checkpoint. `"5m"` (default for all) or `"1h"` (supported: Claude Opus 4.5, Haiku 4.5, Sonnet 4.5 only - Sonnet 4.6 and Opus 4.6 support 5m only). If `"1h"` is specified on an unsupported model, it is silently ignored. _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html_ | `"5m"` or `"1h"` |
 | `cache_control.type` (InvokeModel Anthropic) | Enables caching in the native Anthropic format inside the InvokeModel body. Fixed value: `"ephemeral"`. | `{"type": "ephemeral"}` or `{"type": "ephemeral", "ttl": "5m"}` |
-| Token burndown rate — Claude 3.7+ and Claude 4.x | 1 output token = 5 quota tokens (TPM/TPD) for Claude 3.7 Sonnet and all later models. All other models: 1:1. Initial quota deducted = InputTokens + CacheWriteInputTokens + max_tokens × burndown. Final quota = InputTokens + CacheWriteInputTokens + (OutputTokens × burndown). | `5x` for Claude 3.7, Sonnet 4.6, Opus 4, Opus 4.6 and later; `1x` for other models |
+| Token burndown rate - Claude 3.7+ and Claude 4.x | 1 output token = 5 quota tokens (TPM/TPD) for Claude 3.7 Sonnet and all later models. All other models: 1:1. Initial quota deducted = InputTokens + CacheWriteInputTokens + max_tokens × burndown. Final quota = InputTokens + CacheWriteInputTokens + (OutputTokens × burndown). | `5x` for Claude 3.7, Sonnet 4.6, Opus 4, Opus 4.6 and later; `1x` for other models |
 | Minimum tokens per cache checkpoint | Min tokens required before a cache checkpoint. | `1024` (Claude 3.7, Sonnet 4.6, Opus 4, Opus 4.1); `4096` (Opus 4.5, Opus 4.6, Haiku 4.5, Sonnet 4.5) |
 | Max cache checkpoints per request | Maximum cache checkpoints per single request for all supported Claude models. | `4` for all supported Claude models |
-| Service endpoint names — VPC PrivateLink Bedrock | Names of the 5 (+2 FIPS) Bedrock services for interface VPC endpoints. | `com.amazonaws.{region}.bedrock` \| `bedrock-runtime` \| `bedrock-mantle` \| `bedrock-agent` \| `bedrock-agent-runtime` \| `bedrock-fips` \| `bedrock-runtime-fips` |
-| Service endpoint names — VPC PrivateLink AgentCore | Names of the 3 AgentCore services for interface VPC endpoints. | `com.amazonaws.{region}.bedrock-agentcore` (data plane) \| `bedrock-agentcore-control` (control plane) \| `bedrock-agentcore.gateway` (Gateway) |
+| Service endpoint names - VPC PrivateLink Bedrock | Names of the 5 (+2 FIPS) Bedrock services for interface VPC endpoints. | `com.amazonaws.{region}.bedrock` \| `bedrock-runtime` \| `bedrock-mantle` \| `bedrock-agent` \| `bedrock-agent-runtime` \| `bedrock-fips` \| `bedrock-runtime-fips` |
+| Service endpoint names - VPC PrivateLink AgentCore | Names of the 3 AgentCore services for interface VPC endpoints. | `com.amazonaws.{region}.bedrock-agentcore` (data plane) \| `bedrock-agentcore-control` (control plane) \| `bedrock-agentcore.gateway` (Gateway) |
 | `BedrockAgentCoreFullAccess` | AWS managed policy for AgentCore. Does NOT include `iam:CreateRole`. `iam:PassRole` scoped to `*BedrockAgentCore*`. Contains `GetWorkloadAccessTokenForUserId` (dev only). | `arn:aws:iam::aws:policy/BedrockAgentCoreFullAccess` |
 | Batch inference limits | Max records, input file size, processing window, discount. Does NOT support: prompt caching, tool use, structured output, multi-turn. | `10,000 records / 200 MB / 24 h / ~50% discount vs on-demand` |
 | AgentCore Runtime active sessions | Default quota for simultaneous active workload sessions per account. Adjustable via Service Quotas. | `1000` (US East N. Virginia / US West Oregon); `500` (other regions) |
@@ -931,7 +931,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Con
 
 - **TTL 1 hour is limited to Claude Opus 4.5, Haiku 4.5, and Sonnet 4.5.** The official `prompt-caching.html` supported-models table lists Claude **Sonnet 4.6 and Opus 4.6 as `5 minutes` only** (not 1 hour). Specifying `"ttl": "1h"` on an unsupported model is silently ignored (inference still succeeds at 5m). _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html_
 
-- **CORRECTION — AgentCore VPC endpoint is NOT a single endpoint:** You need THREE separate endpoints: `bedrock-agentcore` (data plane), `bedrock-agentcore-control` (control plane), `bedrock-agentcore.gateway` (Gateway). Create only the ones relevant to the operations you intend to perform.
+- **CORRECTION - AgentCore VPC endpoint is NOT a single endpoint:** You need THREE separate endpoints: `bedrock-agentcore` (data plane), `bedrock-agentcore-control` (control plane), `bedrock-agentcore.gateway` (Gateway). Create only the ones relevant to the operations you intend to perform.
 
 - **RPM (requests per minute) is no longer enforced:** The RPM quota on `bedrock-runtime` has been officially deprecated. Throttling is governed ONLY by token-based quotas (TPM and TPD). Do not request RPM increases for `bedrock-runtime`.
 
@@ -945,30 +945,30 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Con
 
 ## Official sources
 
-- [IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) — Execution role for AgentCore Runtime (direct and container), trust policy, `bedrock-agentcore:GetWorkloadAccessToken*` permissions
-- [Security best practices for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html) — 12 security domains: session isolation, IAM least-privilege, confused deputy, network, encryption, auditing, MMDS credential exposure
-- [AWS managed policies for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security-iam-awsmanpol.html) — `BedrockAgentCoreFullAccess` and the 3 service managed policies (network, identity, memory)
-- [Use interface VPC endpoints (AWS PrivateLink) for AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-interface-endpoints.html) — Three AgentCore PrivateLink endpoints: data plane (bedrock-agentcore), control plane (bedrock-agentcore-control), gateway (bedrock-agentcore.gateway). Notes on OAuth vs SigV4 policy.
-- [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) — Runtime quotas: 1000 active sessions (US-E1/US-W2), 500 elsewhere; 25 TPS invocation; 2 vCPU/8 GB per session; 15 min sync timeout; 8 h async; 1 GB storage/session
-- [Create a service role for Amazon Bedrock Agents](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-permissions.html) — Trust policy and identity-based permissions for classic Bedrock Agents (InvokeModel, Retrieve, guardrails, multi-agent, Provisioned Throughput)
-- [Identity-based policy examples for Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html) — Policies for console, deny inference, provisioned model, minimal playground policy
-- [How Amazon Bedrock works with IAM](https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html) — Overview of IAM features supported by Bedrock: identity-based, condition keys, ABAC, temporary credentials
-- [Use interface VPC endpoints (AWS PrivateLink) for Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/vpc-interface-endpoints.html) — Service names for all Bedrock endpoints, endpoint policies, boto3/CLI examples, FIPS endpoint
-- [Data encryption](https://docs.aws.amazon.com/bedrock/latest/userguide/data-encryption.html) — KMS for agents (`customerEncryptionKeyArn`), knowledge bases (`kmsKeyArn`), custom models (`customModelKmsKeyId`), S3, Secrets Manager
-- [Data protection](https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html) — Shared responsibility model, no training on customer data, TLS 1.2+, FIPS 140-3, model providers have no access to customer data
-- [Prompt caching for faster model inference](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html) — How caching works, TTL (5 min / 1 hour), supported models, Converse API and InvokeModel API code examples. Claude Sonnet 4.6 supports TTL 5m only with min 1024 tokens; Claude Opus 4.6 supports 5m only with min 4096 tokens; Claude Opus 4.5, Haiku 4.5, Sonnet 4.5 support 5m and 1h with min 4096 tokens.
-- [Quotas for the bedrock-runtime endpoint](https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html) — TPM and TPD quotas per model, confirmed RPM deprecation, how to request quota increases. Default TPD = TPM × 24 × 60.
-- [How tokens are counted in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-token-burndown.html) — 5x burndown rate for Claude 3.7+, impact of max_tokens, `CacheReadInputTokens` do not count against quota.
-- [Understanding intelligent prompt routing in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-routing.html) — Automatic routing between models in the same family, configurable criteria, supported models (Anthropic, Meta, Amazon Nova)
-- [Increase throughput with cross-Region inference](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html) — Geographic vs Global inference profiles, ~10% savings with global (confirmed for Claude Sonnet 4.5), data residency, CloudTrail in source region
-- [Global cross-Region inference](https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html) — Three-statement IAM policy required for Global CRIS; `aws:RequestedRegion='unspecified'` for global routing; SCP must explicitly allow `"unspecified"`
-- [Service tiers for optimizing performance and cost](https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html) — Four tiers: Reserved (99.5% uptime, min 100K input TPM + 10K output TPM), Priority (price premium), Standard (default), Flex (price discount). `serviceTier` parameter in runtime APIs — exact percentages vary; see the [Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/).
-- [GENCOST03-BP03 Implement prompt caching to reduce token costs (Well-Architected Generative AI Lens)](https://docs.aws.amazon.com/wellarchitected/latest/generative-ai-lens/gencost03-bp03.html) — Official Well-Architected best practice for prompt caching, implementation steps
-- [Regional boundary enforcement (Data Perimeter for Amazon Bedrock)](https://docs.aws.amazon.com/prescriptive-guidance/latest/data-perimeter-for-amazon-bedrock/regional-boundary-enforcement.html) — SCP for data residency/region restriction, S3 bucket policy anti-cross-region replication
-- [Claude Sonnet 4.6 model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-4-6.html) — ID: `anthropic.claude-sonnet-4-6`; context 1M; max output 64K; TTL caching 5m only (per official prompt-caching table); Geo IDs: `us./eu./au./jp.anthropic.claude-sonnet-4-6`; Global ID: `global.anthropic.claude-sonnet-4-6`. Launch: Feb 17, 2026.
-- [Claude Opus 4.6 model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-opus-4-6.html) — ID: `anthropic.claude-opus-4-6-v1`; context 1M; max output 128K; TTL caching 5m only (not 1h per official prompt-caching table), min 4096 tokens; Geo IDs: `us./eu./au.anthropic.claude-opus-4-6-v1`. Launch: Feb 5, 2026.
-- [Amazon Bedrock pricing](https://aws.amazon.com/bedrock/pricing/) — Official pricing page. Claude 4.x prices are shown in the AWS console and accessible via `bedrock:GetFoundationModelAvailability`. Claude 3.5 Sonnet v2 (extended access): input $6.00, output $30.00, cache write $7.50, cache read $0.60 per 1M tokens.
-- [Supported AWS Regions for AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html) — AgentCore Runtime GA in 16 regions including GovCloud. AgentCore Harness and Payments still in Preview with reduced availability.
+- [IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) - Execution role for AgentCore Runtime (direct and container), trust policy, `bedrock-agentcore:GetWorkloadAccessToken*` permissions
+- [Security best practices for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html) - 12 security domains: session isolation, IAM least-privilege, confused deputy, network, encryption, auditing, MMDS credential exposure
+- [AWS managed policies for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security-iam-awsmanpol.html) - `BedrockAgentCoreFullAccess` and the 3 service managed policies (network, identity, memory)
+- [Use interface VPC endpoints (AWS PrivateLink) for AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc-interface-endpoints.html) - Three AgentCore PrivateLink endpoints: data plane (bedrock-agentcore), control plane (bedrock-agentcore-control), gateway (bedrock-agentcore.gateway). Notes on OAuth vs SigV4 policy.
+- [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) - Runtime quotas: 1000 active sessions (US-E1/US-W2), 500 elsewhere; 25 TPS invocation; 2 vCPU/8 GB per session; 15 min sync timeout; 8 h async; 1 GB storage/session
+- [Create a service role for Amazon Bedrock Agents](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-permissions.html) - Trust policy and identity-based permissions for classic Bedrock Agents (InvokeModel, Retrieve, guardrails, multi-agent, Provisioned Throughput)
+- [Identity-based policy examples for Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html) - Policies for console, deny inference, provisioned model, minimal playground policy
+- [How Amazon Bedrock works with IAM](https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html) - Overview of IAM features supported by Bedrock: identity-based, condition keys, ABAC, temporary credentials
+- [Use interface VPC endpoints (AWS PrivateLink) for Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/vpc-interface-endpoints.html) - Service names for all Bedrock endpoints, endpoint policies, boto3/CLI examples, FIPS endpoint
+- [Data encryption](https://docs.aws.amazon.com/bedrock/latest/userguide/data-encryption.html) - KMS for agents (`customerEncryptionKeyArn`), knowledge bases (`kmsKeyArn`), custom models (`customModelKmsKeyId`), S3, Secrets Manager
+- [Data protection](https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html) - Shared responsibility model, no training on customer data, TLS 1.2+, FIPS 140-3, model providers have no access to customer data
+- [Prompt caching for faster model inference](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html) - How caching works, TTL (5 min / 1 hour), supported models, Converse API and InvokeModel API code examples. Claude Sonnet 4.6 supports TTL 5m only with min 1024 tokens; Claude Opus 4.6 supports 5m only with min 4096 tokens; Claude Opus 4.5, Haiku 4.5, Sonnet 4.5 support 5m and 1h with min 4096 tokens.
+- [Quotas for the bedrock-runtime endpoint](https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-runtime.html) - TPM and TPD quotas per model, confirmed RPM deprecation, how to request quota increases. Default TPD = TPM × 24 × 60.
+- [How tokens are counted in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/quotas-token-burndown.html) - 5x burndown rate for Claude 3.7+, impact of max_tokens, `CacheReadInputTokens` do not count against quota.
+- [Understanding intelligent prompt routing in Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-routing.html) - Automatic routing between models in the same family, configurable criteria, supported models (Anthropic, Meta, Amazon Nova)
+- [Increase throughput with cross-Region inference](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html) - Geographic vs Global inference profiles, ~10% savings with global (confirmed for Claude Sonnet 4.5), data residency, CloudTrail in source region
+- [Global cross-Region inference](https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html) - Three-statement IAM policy required for Global CRIS; `aws:RequestedRegion='unspecified'` for global routing; SCP must explicitly allow `"unspecified"`
+- [Service tiers for optimizing performance and cost](https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html) - Four tiers: Reserved (99.5% uptime, min 100K input TPM + 10K output TPM), Priority (price premium), Standard (default), Flex (price discount). `serviceTier` parameter in runtime APIs - exact percentages vary; see the [Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/).
+- [GENCOST03-BP03 Implement prompt caching to reduce token costs (Well-Architected Generative AI Lens)](https://docs.aws.amazon.com/wellarchitected/latest/generative-ai-lens/gencost03-bp03.html) - Official Well-Architected best practice for prompt caching, implementation steps
+- [Regional boundary enforcement (Data Perimeter for Amazon Bedrock)](https://docs.aws.amazon.com/prescriptive-guidance/latest/data-perimeter-for-amazon-bedrock/regional-boundary-enforcement.html) - SCP for data residency/region restriction, S3 bucket policy anti-cross-region replication
+- [Claude Sonnet 4.6 model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-sonnet-4-6.html) - ID: `anthropic.claude-sonnet-4-6`; context 1M; max output 64K; TTL caching 5m only (per official prompt-caching table); Geo IDs: `us./eu./au./jp.anthropic.claude-sonnet-4-6`; Global ID: `global.anthropic.claude-sonnet-4-6`. Launch: Feb 17, 2026.
+- [Claude Opus 4.6 model card](https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-opus-4-6.html) - ID: `anthropic.claude-opus-4-6-v1`; context 1M; max output 128K; TTL caching 5m only (not 1h per official prompt-caching table), min 4096 tokens; Geo IDs: `us./eu./au.anthropic.claude-opus-4-6-v1`. Launch: Feb 5, 2026.
+- [Amazon Bedrock pricing](https://aws.amazon.com/bedrock/pricing/) - Official pricing page. Claude 4.x prices are shown in the AWS console and accessible via `bedrock:GetFoundationModelAvailability`. Claude 3.5 Sonnet v2 (extended access): input $6.00, output $30.00, cache write $7.50, cache read $0.60 per 1M tokens.
+- [Supported AWS Regions for AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html) - AgentCore Runtime GA in 16 regions including GovCloud. AgentCore Harness and Payments still in Preview with reduced availability.
 
 ---
 
@@ -976,7 +976,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_Con
 
 Re-check the following in the live console or docs before relying on them in production code:
 
-1. **Exact prices ($/MTok) for cache read vs cache write vs standard input for Claude 4.x models** (Sonnet 4.6, Opus 4.6, Opus 4.5, Haiku 4.5, Sonnet 4.5, Opus 4, etc.): The [Amazon Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/) renders these only via interactive JavaScript — they cannot be extracted statically. The only statically confirmed price pair is Claude 3.5 Sonnet v2 (extended access): input $6.00, output $30.00, cache write $7.50, cache read $0.60 per 1M tokens. For all current Anthropic models consult the pricing section in the AWS console directly.
+1. **Exact prices ($/MTok) for cache read vs cache write vs standard input for Claude 4.x models** (Sonnet 4.6, Opus 4.6, Opus 4.5, Haiku 4.5, Sonnet 4.5, Opus 4, etc.): The [Amazon Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/) renders these only via interactive JavaScript - they cannot be extracted statically. The only statically confirmed price pair is Claude 3.5 Sonnet v2 (extended access): input $6.00, output $30.00, cache write $7.50, cache read $0.60 per 1M tokens. For all current Anthropic models consult the pricing section in the AWS console directly.
 
 2. **Exact default quota values per model** (e.g., default TPM for Claude Sonnet 4.6 in us-east-1): These change frequently and are not documented statically. Verify in the [Service Quotas console](https://console.aws.amazon.com/servicequotas/home/services/bedrock/quotas) or via `aws service-quotas list-service-quotas --service-code bedrock`.
 

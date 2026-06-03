@@ -7,7 +7,7 @@ description: >-
   AgentCore (Runtime, Memory, Gateway, Identity, built-in Browser/Code Interpreter
   tools), with Terraform-first IaC and CloudWatch/OpenTelemetry observability. Use
   this skill WHENEVER the user wants to build, architect, configure, deploy, secure,
-  monitor, or debug an AI agent on AWS — even if they don't name the specific service.
+  monitor, or debug an AI agent on AWS - even if they don't name the specific service.
   Trigger on: "build an agent on Bedrock", "Strands agent", "AgentCore", "deploy my
   agent to AWS", "RAG with Bedrock Knowledge Bases", "multi-agent system on AWS",
   "which model / inference profile should I use", "agent memory", "MCP gateway",
@@ -23,25 +23,25 @@ description: >-
   recommendation here is traceable to an official AWS source the agent can re-open.
 ---
 
-# AWSBedrockAgentCoreSkill
+# AWS Bedrock AgentCore Skill
 
 The definitive, source-cited guide for building AI agents on AWS. This skill does **not**
-hand you a single template — it gives a coding agent the official directives, best
+hand you a single template - it gives a coding agent the official directives, best
 practices, working snippets, and source URLs to **autonomously configure the right agent**
 for the user's specific use case.
 
 Every claim in this skill is backed by an official source. The source index lives in
-[references/sources.md](references/sources.md) — open it whenever you need to re-read a
+[references/sources.md](references/sources.md) - open it whenever you need to re-read a
 primary source or verify a detail before recommending it.
 
 ## How to use this skill
 
 1. **Read the decision tree below** and identify the user's use case and required pattern.
-2. **Open only the reference files that match** (progressive disclosure — the references are
+2. **Open only the reference files that match** (progressive disclosure - the references are
    large and detailed; don't load all of them). Each row of the [reference index](#reference-index)
    says when to open which file.
 3. **Confirm maturity before recommending.** Features are labeled GA / Preview. Never propose a
-   Preview feature as a production default — surface it with an explicit warning (see
+   Preview feature as a production default - surface it with an explicit warning (see
    [GA vs Preview](#ga-vs-preview)).
 4. **Re-verify time-sensitive facts.** Model IDs, prices, and quotas change. This skill points to
    the live model cards, the Bedrock pricing page, and the Service Quotas console for exact numbers
@@ -59,7 +59,7 @@ sources, are in the reference files.
   guardrails, reasoning/thinking, service tiers) maps onto it. → [references/bedrock.md](references/bedrock.md)
 - **Always set an explicit region.** In boto3 / Strands `BedrockModel`, pass `region_name` explicitly,
   or set `AWS_DEFAULT_REGION`. `AWS_REGION` is the **lowest-priority fallback** in the boto3 resolution
-  chain (after `region_name`, `AWS_DEFAULT_REGION`, and profile region) — prefer `AWS_DEFAULT_REGION`
+  chain (after `region_name`, `AWS_DEFAULT_REGION`, and profile region) - prefer `AWS_DEFAULT_REGION`
   or pass `region_name` directly to avoid silent misconfiguration.
   → [references/strands.md](references/strands.md)
 - **IAM least-privilege with confused-deputy protection.** Scope `bedrock:InvokeModel*` to the exact
@@ -67,14 +67,14 @@ sources, are in the reference files.
   every service trust policy. → [references/security-iam-cost.md](references/security-iam-cost.md)
 - **Mind the token quota mechanics** (Claude 3.7+ / 4.x): at request **start**, `input_tokens +
   max_tokens` is reserved 1:1 from the TPM quota; at request **end**, actual output tokens are billed
-  at 5×. An oversized `max_tokens` over-reserves quota up front, blocking concurrent requests — that
+  at 5×. An oversized `max_tokens` over-reserves quota up front, blocking concurrent requests - that
   is why you should size `max_tokens` to the real need.
   → [references/security-iam-cost.md](references/security-iam-cost.md)
 - **Verify model access before deploy, not at runtime.** A model you haven't enabled fails the first
   Converse call with `AccessDeniedException`. → [references/bedrock.md](references/bedrock.md)
 - **Label everything GA / Preview** and re-check maturity before proposing it for production.
 
-## Primary decision tree — "which architecture?"
+## Primary decision tree - "which architecture?"
 
 Walk this top-down. The first match that fits the user's need gives you the recommended stack and
 the reference files to open.
@@ -118,7 +118,7 @@ START: What does the user need the agent to do?
 
 5. It must run as a managed / serverless production service?
    → AgentCore Runtime (recommended for agents) | Fargate/ECS or EKS (HTTP streaming) |
-     Lambda (no response streaming — request/response only).
+     Lambda (no response streaming - request/response only).
      Open: agentcore-runtime.md, deployment-iac.md, deployment-frameworks.md
 
 6. It needs persistent memory across sessions?
@@ -166,7 +166,7 @@ references.
 **Stack:** Strands `Agent` + `BedrockModel` (Converse), or direct boto3 `converse()`.
 **Order:** enable model access → set explicit region → create `BedrockModel` → wrap in `Agent` →
 add a `SlidingWindowConversationManager` for multi-turn → stream with `stream_async`.
-**Watch:** region resolution (`AWS_REGION` is lowest-priority — prefer `AWS_DEFAULT_REGION` or pass `region_name`); size `max_tokens` to real need; pick a geo inference profile.
+**Watch:** region resolution (`AWS_REGION` is lowest-priority - prefer `AWS_DEFAULT_REGION` or pass `region_name`); size `max_tokens` to real need; pick a geo inference profile.
 **Open:** [strands.md](references/strands.md), [bedrock.md](references/bedrock.md).
 
 ### B. Tool-using agent (function calling)
@@ -181,7 +181,7 @@ for sandboxed web/code.
 ### C. RAG over private documents
 **Stack:** Bedrock Knowledge Base (vector store: OpenSearch Serverless or Aurora pgvector) +
 `RetrieveAndGenerate` (managed) or `Retrieve` + your own Converse call (custom).
-**Order:** pick a vector store → create KB + data source → choose chunking (immutable after creation —
+**Order:** pick a vector store → create KB + data source → choose chunking (immutable after creation -
 get it right up front) → ingest → query with metadata filtering / hybrid search / reranking as needed.
 **Watch:** chunking strategy can't be changed without re-creating the data source; ingestion quotas;
 KB vs long-term memory are complementary, not interchangeable.
@@ -214,7 +214,7 @@ AgentCore Gateway for secured tools.
 **Order:** create a Memory with the right strategies (Semantic / UserPreference / Summary / Episodic) →
 define namespaces → wire `AgentCoreMemorySessionManager` into Strands → set up inbound auth
 (JWT/IAM) and outbound OAuth credential providers → map session-to-user in your backend.
-**Watch:** LTM extraction is **asynchronous** — no read-after-write; only events created *after* a
+**Watch:** LTM extraction is **asynchronous** - no read-after-write; only events created *after* a
 strategy is active feed LTM; only `conversational` payloads are processed; prefer
 `GetWorkloadAccessTokenForJWT` and deny `GetWorkloadAccessTokenForUserId` in production.
 **Open:** [memory.md](references/memory.md), [gateway-identity.md](references/gateway-identity.md).
@@ -226,7 +226,7 @@ versioned AgentCore Runtime endpoints with canary / weighted rollout.
 Evaluations (on-demand for CI regression, online in production) → cut an immutable version → shift
 traffic gradually via a pinned endpoint / weighted split → watch Evaluations + Observability, roll back on regression.
 **Watch:** the DEFAULT endpoint auto-updates (don't rely on it for pinned prod traffic); some rollout
-features (Gateway A/B, configuration-bundle rollback) are **Preview** — label them; AgentCore Evaluations is GA.
+features (Gateway A/B, configuration-bundle rollback) are **Preview** - label them; AgentCore Evaluations is GA.
 **Open:** [testing-and-rollout.md](references/testing-and-rollout.md), [observability.md](references/observability.md).
 
 ## Top cross-cutting best practices
@@ -235,23 +235,23 @@ The 12 rules that matter most across every agent. Full detail + sources in the r
 
 1. **Use `BedrockModel` / Converse API as the default; never `InvokeModel` legacy.** All
    capabilities (caching, guardrails, thinking, service tiers) map onto Converse.
-2. **Always set `region_name` explicitly** — `AWS_REGION` is the lowest-priority fallback (after `region_name`, `AWS_DEFAULT_REGION`, and profile region); prefer `AWS_DEFAULT_REGION` or pass `region_name` to avoid silent misconfiguration.
+2. **Always set `region_name` explicitly** - `AWS_REGION` is the lowest-priority fallback (after `region_name`, `AWS_DEFAULT_REGION`, and profile region); prefer `AWS_DEFAULT_REGION` or pass `region_name` to avoid silent misconfiguration.
 3. **IAM least-privilege + confused-deputy guards** (`aws:SourceAccount` + `aws:SourceArn`); scope
    `bedrock:InvokeModel*` to the exact model ARN, never a wildcard in production.
 4. **Size `max_tokens` to real need** (Claude 3.7+/4.x): at request start, `input_tokens + max_tokens`
    is reserved 1:1 from the TPM quota; at request end, actual output is billed at 5×. An oversized
    `max_tokens` over-reserves quota up front and blocks concurrent requests.
 5. **Verify model access / first-time-use before deploy**, not at runtime.
-6. **In multi-agent, the SessionManager goes only on the orchestrator** — inner agents raise `ValueError`.
-7. **Enable CloudWatch Transaction Search before deploying** — it indexes spans going forward; re-verify retroactivity in the AWS docs before assuming historical traces are covered.
+6. **In multi-agent, the SessionManager goes only on the orchestrator** - inner agents raise `ValueError`.
+7. **Enable CloudWatch Transaction Search before deploying** - it indexes spans going forward; re-verify retroactivity in the AWS docs before assuming historical traces are covered.
 8. **In production use a numbered Guardrail version** (never `DRAFT`) and an inference profile (geo for
    data residency, global for throughput/cost).
 9. **AgentCore Runtime is ARM64-only**, with a strict HTTP contract (`/invocations`, `/ping` on 8080);
    never block the main thread or the health check fails and the session is terminated.
-10. **Long-term memory is asynchronous** — don't read right after writing; only post-strategy
+10. **Long-term memory is asynchronous** - don't read right after writing; only post-strategy
     `conversational` events feed LTM.
 11. **Explicitly stop sessions and external resources** (Browser/Code Interpreter, MCP clients, Memory
-    batches): use context managers or `try/finally` — they bill and leak state until closed.
+    batches): use context managers or `try/finally` - they bill and leak state until closed.
 12. **Structure prompt caching well** (cache point after static content; order tools → system →
     messages). CacheRead doesn't consume quota but CacheWrite does, so repeated cache misses cost more
     than not caching.
@@ -267,7 +267,7 @@ status, re-open the official page in [references/sources.md](references/sources.
 **Source-of-truth rule (resolve conflicts):** if any two parts of this skill disagree (maturity, API
 shape, capability), the detailed **reference file in `references/` is authoritative** over the
 `assets/` matrices and over this SKILL.md summary. When still unsure, the official URL in
-[references/sources.md](references/sources.md) wins — re-verify there before recommending.
+[references/sources.md](references/sources.md) wins - re-verify there before recommending.
 
 ## Data-aware facts (re-verify, don't trust stale numbers)
 
@@ -280,7 +280,7 @@ Model IDs, prices, and quotas move. Do **not** hard-code these from memory:
   aren't documented statically).
 
 The references give the *shape* of these (how caching is billed, how burndown works, how profiles
-affect cost) — the live consoles give the *numbers*.
+affect cost) - the live consoles give the *numbers*.
 
 ## Reference index
 
@@ -289,7 +289,7 @@ Open only what the task needs.
 | Reference file | Open it when… |
 |---|---|
 | [references/strands.md](references/strands.md) | Building any Strands agent: agent loop, `Agent` class, model providers, streaming, hooks, structured output, conversation/state/session management. |
-| [references/bedrock.md](references/bedrock.md) | Choosing/using models, the Converse API, inference profiles, prompt caching, reasoning, service tiers — and **RAG with Knowledge Bases**. |
+| [references/bedrock.md](references/bedrock.md) | Choosing/using models, the Converse API, inference profiles, prompt caching, reasoning, service tiers - and **RAG with Knowledge Bases**. |
 | [references/bedrock-platform.md](references/bedrock-platform.md) | Intelligent Prompt Router, batch inference, fine-tuning / custom models, and a data-residency checklist. |
 | [references/agentcore-runtime.md](references/agentcore-runtime.md) | Hosting an agent serverless on AgentCore Runtime: the service contract, sessions, streaming, versioning, deploy. |
 | [references/frameworks-on-agentcore.md](references/frameworks-on-agentcore.md) | Hosting **any** framework (LangGraph, CrewAI, LlamaIndex, Google ADK, Strands) on AgentCore Runtime; Python vs TypeScript SDK differences. |
@@ -303,15 +303,15 @@ Open only what the task needs.
 | [references/security-iam-cost.md](references/security-iam-cost.md) | IAM roles/policies, KMS, VPC PrivateLink, quotas, token burndown, cost optimization. |
 | [references/guardrails.md](references/guardrails.md) | Safety/compliance: content filters, denied topics, PII, contextual grounding, `ApplyGuardrail`. |
 | [references/managed-alternatives.md](references/managed-alternatives.md) | Choosing a **managed/low-code** path (Bedrock managed Agents, Flows, Responses API) or complementary capabilities (AgentCore Policy/Cedar, Evaluations, Prompt Management). |
-| [references/deployment-iac.md](references/deployment-iac.md) | **IaC, Terraform (primary)** — `hashicorp/aws` + `awscc` resources for Bedrock & AgentCore. |
+| [references/deployment-iac.md](references/deployment-iac.md) | **IaC, Terraform (primary)** - `hashicorp/aws` + `awscc` resources for Bedrock & AgentCore. |
 | [references/deployment-best-practices.md](references/deployment-best-practices.md) | IaC best practices: remote state, least-priv IAM via Terraform, ARM64 build, CI/CD. |
 | [references/deployment-cdk.md](references/deployment-cdk.md) | IaC with **AWS CDK (secondary)**: L2/alpha constructs, generative-ai-cdk-constructs. |
 | [references/deployment-frameworks.md](references/deployment-frameworks.md) | Deploying a Strands agent to **Lambda / Fargate-ECS / EKS** (non-AgentCore hosting). |
 | [references/sources.md](references/sources.md) | You need the official source URL for any topic to re-read or verify it. |
 
 ### Bundled assets
-- [assets/service-selection-matrix.md](assets/service-selection-matrix.md) — use-case → stack → maturity → when *not* to use it.
-- [assets/model-selection-guide.md](assets/model-selection-guide.md) — which model / inference profile / service tier / caching.
-- [assets/deployment-checklist.md](assets/deployment-checklist.md) — pre-production checklist.
-- `assets/iam-policies/` — ready-to-adapt IAM role and trust policies.
-- `assets/snippets/` — copy-paste starting snippets for the common patterns.
+- [assets/service-selection-matrix.md](assets/service-selection-matrix.md) - use-case → stack → maturity → when *not* to use it.
+- [assets/model-selection-guide.md](assets/model-selection-guide.md) - which model / inference profile / service tier / caching.
+- [assets/deployment-checklist.md](assets/deployment-checklist.md) - pre-production checklist.
+- `assets/iam-policies/` - ready-to-adapt IAM role and trust policies.
+- `assets/snippets/` - copy-paste starting snippets for the common patterns.

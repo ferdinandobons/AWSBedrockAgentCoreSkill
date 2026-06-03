@@ -1,6 +1,6 @@
-# Amazon Bedrock AgentCore — Gateway & Identity
+# Amazon Bedrock AgentCore - Gateway & Identity
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -30,10 +30,10 @@
   - [Gateway Service Role trust policy with gateway ARN condition](#gateway-service-role-trust-policy-with-gateway-arn-condition)
   - [Create OAuth2 Credential Provider with BYOS Secrets Manager (GitHub)](#create-oauth2-credential-provider-with-byos-secrets-manager-github)
   - [Create custom OAuth2 Credential Provider (CustomOauth2) via CLI](#create-custom-oauth2-credential-provider-customoauth2-via-cli)
-  - [Get workload access token — Pattern 1 JWT-based (recommended)](#get-workload-access-token--pattern-1-jwt-based-recommended)
+  - [Get workload access token - Pattern 1 JWT-based (recommended)](#get-workload-access-token--pattern-1-jwt-based-recommended)
   - [IAM policy: Deny GetWorkloadAccessTokenForUserId](#iam-policy-deny-getworkloadaccesstokenforuserid)
   - [Scope credential provider access to a specific workload identity (IAM)](#scope-credential-provider-access-to-a-specific-workload-identity-iam)
-  - [On-Behalf-Of Token Exchange — TOKEN_EXCHANGE with M2M actor token (CLI)](#on-behalf-of-token-exchange--token_exchange-with-m2m-actor-token-cli)
+  - [On-Behalf-Of Token Exchange - TOKEN_EXCHANGE with M2M actor token (CLI)](#on-behalf-of-token-exchange--token_exchange-with-m2m-actor-token-cli)
   - [Create Gateway with VPC-hosted private IdP (managed Lattice)](#create-gateway-with-vpc-hosted-private-idp-managed-lattice)
   - [Gateway rule with 50/50 A/B split between two configuration bundle versions](#gateway-rule-with-5050-ab-split-between-two-configuration-bundle-versions)
   - [Semantic tool search via MCP JSON-RPC call](#semantic-tool-search-via-mcp-json-rpc-call)
@@ -73,14 +73,14 @@ https://{gateway-Id}.gateway.bedrock-agentcore.{Region}.amazonaws.com
 A target is the configuration that specifies where the gateway routes requests.
 
 **MCP target types:**
-- `lambda` — Lambda function ARN + tool schema JSON
-- `apiGateway` — REST API stage + optional `toolFilters` and `toolOverrides`
-- `openApiSchema` — OpenAPI 3.0/3.1 spec from S3 or inline
-- `smithyModel` — Smithy model from S3
-- `mcpServer` — external MCP server endpoint
+- `lambda` - Lambda function ARN + tool schema JSON
+- `apiGateway` - REST API stage + optional `toolFilters` and `toolOverrides`
+- `openApiSchema` - OpenAPI 3.0/3.1 spec from S3 or inline
+- `smithyModel` - Smithy model from S3
+- `mcpServer` - external MCP server endpoint
 
 **HTTP target type:**
-- `agentcoreRuntime` — Runtime agent ARN for direct traffic without protocol translation
+- `agentcoreRuntime` - Runtime agent ARN for direct traffic without protocol translation
 
 **Quotas:** max 100 targets per gateway (adjustable), max 1,000 tools per target (adjustable). Each target has `credentialProviderConfigurations` for outbound auth.
 
@@ -93,7 +93,7 @@ Controls who can invoke the gateway. Four modes:
 | `CUSTOM_JWT` | Validates JWT from any OIDC-compatible IdP via `discoveryUrl`. Checks `allowedAudience`, `allowedClients`, `allowedScopes`, `customClaims`. Supports claim validation operators: `EQUALS`, `CONTAINS`, `CONTAINS_ANY`. |
 | `AWS_IAM` | SigV4 signing. Caller must have `bedrock-agentcore:InvokeGateway` permission. |
 | `AUTHENTICATE_ONLY` | Validates JWT but delegates authorization to the downstream target. |
-| `NONE` | No authentication — use only alongside a custom REQUEST interceptor Lambda. |
+| `NONE` | No authentication - use only alongside a custom REQUEST interceptor Lambda. |
 
 Supports private IdPs in VPC via VPC Lattice (managed or self-managed). When a client sends a request without a valid token, the gateway returns 401/403 with a `WWW-Authenticate` header following RFC 6750 Bearer token challenge, including required scopes and a `resource_metadata` URL.
 
@@ -103,13 +103,13 @@ Manages how the gateway authenticates to backend targets. `credentialProviderTyp
 
 | Type | Behavior |
 |---|---|
-| `GATEWAY_IAM_ROLE` | SigV4 with the gateway's IAM role — default for Lambda, API GW, and Runtime targets. |
+| `GATEWAY_IAM_ROLE` | SigV4 with the gateway's IAM role - default for Lambda, API GW, and Runtime targets. |
 | `OAUTH` | Client credentials flow via an `OAuth2CredentialProvider` ARN. |
 | `API_KEY` | API key injected into header/query/path via an `ApiKeyCredentialProvider` ARN, with `credentialLocation` set to `HEADER`, `QUERY_PARAMETER`, or `PATH`. |
 
 ### Semantic Tool Search
 
-Optional feature enabled at gateway creation time — **cannot be changed after creation**. Adds the built-in tool `x_amz_bedrock_agentcore_search` to the MCP server. Accepts a natural-language query and returns the most relevant tools among all registered gateway tools. Configured via `protocolConfiguration.mcp.searchType=SEMANTIC`. Requires `bedrock-agentcore:SynchronizeGatewayTargets` IAM permission. Rate limit: 25 transactions per minute for search-based tool calls. Pricing: $0.025 per 1,000 search invocations.
+Optional feature enabled at gateway creation time - **cannot be changed after creation**. Adds the built-in tool `x_amz_bedrock_agentcore_search` to the MCP server. Accepts a natural-language query and returns the most relevant tools among all registered gateway tools. Configured via `protocolConfiguration.mcp.searchType=SEMANTIC`. Requires `bedrock-agentcore:SynchronizeGatewayTargets` IAM permission. Rate limit: 25 transactions per minute for search-based tool calls. Pricing: $0.025 per 1,000 search invocations.
 
 ### AgentCore Identity
 
@@ -142,10 +142,10 @@ An opaque token signed by AWS representing the (agent, user) pair. Authorizes th
 
 For **external agents**, obtain it with:
 
-- **Pattern 1 (production):** `get_workload_access_token(workload_name=..., user_token=jwt)` — AgentCore verifies the JWT signature, issuer, and expiration.
-- **Pattern 2 (development):** `get_workload_access_token(workload_name=..., user_id=string)` — platform treats `user_id` as an opaque unverified string; security is entirely the application's responsibility.
+- **Pattern 1 (production):** `get_workload_access_token(workload_name=..., user_token=jwt)` - AgentCore verifies the JWT signature, issuer, and expiration.
+- **Pattern 2 (development):** `get_workload_access_token(workload_name=..., user_id=string)` - platform treats `user_id` as an opaque unverified string; security is entirely the application's responsibility.
 
-**Important:** workload identities managed by Runtime or Gateway cannot directly retrieve workload access tokens — they receive it automatically via the injected header (error: `WorkloadIdentity is linked to a service`).
+**Important:** workload identities managed by Runtime or Gateway cannot directly retrieve workload access tokens - they receive it automatically via the injected header (error: `WorkloadIdentity is linked to a service`).
 
 ### Auth Flows (USER_FEDERATION vs M2M)
 
@@ -178,7 +178,7 @@ Lambda functions that execute custom code during every gateway invocation.
 | `REQUEST` | Before the gateway calls the target | Validation, transformation, custom auth |
 | `RESPONSE` | After the target's response, before returning to caller | Response transformation, filtering |
 
-**Limits:** max 1 REQUEST and 1 RESPONSE interceptor per gateway. `passRequestHeaders` defaults to `false`; setting it to `true` exposes sensitive headers (including Authorization tokens) to the interceptor Lambda — use with caution. Primary use: pair with `authorizerType=NONE` to implement fully custom auth logic.
+**Limits:** max 1 REQUEST and 1 RESPONSE interceptor per gateway. `passRequestHeaders` defaults to `false`; setting it to `true` exposes sensitive headers (including Authorization tokens) to the interceptor Lambda - use with caution. Primary use: pair with `authorizerType=NONE` to implement fully custom auth logic.
 
 ### Gateway Rules
 
@@ -194,9 +194,9 @@ Traffic routing and configuration override system that operates without redeploy
 
 **GA since May 2026.** The gateway maintains stateful sessions with MCP clients (`Mcp-Session-Id` in the header). Session timeout is configurable from 1 to 8 hours (default: 1 hour). Prerequisite for:
 
-- **Elicitation pass-through** — mid-execution user input.
-- **Sampling messages** — server-initiated LLM calls.
-- **Progress/Logging notifications** — human-in-the-loop features introduced in May 2026.
+- **Elicitation pass-through** - mid-execution user input.
+- **Sampling messages** - server-initiated LLM calls.
+- **Progress/Logging notifications** - human-in-the-loop features introduced in May 2026.
 
 ---
 
@@ -208,7 +208,7 @@ Traffic routing and configuration override system that operates without redeploy
 
 - **Enable semantic search (`searchType=SEMANTIC`) at gateway creation time.** Semantic search cannot be enabled after creation. With many tools, it reduces context sent to the model: instead of listing all tools, the agent searches only the relevant ones, improving latency and reducing costs. Rate limit: 25 TPM for search vs. 1,000 concurrent connections for tool-call/tool-list. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-create-api.html_
 
-- **Prefer `GetWorkloadAccessTokenForJWT` (Pattern 1) over `GetWorkloadAccessTokenForUserId` (Pattern 2) in production.** Pattern 1 validates the JWT signature, issuer, and expiration before issuing the workload token, providing cryptographic proof of identity. Pattern 2 accepts an unverified opaque string — the risk of impersonation is entirely on the application. For workloads that always have a JWT available, also add an explicit Deny on `bedrock-agentcore:GetWorkloadAccessTokenForUserId`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/get-workload-access-token.html_
+- **Prefer `GetWorkloadAccessTokenForJWT` (Pattern 1) over `GetWorkloadAccessTokenForUserId` (Pattern 2) in production.** Pattern 1 validates the JWT signature, issuer, and expiration before issuing the workload token, providing cryptographic proof of identity. Pattern 2 accepts an unverified opaque string - the risk of impersonation is entirely on the application. For workloads that always have a JWT available, also add an explicit Deny on `bedrock-agentcore:GetWorkloadAccessTokenForUserId`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/get-workload-access-token.html_
 
 - **Use `clientSecretSource=EXTERNAL` to reference secrets already in Secrets Manager instead of passing the secret inline.** Available for OAuth2, API key, and payment credential providers. Allows applying custom CMKs, automatic rotation, resource policies, and your own tagging strategy. Secrets remain customer-owned; AgentCore reads them at runtime without copying. Also supported for API keys (`apiKeySecretSource=EXTERNAL`) and payment providers (`apiKeySecretSource`, `walletSecretSource`, `appSecretSource`, `authorizationPrivateKeySource`). _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/resource-providers.html_
 
@@ -220,7 +220,7 @@ Traffic routing and configuration override system that operates without redeploy
 
 - **Use VPC Egress (`privateEndpoint`) for private IdPs instead of exposing OIDC endpoints on the internet.** GA since April 2026. Gateway supports `privateEndpoint` on `customJWTAuthorizer` for IdPs in a VPC (managed Lattice or self-managed). Avoids exposing OIDC/token/JWKS endpoints on the public network. If token/JWKS endpoints use different domains from `discoveryUrl`, use `privateEndpointOverrides` (self-managed Lattice only). Requires `iam:CreateServiceLinkedRole` for `identity-network.bedrock-agentcore.amazonaws.com`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-inbound-auth.html_
 
-- **Use gateway rules for A/B testing of configuration bundles without redeployment.** GA (released Q1 2026): gateway rules with `weightedOverride` allow splitting traffic between two configuration bundle versions (each weight must be 1–99; 0 and 100 are invalid; weights must sum to 100). Max 20 rules per gateway — leave gaps between priorities (e.g., 100, 200, 300) to insert future rules without renumbering. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-rules.html_
+- **Use gateway rules for A/B testing of configuration bundles without redeployment.** GA (released Q1 2026): gateway rules with `weightedOverride` allow splitting traffic between two configuration bundle versions (each weight must be 1–99; 0 and 100 are invalid; weights must sum to 100). Max 20 rules per gateway - leave gaps between priorities (e.g., 100, 200, 300) to insert future rules without renumbering. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-rules.html_
 
 - **Use interceptors for fine-grained access control instead of custom logic in the targets.** REQUEST interceptors execute before the gateway calls the target, allowing JWT claim validation, role-based/attribute-based access control, and returning authorization errors before consuming backend resources. Implement fail-safe defaults (deny by default), log decisions for auditing, and do not log sensitive headers when `passRequestHeaders=true`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-fine-grained-access-control.html_
 
@@ -526,14 +526,14 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity-
 
 ---
 
-### Get workload access token — Pattern 1 JWT-based (recommended)
+### Get workload access token - Pattern 1 JWT-based (recommended)
 
 ```python
 from bedrock_agentcore.services.identity import IdentityClient
 
 identity_client = IdentityClient("us-east-1")
 
-# Pattern 1 (production): JWT from IdP — AgentCore verifies signature, issuer, and expiration
+# Pattern 1 (production): JWT from IdP - AgentCore verifies signature, issuer, and expiration
 workload_access_token = identity_client.get_workload_access_token(
     workload_name="my-demo-agent",
     user_token="insert-jwt-here"  # JWT issued by the IdP for the user
@@ -598,7 +598,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/scope-cre
 
 ---
 
-### On-Behalf-Of Token Exchange — TOKEN_EXCHANGE with M2M actor token (CLI)
+### On-Behalf-Of Token Exchange - TOKEN_EXCHANGE with M2M actor token (CLI)
 
 ```bash
 # Step 1: configure credential provider with OBO mode TOKEN_EXCHANGE
@@ -773,8 +773,8 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-u
 | `authorizerConfiguration.customJWTAuthorizer.customClaims` | Array of `CustomClaimValidationsType` for custom claims. Each object specifies `inboundTokenClaimName`, `inboundTokenClaimValueType` (`STRING` or `STRING_ARRAY`), and `authorizingClaimMatchValue` with `claimMatchOperator` (`EQUALS`, `CONTAINS`, `CONTAINS_ANY`) and `claimMatchValue`. | `{"inboundTokenClaimName": "role", "inboundTokenClaimValueType": "STRING", "authorizingClaimMatchValue": {"claimMatchValue": {"matchValueString": "admin"}, "claimMatchOperator": "EQUALS"}}` |
 | `authorizerConfiguration.customJWTAuthorizer.privateEndpoint` | Enables access to private IdPs in VPC. Supports `managedVpcResource` (with `vpcIdentifier`, `subnetIds`, `securityGroupIds`) or `selfManagedLatticeResource` (with `resourceConfigurationIdentifier`). For different domains in token/JWKS endpoint, use `privateEndpointOverrides` (self-managed Lattice only). | `{"managedVpcResource": {"vpcIdentifier": "vpc-0abc", "subnetIds": ["subnet-0abc"], "endpointIpAddressType": "IPV4", "securityGroupIds": ["sg-0abc"]}}` |
 | `protocolConfiguration.mcp.searchType` | Enables semantic search. `SEMANTIC` = adds tool `x_amz_bedrock_agentcore_search`. Not modifiable after creation. Rate limit: 25 TPM for search requests. | `"SEMANTIC"` |
-| `exceptionLevel` | Level of detail for errors returned during invocation. `DEBUG` = detailed error messages (development only — never use in production). | `"DEBUG"` |
-| `interceptorConfigurations` | Array that configures Lambda interceptors. Max 1 `REQUEST` (executes before the target) and 1 `RESPONSE` (executes after the target) per gateway. Each entry has: `interceptor.lambda.arn` (Lambda ARN), `interceptionPoints` (array: `"REQUEST"` and/or `"RESPONSE"`), and `inputConfiguration.passRequestHeaders` (boolean; if true, request headers including sensitive tokens are passed to the Lambda — use with caution). | `[{"interceptor": {"lambda": {"arn": "arn:aws:lambda:us-west-2:123456789012:function:my-interceptor"}}, "interceptionPoints": ["REQUEST"], "inputConfiguration": {"passRequestHeaders": false}}]` |
+| `exceptionLevel` | Level of detail for errors returned during invocation. `DEBUG` = detailed error messages (development only - never use in production). | `"DEBUG"` |
+| `interceptorConfigurations` | Array that configures Lambda interceptors. Max 1 `REQUEST` (executes before the target) and 1 `RESPONSE` (executes after the target) per gateway. Each entry has: `interceptor.lambda.arn` (Lambda ARN), `interceptionPoints` (array: `"REQUEST"` and/or `"RESPONSE"`), and `inputConfiguration.passRequestHeaders` (boolean; if true, request headers including sensitive tokens are passed to the Lambda - use with caution). | `[{"interceptor": {"lambda": {"arn": "arn:aws:lambda:us-west-2:123456789012:function:my-interceptor"}}, "interceptionPoints": ["REQUEST"], "inputConfiguration": {"passRequestHeaders": false}}]` |
 | `credentialProviderType` (target) | Type of outbound auth for the target. Values: `GATEWAY_IAM_ROLE`, `OAUTH`, `API_KEY`. | `"GATEWAY_IAM_ROLE"` |
 | `apiKeyCredentialProvider.credentialLocation` | Where to inject the API key in the outbound request. Values: `HEADER`, `QUERY_PARAMETER`, `PATH`. | `"HEADER"` |
 | `credentialProviderVendor` (OAuth2) | 26 pre-configured vendors: `GithubOauth2`, `GoogleOauth2`, `MicrosoftOauth2`, `SalesforceOauth2`, `SlackOauth2`, `JiraOauth2`, `AsanaOauth2`, `ZendeskOauth2`, `OktaOauth2`, `Auth0Oauth2`, `AmazonCognitoOauth2`, `LinkedinOauth2`, `TwitterOauth2`, `DropboxOauth2`, `BoxOauth2`, `HubspotOauth2`, `ZoomOauth2`, `NotionOauth2`, `GitlabOauth2`, `BitbucketOauth2`, `TwilioOauth2`, `StripeOauth2`, `FigmaOauth2`, `SpotifyOauth2`, `AtlassianOauth2`, `CustomOauth2`. Payment providers (Preview): `CoinbaseCDP`, `StripePrivy`. | `"GithubOauth2"` or `"CustomOauth2"` |
@@ -810,7 +810,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-u
 
 - **JWT claims are logged in CloudTrail for gateways with `CUSTOM_JWT` auth.** The entry includes the Subject (`sub` claim) of the JWT. Avoid PII in the `sub` field. Prefer GUIDs or pairwise identifiers as recommended by the OIDC spec.
 
-- **Tokens in the vault are not guaranteed to be valid** — they can be revoked on the provider side without AgentCore knowing. On a 401 error, use `force_authentication=True` in the decorator to force a new authentication flow.
+- **Tokens in the vault are not guaranteed to be valid** - they can be revoked on the provider side without AgentCore knowing. On a 401 error, use `force_authentication=True` in the decorator to force a new authentication flow.
 
 - **`GetWorkloadAccessTokenForUserId`: the platform treats `userId` as an opaque unverified string.** For workloads that always have a JWT available, add an explicit `Deny` on `bedrock-agentcore:GetWorkloadAccessTokenForUserId` in the IAM policy.
 
@@ -828,32 +828,32 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-u
 
 - **Interceptors: `passRequestHeaders=false` by default.** Enabling it exposes sensitive tokens (Authorization header) to the interceptor Lambda. Ensure the interceptor Lambda does NOT log these sensitive headers.
 
-- **Identity is free when used via Runtime or Gateway** — this is a critical pricing detail. Only standalone scenarios (external agents) incur the cost of $0.010/1K tokens.
+- **Identity is free when used via Runtime or Gateway** - this is a critical pricing detail. Only standalone scenarios (external agents) incur the cost of $0.010/1K tokens.
 
 ---
 
 ## Official sources
 
-- [AgentCore Gateway — Overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway.html) — Master page with all key concepts, capabilities, and links to sub-guides.
-- [AgentCore Gateway — Supported Target Types](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-supported-targets.html) — Categorization of MCP targets vs HTTP targets.
-- [AgentCore Gateway — Configuring targets (Lambda, API GW, OpenAPI, Smithy, MCP Server, HTTP)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-add-target-api-target-config.html) — Boto3 and CLI code for all target types with exact parameters.
-- [AgentCore Gateway — Create a gateway via API](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-create-api.html) — CreateGateway with all authorizer types (CUSTOM_JWT, AWS_IAM, NONE, AUTHENTICATE_ONLY), semantic search, interceptors, policy engine, and debug messages.
-- [AgentCore Gateway — Inbound auth setup](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-inbound-auth.html) — IAM, JWT, NONE, and private VPC-hosted IdP with managed/self-managed Lattice for ingress auth; scope advertisement RFC 6750.
-- [AgentCore Gateway — Permissions and Service Role](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-prerequisites-permissions.html) — Trust policy, service role permissions, resource-based policies for Lambda/S3.
-- [AgentCore Gateway — Semantic Tool Search](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-using-mcp-semantic-search.html) — How to use `x_amz_bedrock_agentcore_search` with natural-language queries.
-- [AgentCore Gateway — Inbound JWT Authorizer config](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/inbound-jwt-authorizer.html) — Parameters `discoveryUrl`, `allowedAudience`, `allowedClients`, `allowedScopes`, `customClaims`.
-- [AgentCore Gateway — Fine-Grained Access Control](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-fine-grained-access-control.html) — Implementation via interceptors (REQUEST/RESPONSE Lambda), JWT claims validation, IAM principal matching, external authorization services.
-- [AgentCore Gateway — Interceptors](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors.html) — Lambda interceptor configuration (REQUEST before target, RESPONSE after): max 1 REQUEST and 1 RESPONSE per gateway. `passRequestHeaders` details and security.
-- [AgentCore Gateway — Rules](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-rules.html) — Traffic routing and config bundle override without redeployment: priority 1–1M, max 20 rules/gateway, `matchPrincipals` and `matchPaths` conditions, A/B testing with `weightedOverride`/`weightedRoute`.
-- [AgentCore Identity — Credential Providers (OAuth2, API Key, Payment)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/resource-providers.html) — Create OAuth2 providers (26 pre-configured vendors + custom), API key, and payment providers (CoinbaseCDP, StripePrivy) with BYOS Secrets Manager.
-- [AgentCore Identity — Getting OAuth2 Access Token](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity-authentication.html) — `requires_access_token` decorator, USER_FEDERATION vs M2M flows, automatic refresh token storage.
-- [AgentCore Identity — Workload Access Token](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/get-workload-access-token.html) — JWT-based pattern (GetWorkloadAccessTokenForJWT) and UserId-based pattern, detailed security controls including explicit Deny for UserId.
-- [AgentCore Identity — On-Behalf-Of Token Exchange](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/on-behalf-of-token-exchange.html) — RFC 8693 TOKEN_EXCHANGE (`actorTokenContent`: M2M/AWS_IAM_ID_TOKEN_JWT/NONE) and RFC 7523 JWT_AUTHORIZATION_GRANT, native Microsoft OBO.
-- [AgentCore Identity — Scope Credential Provider Access](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/scope-credential-provider-access.html) — IAM policies to restrict credential provider access to specific workload identities; examples with GetResourceOauth2Token and GetResourceApiKey.
-- [AgentCore Identity — Tutorial: first authenticated agent with Cognito](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity-getting-started-cognito.html) — End-to-end tutorial with real code: Cognito user pool, credential provider, deploy on Runtime.
-- [AgentCore Release Notes](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/release-notes.html) — Complete changelog with GA/preview dates for every feature from July 2025 to June 2026.
-- [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) — Complete quotas for Gateway (targets, tools, invocation rate), Identity (workload identities, credential providers), and all other services.
-- [Amazon Bedrock AgentCore Pricing](https://aws.amazon.com/bedrock/agentcore/pricing/) — Official pricing: Gateway $0.005/1K invocations, $0.025/1K searches, $0.02/100 tools/month; Identity $0.010/1K tokens (free via Runtime/Gateway); Policy $0.000025/authorization request.
-- [BedrockAgentCoreFullAccess — Managed Policy](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/BedrockAgentCoreFullAccess.html) — AWS managed policy for full access to Gateway and Identity.
-- [AWS What's New — AgentCore GA](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/) — GA announcement October 2025 with main features.
-- [AWS What's New — AgentCore Identity BYOS (Secrets Manager)](https://aws.amazon.com/about-aws/whats-new/2026/06/agentcore-identity-secrets-manager/) — June 2026: bring-your-own-secret with Secrets Manager for credential providers.
+- [AgentCore Gateway - Overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway.html) - Master page with all key concepts, capabilities, and links to sub-guides.
+- [AgentCore Gateway - Supported Target Types](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-supported-targets.html) - Categorization of MCP targets vs HTTP targets.
+- [AgentCore Gateway - Configuring targets (Lambda, API GW, OpenAPI, Smithy, MCP Server, HTTP)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-add-target-api-target-config.html) - Boto3 and CLI code for all target types with exact parameters.
+- [AgentCore Gateway - Create a gateway via API](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-create-api.html) - CreateGateway with all authorizer types (CUSTOM_JWT, AWS_IAM, NONE, AUTHENTICATE_ONLY), semantic search, interceptors, policy engine, and debug messages.
+- [AgentCore Gateway - Inbound auth setup](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-inbound-auth.html) - IAM, JWT, NONE, and private VPC-hosted IdP with managed/self-managed Lattice for ingress auth; scope advertisement RFC 6750.
+- [AgentCore Gateway - Permissions and Service Role](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-prerequisites-permissions.html) - Trust policy, service role permissions, resource-based policies for Lambda/S3.
+- [AgentCore Gateway - Semantic Tool Search](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-using-mcp-semantic-search.html) - How to use `x_amz_bedrock_agentcore_search` with natural-language queries.
+- [AgentCore Gateway - Inbound JWT Authorizer config](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/inbound-jwt-authorizer.html) - Parameters `discoveryUrl`, `allowedAudience`, `allowedClients`, `allowedScopes`, `customClaims`.
+- [AgentCore Gateway - Fine-Grained Access Control](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-fine-grained-access-control.html) - Implementation via interceptors (REQUEST/RESPONSE Lambda), JWT claims validation, IAM principal matching, external authorization services.
+- [AgentCore Gateway - Interceptors](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-interceptors.html) - Lambda interceptor configuration (REQUEST before target, RESPONSE after): max 1 REQUEST and 1 RESPONSE per gateway. `passRequestHeaders` details and security.
+- [AgentCore Gateway - Rules](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-rules.html) - Traffic routing and config bundle override without redeployment: priority 1–1M, max 20 rules/gateway, `matchPrincipals` and `matchPaths` conditions, A/B testing with `weightedOverride`/`weightedRoute`.
+- [AgentCore Identity - Credential Providers (OAuth2, API Key, Payment)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/resource-providers.html) - Create OAuth2 providers (26 pre-configured vendors + custom), API key, and payment providers (CoinbaseCDP, StripePrivy) with BYOS Secrets Manager.
+- [AgentCore Identity - Getting OAuth2 Access Token](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity-authentication.html) - `requires_access_token` decorator, USER_FEDERATION vs M2M flows, automatic refresh token storage.
+- [AgentCore Identity - Workload Access Token](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/get-workload-access-token.html) - JWT-based pattern (GetWorkloadAccessTokenForJWT) and UserId-based pattern, detailed security controls including explicit Deny for UserId.
+- [AgentCore Identity - On-Behalf-Of Token Exchange](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/on-behalf-of-token-exchange.html) - RFC 8693 TOKEN_EXCHANGE (`actorTokenContent`: M2M/AWS_IAM_ID_TOKEN_JWT/NONE) and RFC 7523 JWT_AUTHORIZATION_GRANT, native Microsoft OBO.
+- [AgentCore Identity - Scope Credential Provider Access](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/scope-credential-provider-access.html) - IAM policies to restrict credential provider access to specific workload identities; examples with GetResourceOauth2Token and GetResourceApiKey.
+- [AgentCore Identity - Tutorial: first authenticated agent with Cognito](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/identity-getting-started-cognito.html) - End-to-end tutorial with real code: Cognito user pool, credential provider, deploy on Runtime.
+- [AgentCore Release Notes](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/release-notes.html) - Complete changelog with GA/preview dates for every feature from July 2025 to June 2026.
+- [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) - Complete quotas for Gateway (targets, tools, invocation rate), Identity (workload identities, credential providers), and all other services.
+- [Amazon Bedrock AgentCore Pricing](https://aws.amazon.com/bedrock/agentcore/pricing/) - Official pricing: Gateway $0.005/1K invocations, $0.025/1K searches, $0.02/100 tools/month; Identity $0.010/1K tokens (free via Runtime/Gateway); Policy $0.000025/authorization request.
+- [BedrockAgentCoreFullAccess - Managed Policy](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/BedrockAgentCoreFullAccess.html) - AWS managed policy for full access to Gateway and Identity.
+- [AWS What's New - AgentCore GA](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/) - GA announcement October 2025 with main features.
+- [AWS What's New - AgentCore Identity BYOS (Secrets Manager)](https://aws.amazon.com/about-aws/whats-new/2026/06/agentcore-identity-secrets-manager/) - June 2026: bring-your-own-secret with Secrets Manager for credential providers.

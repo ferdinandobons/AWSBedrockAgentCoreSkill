@@ -1,5 +1,5 @@
 {
-  "_comment": "Trust policy for the Bedrock Agents classic service role (AmazonBedrockExecutionRoleForAgents_*). The role name MUST start with 'AmazonBedrockExecutionRoleForAgents_' — this prefix is enforced by the Bedrock service trust evaluation. The aws:SourceAccount + AWS:SourceArn conditions (note uppercase 'AWS:' for SourceArn — this matches the official Bedrock docs) are required to prevent confused-deputy attacks. Replace the wildcard agent/* with the specific agent ARN after the agent is created. Source: https://docs.aws.amazon.com/bedrock/latest/userguide/agents-permissions.html",
+  "_comment": "Trust policy for the Bedrock Agents classic service role (AmazonBedrockExecutionRoleForAgents_*). The role name MUST start with 'AmazonBedrockExecutionRoleForAgents_' - this prefix is enforced by the Bedrock service trust evaluation. The aws:SourceAccount + AWS:SourceArn conditions (note uppercase 'AWS:' for SourceArn - this matches the official Bedrock docs) are required to prevent confused-deputy attacks. Replace the wildcard agent/* with the specific agent ARN after the agent is created. Source: https://docs.aws.amazon.com/bedrock/latest/userguide/agents-permissions.html",
   "Version": "2012-10-17",
   "Statement": [
     {

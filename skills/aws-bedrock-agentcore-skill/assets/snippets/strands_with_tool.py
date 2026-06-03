@@ -14,7 +14,7 @@ from strands import Agent, tool, ToolContext
 from strands.models import BedrockModel
 
 # ------------------------------------------------------------------
-# 1. Simple @tool — docstring is the description the model sees.
+# 1. Simple @tool - docstring is the description the model sees.
 #    Keep it clear and unambiguous so the model picks the right tool.
 # ------------------------------------------------------------------
 @tool
@@ -36,7 +36,7 @@ def get_product_price(product_name: str) -> str:
 
 
 # ------------------------------------------------------------------
-# 2. @tool with context=True — injects ToolContext so the tool can
+# 2. @tool with context=True - injects ToolContext so the tool can
 #    read/write agent state without polluting the LLM context.
 # ------------------------------------------------------------------
 @tool(context=True)

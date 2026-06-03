@@ -8,8 +8,8 @@
 # Key rules from the docs:
 #   - Always pass status ('success' or 'error') in every toolResult.
 #   - Append ALL toolResult blocks as a single user message.
-#   - Loop until stopReason != 'tool_use' — the model may chain multiple tool calls.
-#   - toolChoice 'auto' / 'any' / 'tool' — only 'auto' is supported with thinking.
+#   - Loop until stopReason != 'tool_use' - the model may chain multiple tool calls.
+#   - toolChoice 'auto' / 'any' / 'tool' - only 'auto' is supported with thinking.
 #   - Use cross-region inference profile prefix (us.) for production throughput.
 #
 # Source: https://docs.aws.amazon.com/bedrock/latest/userguide/tool-use-client-side.html
@@ -136,7 +136,7 @@ def run_with_tools(user_input: str) -> list:
             print(final_text)
 
             usage = response["usage"]
-            print(f"Tokens — in: {usage['inputTokens']}, out: {usage['outputTokens']}")
+            print(f"Tokens - in: {usage['inputTokens']}, out: {usage['outputTokens']}")
             break
 
     return messages

@@ -1,6 +1,6 @@
-# Strands Tools — @tool & MCP Integration
+# Strands Tools - @tool & MCP Integration
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -8,21 +8,21 @@
 - [Key concepts](#key-concepts)
 - [Best practices](#best-practices)
 - [Code](#code)
-  - [Custom tool with @tool decorator — basic Python pattern](#custom-tool-with-tool-decorator--basic-python-pattern-with-type-hints-and-docstring)
+  - [Custom tool with @tool decorator - basic Python pattern](#custom-tool-with-tool-decorator--basic-python-pattern-with-type-hints-and-docstring)
   - [@tool decorator with parameter overrides](#tool-decorator-with-parameter-overrides-custom-name-description-and-json-schema)
   - [@tool with ToolContext](#tool-with-toolcontext-for-accessing-agent-state-and-per-invocation-data)
   - [Async tool with streaming via AsyncGenerator](#async-tool-with-streaming-via-asyncgenerator-python)
   - [Class-based tools sharing a database connection](#class-based-tools-sharing-a-database-connection-python)
   - [Module-based tool (TOOL_SPEC pattern)](#module-based-tool-tool_spec-pattern-python-only-no-sdk-import-required-in-tool-file)
   - [TypeScript tool with Zod schema and AsyncGenerator](#typescript-tool-with-zod-schema-json-schema-alternative-and-asyncgenerator-streaming)
-  - [MCP — Managed approach (recommended)](#mcp-integration--managed-approach-recommended-pass-mcpclient-directly-to-agent-python)
-  - [MCP — Manual context manager](#mcp-integration--manual-context-manager-explicit-lifecycle-control)
-  - [MCP — All three transport types](#mcp--all-three-transport-types-stdio-with-windows-variant-streamable-http-with-auth-sse-and-aws-iam)
-  - [MCP — Multiple servers with tool_filters and prefix](#mcp--multiple-servers-with-tool_filters-and-prefix-to-avoid-name-conflicts-python-only)
-  - [MCP Elicitation — human-in-the-loop consent](#mcp-elicitation--human-in-the-loop-consent-for-destructive-server-side-operations-python)
+  - [MCP - Managed approach (recommended)](#mcp-integration--managed-approach-recommended-pass-mcpclient-directly-to-agent-python)
+  - [MCP - Manual context manager](#mcp-integration--manual-context-manager-explicit-lifecycle-control)
+  - [MCP - All three transport types](#mcp--all-three-transport-types-stdio-with-windows-variant-streamable-http-with-auth-sse-and-aws-iam)
+  - [MCP - Multiple servers with tool_filters and prefix](#mcp--multiple-servers-with-tool_filters-and-prefix-to-avoid-name-conflicts-python-only)
+  - [MCP Elicitation - human-in-the-loop consent](#mcp-elicitation--human-in-the-loop-consent-for-destructive-server-side-operations-python)
   - [strands-agents-tools pre-built tools](#using-strands-agents-tools-package-pre-built-tools-python-only)
   - [TypeScript vended tools](#typescript-vended-tools--pre-built-tools-included-in-strands-agentssdk)
-  - [MCP TypeScript — stdio, HTTP, and SSE with McpClient](#mcp-typescript--stdio-http-and-sse-clients-with-mcpclient--elicitation-callback)
+  - [MCP TypeScript - stdio, HTTP, and SSE with McpClient](#mcp-typescript--stdio-http-and-sse-clients-with-mcpclient--elicitation-callback)
   - [Tool executor configuration](#tool-executor-configuration-concurrent-default-vs-sequential-python-and-typescript)
   - [Creating a custom MCP server with FastMCP](#creating-a-custom-mcp-server-with-fastmcp--python-and-typescript)
 - [Configuration reference](#configuration-reference)
@@ -35,7 +35,7 @@
 
 Strands Agents (open-source SDK by AWS) uses tools as the primary mechanism to extend agent capabilities beyond text generation. Tools are defined via the `@tool` decorator (Python) or `tool()` function (TypeScript), using docstrings/type hints or Zod schemas to auto-generate OpenAPI-compatible tool specs. The SDK integrates natively with the Model Context Protocol (MCP) via `MCPClient`, supporting stdio, Streamable HTTP, and SSE transports. The `strands-agents-tools` package (Python-only, community-supported) provides 40 pre-built tools (_Source: https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/_). Human-in-the-loop is implemented either through the `elicitation_callback` on `MCPClient` or through the `handoff_to_user` tool, with `BYPASS_TOOL_CONSENT` controlling confirmation prompts for sensitive operations.
 
-**Maturity:** Both SDKs are GA as of 2025–2026. The Python SDK (`strands-agents`) has been production-ready since May 2025 with 25M+ downloads. The TypeScript SDK (`@strands-agents/sdk`) reached 1.0 GA on **April 30, 2026** — prior to that it was in public preview. `tool_filters` and `prefix` on `MCPClient` are **Python-only** and confirmed unsupported in TypeScript `McpClient` (as of TypeScript 1.0). Custom `ToolExecutors` are planned but not yet supported in Python (tracked at [GitHub Issue #762](https://github.com/strands-agents/sdk-python/issues/762), open as of June 2026). The `mcp-proxy-for-aws` package is an official AWS package, reached GA in October 2025, currently at version 1.6.0. MCP elicitation is an MCP protocol feature integrated in both SDKs; its exact API surface may evolve as the MCP spec finalizes.
+**Maturity:** Both SDKs are GA as of 2025–2026. The Python SDK (`strands-agents`) has been production-ready since May 2025 with 25M+ downloads. The TypeScript SDK (`@strands-agents/sdk`) reached 1.0 GA on **April 30, 2026** - prior to that it was in public preview. `tool_filters` and `prefix` on `MCPClient` are **Python-only** and confirmed unsupported in TypeScript `McpClient` (as of TypeScript 1.0). Custom `ToolExecutors` are planned but not yet supported in Python (tracked at [GitHub Issue #762](https://github.com/strands-agents/sdk-python/issues/762), open as of June 2026). The `mcp-proxy-for-aws` package is an official AWS package, reached GA in October 2025, currently at version 1.6.0. MCP elicitation is an MCP protocol feature integrated in both SDKs; its exact API surface may evolve as the MCP spec finalizes.
 
 ---
 
@@ -47,7 +47,7 @@ Decorator from `strands` that transforms any Python function into an SDK-compati
 
 ### tool() function (TypeScript)
 
-Function from `@strands-agents/sdk` used to define tools in TypeScript. Accepts an object with `name`, `description`, `inputSchema` (either a Zod schema for runtime validation or a plain JSON Schema object), and a `callback`. The callback receives typed input (with Zod) or `unknown` input (with JSON Schema), and optionally a `ToolContext` as second parameter. `AsyncGenerator` callbacks enable streaming progress updates. Return values are automatically converted to `ToolResultBlock` — any JSON-serializable value is accepted.
+Function from `@strands-agents/sdk` used to define tools in TypeScript. Accepts an object with `name`, `description`, `inputSchema` (either a Zod schema for runtime validation or a plain JSON Schema object), and a `callback`. The callback receives typed input (with Zod) or `unknown` input (with JSON Schema), and optionally a `ToolContext` as second parameter. `AsyncGenerator` callbacks enable streaming progress updates. Return values are automatically converted to `ToolResultBlock` - any JSON-serializable value is accepted.
 
 ### TOOL_SPEC (module-based tools, Python only)
 
@@ -69,20 +69,20 @@ Context object injected into tools decorated with `@tool(context=True)` or `@too
 
 Class from `strands.tools.mcp` that connects to MCP servers and exposes their tools. Full constructor: `MCPClient(transport_callable, *, startup_timeout=30, tool_filters=None, prefix=None, elicitation_callback=None, tasks_config=None)`. Implements `ToolProvider` interface so can be passed directly to `Agent(tools=[mcp_client])` for automatic lifecycle management. Also supports explicit context manager usage. Key methods:
 
-- `list_tools_sync(pagination_token=None, prefix=None, tool_filters=None) -> PaginatedList[MCPAgentTool]` — the per-call `prefix`/`tool_filters` override constructor defaults if explicitly provided (including empty string/dict).
+- `list_tools_sync(pagination_token=None, prefix=None, tool_filters=None) -> PaginatedList[MCPAgentTool]` - the per-call `prefix`/`tool_filters` override constructor defaults if explicitly provided (including empty string/dict).
 - `call_tool_sync(tool_use_id, name, arguments, read_timeout_seconds, meta)` and `call_tool_async()` for direct invocations.
 
 ### MCPAgentTool
 
-Internal adapter class `MCPAgentTool(AgentTool)` in `strands.tools.mcp.mcp_agent_tool`. Wraps an MCP tool and exposes it as a standard `AgentTool`. Constructor params: `mcp_tool`, `mcp_client`, `name_override` (optional, for disambiguation), `timeout` (`timedelta | None`, optional — sets per-tool execution timeout). Created automatically by `MCPClient.list_tools_sync()`. To configure per-tool timeouts, post-process the returned list and reconstruct `MCPAgentTool` instances with the `timeout` parameter. For per-call timeout control (without reconstructing instances), use `call_tool_sync(read_timeout_seconds=timedelta(...))` directly on the `MCPClient`.
+Internal adapter class `MCPAgentTool(AgentTool)` in `strands.tools.mcp.mcp_agent_tool`. Wraps an MCP tool and exposes it as a standard `AgentTool`. Constructor params: `mcp_tool`, `mcp_client`, `name_override` (optional, for disambiguation), `timeout` (`timedelta | None`, optional - sets per-tool execution timeout). Created automatically by `MCPClient.list_tools_sync()`. To configure per-tool timeouts, post-process the returned list and reconstruct `MCPAgentTool` instances with the `timeout` parameter. For per-call timeout control (without reconstructing instances), use `call_tool_sync(read_timeout_seconds=timedelta(...))` directly on the `MCPClient`.
 
 ### MCP Transport Types
 
 Three supported transports in both Python and TypeScript:
 
-1. **stdio** — for local process MCP servers launched as subprocesses via `StdioServerParameters(command, args)`. Windows requires `'--from server@version server.exe'` args pattern.
-2. **Streamable HTTP** — for HTTP-based servers via `streamablehttp_client(url, headers={})`. Supports AWS IAM SigV4 via `mcp-proxy-for-aws` (official AWS package, GA since Oct 2025).
-3. **SSE (Server-Sent Events)** — via `sse_client(url)`, legacy HTTP transport.
+1. **stdio** - for local process MCP servers launched as subprocesses via `StdioServerParameters(command, args)`. Windows requires `'--from server@version server.exe'` args pattern.
+2. **Streamable HTTP** - for HTTP-based servers via `streamablehttp_client(url, headers={})`. Supports AWS IAM SigV4 via `mcp-proxy-for-aws` (official AWS package, GA since Oct 2025).
+3. **SSE (Server-Sent Events)** - via `sse_client(url)`, legacy HTTP transport.
 
 All three are wrapped in a lambda passed to `MCPClient`. TypeScript uses `@modelcontextprotocol/sdk` transport classes (`StdioClientTransport`, `StreamableHTTPClientTransport`, `SSEClientTransport`).
 
@@ -110,10 +110,10 @@ TypeScript users should use vended-tools from `@strands-agents/sdk` instead.
 
 TypeScript-only pre-built tools shipped directly in `@strands-agents/sdk` under `@strands-agents/sdk/vended-tools/*`. Four tools available:
 
-- **bash** — Node.js Unix/Linux/macOS only; shell state persists across invocations within session
-- **fileEditor** — Node.js only; full-path file read/write/edit
-- **httpRequest** — Node.js 20+ and browsers; 30s default timeout
-- **notebook** — Node.js and browsers; persistent scratchpad integrated with session management
+- **bash** - Node.js Unix/Linux/macOS only; shell state persists across invocations within session
+- **fileEditor** - Node.js only; full-path file read/write/edit
+- **httpRequest** - Node.js 20+ and browsers; 30s default timeout
+- **notebook** - Node.js and browsers; persistent scratchpad integrated with session management
 
 Imported individually: `import { bash } from '@strands-agents/sdk/vended-tools/bash'`.
 
@@ -121,14 +121,14 @@ Imported individually: `import { bash } from '@strands-agents/sdk/vended-tools/b
 
 Tool in `strands_tools` enabling human-in-the-loop workflows. Two modes:
 
-- **Interactive Mode** (`breakout_of_loop=False`) — pauses agent, collects user input, continues execution.
-- **Complete Handoff Mode** (`breakout_of_loop=True`) — stops the agent event loop entirely and transfers control to the human operator.
+- **Interactive Mode** (`breakout_of_loop=False`) - pauses agent, collects user input, continues execution.
+- **Complete Handoff Mode** (`breakout_of_loop=True`) - stops the agent event loop entirely and transfers control to the human operator.
 
 Designed for terminal environments as a reference implementation; for production web applications implement custom handoff mechanisms tailored to the specific UI/UX.
 
 ### BYPASS_TOOL_CONSENT
 
-Environment variable (`BYPASS_TOOL_CONSENT=true`) that disables user confirmation prompts for sensitive operations in the `strands-agents-tools` package (`shell`, `file_write`, `python_repl`, `editor`, etc.). Off by default. Setting it is appropriate for fully automated CI/CD pipelines but removes an important safety check in interactive or production environments. Note: removing it is a **global** setting — it applies to all sensitive tools in the process, not selectively.
+Environment variable (`BYPASS_TOOL_CONSENT=true`) that disables user confirmation prompts for sensitive operations in the `strands-agents-tools` package (`shell`, `file_write`, `python_repl`, `editor`, etc.). Off by default. Setting it is appropriate for fully automated CI/CD pipelines but removes an important safety check in interactive or production environments. Note: removing it is a **global** setting - it applies to all sensitive tools in the process, not selectively.
 
 ### Tool Executors
 
@@ -136,7 +136,7 @@ Control whether multiple tool calls from a single LLM turn execute concurrently 
 
 ### Auto-loading from ./tools/ directory
 
-Python-only feature enabled by `Agent(load_tools_from_directory=True)`. Any `.py` file in the `./tools/` directory relative to the current working directory is automatically loaded and hot-reloaded on modification. Disabled by default. Security warning: any file placed in that directory will be executed automatically — never point this at a directory writable by untrusted processes or users.
+Python-only feature enabled by `Agent(load_tools_from_directory=True)`. Any `.py` file in the `./tools/` directory relative to the current working directory is automatically loaded and hot-reloaded on modification. Disabled by default. Security warning: any file placed in that directory will be executed automatically - never point this at a directory writable by untrusted processes or users.
 
 ### Direct Tool Invocation
 
@@ -157,39 +157,39 @@ Can be set at `MCPClient` construction time or overridden per `list_tools_sync()
 
 ## Best practices
 
-- **Write rich, multi-paragraph tool docstrings as the primary tool description** — The LLM relies entirely on the tool description to decide when and how to call it. Include: what the tool does, when to use it, example response structure, parameter ranges, limitations, and related tools. Vague one-liners cause the model to misuse or skip tools. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/_
+- **Write rich, multi-paragraph tool docstrings as the primary tool description** - The LLM relies entirely on the tool description to decide when and how to call it. Include: what the tool does, when to use it, example response structure, parameter ranges, limitations, and related tools. Vague one-liners cause the model to misuse or skip tools. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/_
 
-- **Use the @tool decorator for simple tools and module-based TOOL_SPEC for dependency-free tools** — `@tool` is the most concise pattern and handles type coercion automatically via Pydantic. Use `TOOL_SPEC` modules when you want zero Strands SDK dependency in the tool file (e.g., for sharing tools across frameworks), since the module just needs a dict and a plain function. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/_
+- **Use the @tool decorator for simple tools and module-based TOOL_SPEC for dependency-free tools** - `@tool` is the most concise pattern and handles type coercion automatically via Pydantic. Use `TOOL_SPEC` modules when you want zero Strands SDK dependency in the tool file (e.g., for sharing tools across frameworks), since the module just needs a dict and a plain function. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/_
 
-- **Always use keyword arguments when calling tools directly via `agent.tool.my_tool()`** — Positional arguments to the `agent.tool` proxy are not supported and will fail. Always use `agent.tool.my_tool(param1='val', param2=123)`. In TypeScript, use `agent.tool.toolName!.invoke({param1: 'val'})`. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/_
+- **Always use keyword arguments when calling tools directly via `agent.tool.my_tool()`** - Positional arguments to the `agent.tool` proxy are not supported and will fail. Always use `agent.tool.my_tool(param1='val', param2=123)`. In TypeScript, use `agent.tool.toolName!.invoke({param1: 'val'})`. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/_
 
-- **Pass `MCPClient` directly to `Agent(tools=[mcp_client])` rather than using `list_tools_sync()` manually** — Passing the `MCPClient` directly (Python) or `McpClient` directly (TypeScript) enables automatic lifecycle management: the connection is opened before the first call and closed after the agent finishes, preventing resource leaks. Manual context managers require keeping the `with` block open for the entire agent lifetime. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
+- **Pass `MCPClient` directly to `Agent(tools=[mcp_client])` rather than using `list_tools_sync()` manually** - Passing the `MCPClient` directly (Python) or `McpClient` directly (TypeScript) enables automatic lifecycle management: the connection is opened before the first call and closed after the agent finishes, preventing resource leaks. Manual context managers require keeping the `with` block open for the entire agent lifetime. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
-- **Use `prefix=` on `MCPClient` to namespace tools from different servers** — When combining multiple MCP servers, tool name collisions are common (both may have a `'search'` tool). The `prefix` parameter namespaces tools as `aws_docs_search_documentation` vs `other_search`, avoiding conflicts and making the agent's choices more predictable. Python-only feature; TypeScript users must manage naming manually. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
+- **Use `prefix=` on `MCPClient` to namespace tools from different servers** - When combining multiple MCP servers, tool name collisions are common (both may have a `'search'` tool). The `prefix` parameter namespaces tools as `aws_docs_search_documentation` vs `other_search`, avoiding conflicts and making the agent's choices more predictable. Python-only feature; TypeScript users must manage naming manually. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
-- **Use `tool_filters={'allowed': [...]}` to limit which MCP tools are loaded** — MCP servers often expose dozens of tools, but the agent only needs a subset. Fewer tools in context reduces token cost, reduces the chance of the model picking the wrong tool, and improves performance. Combine with regex patterns for flexible matching. Python-only; in TypeScript filter manually after `mcpClient.listTools()`. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
+- **Use `tool_filters={'allowed': [...]}` to limit which MCP tools are loaded** - MCP servers often expose dozens of tools, but the agent only needs a subset. Fewer tools in context reduces token cost, reduces the chance of the model picking the wrong tool, and improves performance. Combine with regex patterns for flexible matching. Python-only; in TypeScript filter manually after `mcpClient.listTools()`. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
-- **Implement `elicitation_callback` for human-in-the-loop confirmation of destructive MCP operations** — The MCP elicitation protocol allows server-side tools to pause and request explicit user approval before performing irreversible actions (file deletion, API calls). This is the correct pattern for human-in-the-loop in MCP-based tools, as opposed to simply logging the action. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
+- **Implement `elicitation_callback` for human-in-the-loop confirmation of destructive MCP operations** - The MCP elicitation protocol allows server-side tools to pause and request explicit user approval before performing irreversible actions (file deletion, API calls). This is the correct pattern for human-in-the-loop in MCP-based tools, as opposed to simply logging the action. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
-- **Follow least-privilege when designing tools: validate paths, scope permissions, audit-log sensitive ops** — Tools execute with the permissions of the host process. A compromised or hallucinating agent could pass malicious paths or arguments. Path traversal checks (`realpath`/`abspath` validation against allowed dirs), strict input validation, and logging protect against both bugs and prompt injection attacks. _Source: https://strandsagents.com/docs/user-guide/safety-security/responsible-ai/_
+- **Follow least-privilege when designing tools: validate paths, scope permissions, audit-log sensitive ops** - Tools execute with the permissions of the host process. A compromised or hallucinating agent could pass malicious paths or arguments. Path traversal checks (`realpath`/`abspath` validation against allowed dirs), strict input validation, and logging protect against both bugs and prompt injection attacks. _Source: https://strandsagents.com/docs/user-guide/safety-security/responsible-ai/_
 
-- **Use `SequentialToolExecutor` only when tool calls have explicit ordering dependencies** — The default `ConcurrentToolExecutor` runs all tools from a single LLM turn in parallel, minimizing wall-clock time. Switching to sequential adds latency. Only use it when tool B genuinely needs the output or side effect of tool A (e.g., 'screenshot then email the screenshot'). Note: even the concurrent executor is sequential if the model only emits one tool call per turn. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/executors/_
+- **Use `SequentialToolExecutor` only when tool calls have explicit ordering dependencies** - The default `ConcurrentToolExecutor` runs all tools from a single LLM turn in parallel, minimizing wall-clock time. Switching to sequential adds latency. Only use it when tool B genuinely needs the output or side effect of tool A (e.g., 'screenshot then email the screenshot'). Note: even the concurrent executor is sequential if the model only emits one tool call per turn. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/executors/_
 
-- **Use class-based tools to share expensive resources (DB connections, API clients) across tool calls** — Class-based tools initialized once and passed as bound methods (`db_tools.query_database`) share the same connection object across all invocations. This avoids reconnecting on every tool call and keeps credentials out of tool parameters (where the LLM could log or expose them). _Source: https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/_
+- **Use class-based tools to share expensive resources (DB connections, API clients) across tool calls** - Class-based tools initialized once and passed as bound methods (`db_tools.query_database`) share the same connection object across all invocations. This avoids reconnecting on every tool call and keeps credentials out of tool parameters (where the LLM could log or expose them). _Source: https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/_
 
-- **Never set `BYPASS_TOOL_CONSENT=true` in interactive or production environments** — `BYPASS_TOOL_CONSENT` removes the user confirmation prompts for shell execution, file writes, and code execution — it applies globally to all sensitive tools in the process, not selectively. Disabling it in production removes the last line of defense against an agent taking irreversible destructive actions. Reserve it for fully automated, audited CI pipelines. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/_
+- **Never set `BYPASS_TOOL_CONSENT=true` in interactive or production environments** - `BYPASS_TOOL_CONSENT` removes the user confirmation prompts for shell execution, file writes, and code execution - it applies globally to all sensitive tools in the process, not selectively. Disabling it in production removes the last line of defense against an agent taking irreversible destructive actions. Reserve it for fully automated, audited CI pipelines. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/_
 
-- **Return informative error messages (`status: 'error'`) from tools rather than raising unhandled exceptions** — When a tool raises an unhandled exception, the agent receives an opaque error and may retry indefinitely or give up. Returning a structured error with a clear message (e.g., `'File not found at /path/x'`) gives the LLM enough context to adapt its strategy. A dict without a `'status'` key is silently treated as a JSON success response, not an error — explicitly set `'status': 'error'` for failures. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/_
+- **Return informative error messages (`status: 'error'`) from tools rather than raising unhandled exceptions** - When a tool raises an unhandled exception, the agent receives an opaque error and may retry indefinitely or give up. Returning a structured error with a clear message (e.g., `'File not found at /path/x'`) gives the LLM enough context to adapt its strategy. A dict without a `'status'` key is silently treated as a JSON success response, not an error - explicitly set `'status': 'error'` for failures. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/_
 
-- **For TypeScript tools, use vended-tools (`@strands-agents/sdk/vended-tools/*`) instead of `strands-agents-tools`** — `strands-agents-tools` is Python-only. TypeScript users should import from the vended-tools subpaths (`bash`, `fileEditor`, `httpRequest`, `notebook`) included in `@strands-agents/sdk`. These are maintained at SDK parity. For custom tools, use the `tool()` function with Zod or JSON Schema. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/vended-tools/_
+- **For TypeScript tools, use vended-tools (`@strands-agents/sdk/vended-tools/*`) instead of `strands-agents-tools`** - `strands-agents-tools` is Python-only. TypeScript users should import from the vended-tools subpaths (`bash`, `fileEditor`, `httpRequest`, `notebook`) included in `@strands-agents/sdk`. These are maintained at SDK parity. For custom tools, use the `tool()` function with Zod or JSON Schema. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/vended-tools/_
 
-- **Pass `{ recordDirectToolCall: false }` when invoking tools directly during an active agent invocation in TypeScript** — Calling `agent.tool.toolName!.invoke()` while an agent invocation is already in progress will throw `ConcurrentInvocationError` unless `recordDirectToolCall` is set to `false`. This is the correct pattern for side-effect tools or utility calls whose output should not enter the conversation context. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/_
+- **Pass `{ recordDirectToolCall: false }` when invoking tools directly during an active agent invocation in TypeScript** - Calling `agent.tool.toolName!.invoke()` while an agent invocation is already in progress will throw `ConcurrentInvocationError` unless `recordDirectToolCall` is set to `false`. This is the correct pattern for side-effect tools or utility calls whose output should not enter the conversation context. _Source: https://strandsagents.com/docs/user-guide/concepts/tools/_
 
 ---
 
 ## Code
 
-### Custom tool with @tool decorator — basic Python pattern with type hints and docstring
+### Custom tool with @tool decorator - basic Python pattern with type hints and docstring
 
 ```python
 from strands import Agent, tool
@@ -429,7 +429,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/_
 import { Agent, tool } from '@strands-agents/sdk'
 import { z } from 'zod'
 
-// Tool with Zod schema — input is typed and validated at runtime
+// Tool with Zod schema - input is typed and validated at runtime
 const weatherTool = tool({
   name: 'weather_forecast',
   description: 'Get weather forecast for a city. Use when user asks about weather.',
@@ -442,7 +442,7 @@ const weatherTool = tool({
   },
 })
 
-// Same tool with plain JSON Schema — input is `unknown`, cast manually
+// Same tool with plain JSON Schema - input is `unknown`, cast manually
 const weatherToolJson = tool({
   name: 'weather_forecast',
   description: 'Get weather forecast for a city.',
@@ -488,14 +488,14 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/_
 
 ---
 
-### MCP integration — Managed approach (recommended): pass MCPClient directly to Agent (Python)
+### MCP integration - Managed approach (recommended): pass MCPClient directly to Agent (Python)
 
 ```python
 from mcp import stdio_client, StdioServerParameters
 from strands import Agent
 from strands.tools.mcp import MCPClient
 
-# Recommended: pass MCPClient directly — lifecycle managed automatically
+# Recommended: pass MCPClient directly - lifecycle managed automatically
 mcp_client = MCPClient(lambda: stdio_client(
     StdioServerParameters(
         command="uvx",
@@ -511,7 +511,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
 ---
 
-### MCP integration — Manual context manager (explicit lifecycle control) — agent MUST be inside with block
+### MCP integration - Manual context manager (explicit lifecycle control) - agent MUST be inside with block
 
 ```python
 from mcp import stdio_client, StdioServerParameters
@@ -528,7 +528,7 @@ with mcp_client:
     agent = Agent(tools=tools)
     response = agent("Use the tools")  # Works
 
-# response = agent("This fails")  # MCPClientInitializationError — outside context
+# response = agent("This fails")  # MCPClientInitializationError - outside context
 
 # Multiple servers: use multiple context managers together
 with server1, server2:
@@ -541,7 +541,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
 ---
 
-### MCP — All three transport types: stdio (with Windows variant), Streamable HTTP with auth, SSE, and AWS IAM
+### MCP - All three transport types: stdio (with Windows variant), Streamable HTTP with auth, SSE, and AWS IAM
 
 ```python
 import os
@@ -551,12 +551,12 @@ from mcp.client.sse import sse_client
 from strands import Agent
 from strands.tools.mcp import MCPClient
 
-# 1. stdio — local process (macOS/Linux)
+# 1. stdio - local process (macOS/Linux)
 stdio_client_obj = MCPClient(lambda: stdio_client(
     StdioServerParameters(command="uvx", args=["my-mcp-server@latest"])
 ))
 
-# stdio — Windows variant (must specify .exe explicitly)
+# stdio - Windows variant (must specify .exe explicitly)
 stdio_win = MCPClient(lambda: stdio_client(
     StdioServerParameters(
         command="uvx",
@@ -594,7 +594,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
 ---
 
-### MCP — Multiple servers with tool_filters and prefix to avoid name conflicts (Python-only)
+### MCP - Multiple servers with tool_filters and prefix to avoid name conflicts (Python-only)
 
 ```python
 import re
@@ -602,7 +602,7 @@ from mcp import stdio_client, StdioServerParameters
 from strands import Agent
 from strands.tools.mcp import MCPClient
 
-# Server 1: AWS docs — load only 2 specific tools, prefix with 'aws_docs'
+# Server 1: AWS docs - load only 2 specific tools, prefix with 'aws_docs'
 aws_docs_client = MCPClient(
     lambda: stdio_client(StdioServerParameters(
         command="uvx",
@@ -612,7 +612,7 @@ aws_docs_client = MCPClient(
     prefix="aws_docs"
 )
 
-# Server 2: Custom server — regex filter, combined allowed+rejected
+# Server 2: Custom server - regex filter, combined allowed+rejected
 my_server_client = MCPClient(
     lambda: stdio_client(StdioServerParameters(
         command="python",
@@ -635,10 +635,10 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
 ---
 
-### MCP Elicitation — human-in-the-loop consent for destructive server-side operations (Python)
+### MCP Elicitation - human-in-the-loop consent for destructive server-side operations (Python)
 
 ```python
-# server.py — MCP server that pauses for user approval
+# server.py - MCP server that pauses for user approval
 from mcp.server import FastMCP
 from pydantic import BaseModel, Field
 
@@ -657,11 +657,11 @@ async def delete_files(paths: list[str]) -> str:
     if result.action != "accept" or not result.data.confirmed:
         return f"Deletion rejected by {result.data.username}"
     # Perform deletion...
-    return f"Deleted {paths} — approved by {result.data.username}"
+    return f"Deleted {paths} - approved by {result.data.username}"
 
 server.run()
 
-# client.py — Strands agent with elicitation callback
+# client.py - Strands agent with elicitation callback
 from mcp import stdio_client, StdioServerParameters
 from mcp.types import ElicitResult
 from strands import Agent
@@ -684,7 +684,7 @@ client = MCPClient(
     elicitation_callback=elicitation_callback,
 )
 
-# Use managed approach — lifecycle handled automatically
+# Use managed approach - lifecycle handled automatically
 agent = Agent(tools=[client])
 agent("Delete '/tmp/old_logs.txt'")
 ```
@@ -728,7 +728,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/community-tool
 
 ---
 
-### TypeScript vended tools — pre-built tools included in @strands-agents/sdk
+### TypeScript vended tools - pre-built tools included in @strands-agents/sdk
 
 ```typescript
 import { Agent } from '@strands-agents/sdk'
@@ -757,7 +757,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/vended-tools/_
 
 ---
 
-### MCP TypeScript — stdio, HTTP, and SSE clients with McpClient + elicitation callback
+### MCP TypeScript - stdio, HTTP, and SSE clients with McpClient + elicitation callback
 
 ```typescript
 import { Agent, McpClient } from '@strands-agents/sdk'
@@ -851,7 +851,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/executors/_
 
 ---
 
-### Creating a custom MCP server with FastMCP — Python and TypeScript
+### Creating a custom MCP server with FastMCP - Python and TypeScript
 
 ```python
 # my_mcp_server.py (Python using FastMCP)
@@ -888,18 +888,18 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
 | Name | Description | Default / example |
 |------|-------------|-------------------|
-| `BYPASS_TOOL_CONSENT` | Environment variable for `strands-agents-tools`. When set to `'true'`, disables user confirmation prompts for ALL sensitive tools in the process (`shell`, `file_write`, `python_repl`, `editor`, etc.) globally. WARNING: disabling removes the human safety check across every sensitive tool — use only in CI/automated pipelines. | `os.environ['BYPASS_TOOL_CONSENT'] = 'true'` or `export BYPASS_TOOL_CONSENT=true` |
+| `BYPASS_TOOL_CONSENT` | Environment variable for `strands-agents-tools`. When set to `'true'`, disables user confirmation prompts for ALL sensitive tools in the process (`shell`, `file_write`, `python_repl`, `editor`, etc.) globally. WARNING: disabling removes the human safety check across every sensitive tool - use only in CI/automated pipelines. | `os.environ['BYPASS_TOOL_CONSENT'] = 'true'` or `export BYPASS_TOOL_CONSENT=true` |
 | `Agent(tools=[...])` | List of tools passed to the Agent constructor. Accepts: `@tool`-decorated functions (Python), module objects with `TOOL_SPEC` (Python), file path strings (Python), `MCPClient` instances implementing `ToolProvider`, `Agent` instances (auto-converted to tools for multi-agent), or pre-built tools from `strands_tools` / `@strands-agents/sdk/vended-tools/*`. | `Agent(tools=[my_tool, mcp_client, './path/tool.py', research_agent])` |
 | `Agent(load_tools_from_directory=True)` | Python-only. Auto-loads all `.py` files from `./tools/` in the current working directory and hot-reloads them on modification. Disabled by default. Security risk: executes any file placed in that directory automatically. | `Agent(load_tools_from_directory=True)` |
 | `Agent(tool_executor=SequentialToolExecutor())` | Override the default `ConcurrentToolExecutor`. Use `SequentialToolExecutor` when tool calls within a single LLM turn must execute in order due to side-effect dependencies. TypeScript equivalent: `new Agent({ toolExecutor: 'sequential' })`. | `from strands.tools.executors import SequentialToolExecutor`<br>`Agent(tool_executor=SequentialToolExecutor())` |
 | `MCPClient(transport_callable, *, startup_timeout, tool_filters, prefix, elicitation_callback, tasks_config)` | Full `MCPClient` constructor. `transport_callable`: lambda returning a transport context manager. `startup_timeout`: int seconds before init is cancelled (default 30). `tool_filters`: `ToolFilters` TypedDict with `'allowed'` and/or `'rejected'` lists of strings or compiled regexes (allowed first, then rejected). `prefix`: string prepended to all tool names. `elicitation_callback`: async callable returning `ElicitResult`. `tasks_config`: experimental for long-running tool execution. | `MCPClient(`<br>&nbsp;&nbsp;`lambda: stdio_client(StdioServerParameters(command='uvx', args=['server@latest'])),`<br>&nbsp;&nbsp;`startup_timeout=30,`<br>&nbsp;&nbsp;`tool_filters={'allowed': ['search_docs'], 'rejected': []},`<br>&nbsp;&nbsp;`prefix='aws',`<br>&nbsp;&nbsp;`elicitation_callback=my_callback`<br>`)` |
 | `MCPClient.list_tools_sync(pagination_token, prefix, tool_filters)` | Returns `PaginatedList[MCPAgentTool]`. The `prefix` and `tool_filters` parameters OVERRIDE constructor defaults if explicitly provided (including empty string `''` or empty dict `{}`). If passed as `None`, constructor defaults are used. Supports pagination via `pagination_token`. | `tools = mcp_client.list_tools_sync(prefix='my_prefix', tool_filters={'allowed': ['tool_a']})` |
 | `MCPClient.call_tool_sync / call_tool_async read_timeout_seconds` | Per-call timeout for MCP tool execution. Pass as a `timedelta`. Prevents agent hanging on slow or unresponsive MCP tools. Primary mechanism for per-call timeout control. | `from datetime import timedelta`<br>`mcp_client.call_tool_sync('id', 'my_tool', arguments={}, read_timeout_seconds=timedelta(seconds=30))` |
-| `MCPAgentTool(mcp_tool, mcp_client, name_override, timeout)` | Adapter wrapping an MCP tool as an `AgentTool`. `timeout`: `timedelta \| None` — default execution timeout. `name_override`: `str \| None` — overrides the MCP tool name. Created automatically by `list_tools_sync()`; construct manually to set per-tool timeouts. | `from datetime import timedelta`<br>`from strands.tools.mcp.mcp_agent_tool import MCPAgentTool`<br>`tool_with_timeout = MCPAgentTool(mcp_tool=raw_tool, mcp_client=client, timeout=timedelta(seconds=30))` |
-| `@tool` decorator parameters | All optional: `name` (str), `description` (str), `inputSchema` (dict with `'json'` key containing JSON Schema), `context` (bool \| str — `True` uses `'tool_context'` param name; a string value sets a custom param name). | `@tool(name='custom_name', description='Override description', context=True)`<br>or: `@tool(context='ctx')` |
+| `MCPAgentTool(mcp_tool, mcp_client, name_override, timeout)` | Adapter wrapping an MCP tool as an `AgentTool`. `timeout`: `timedelta \| None` - default execution timeout. `name_override`: `str \| None` - overrides the MCP tool name. Created automatically by `list_tools_sync()`; construct manually to set per-tool timeouts. | `from datetime import timedelta`<br>`from strands.tools.mcp.mcp_agent_tool import MCPAgentTool`<br>`tool_with_timeout = MCPAgentTool(mcp_tool=raw_tool, mcp_client=client, timeout=timedelta(seconds=30))` |
+| `@tool` decorator parameters | All optional: `name` (str), `description` (str), `inputSchema` (dict with `'json'` key containing JSON Schema), `context` (bool \| str - `True` uses `'tool_context'` param name; a string value sets a custom param name). | `@tool(name='custom_name', description='Override description', context=True)`<br>or: `@tool(context='ctx')` |
 | `strands-agents-tools` extras | Optional dependency groups for specialized tools. Install with bracket syntax. | `pip install 'strands-agents-tools[mem0_memory]'`<br>`pip install 'strands-agents-tools[local_chromium_browser]'`<br>`pip install 'strands-agents-tools[agent_core_browser]'`<br>`pip install 'strands-agents-tools[agent_core_code_interpreter]'`<br>`pip install 'strands-agents-tools[a2a_client]'`<br>`pip install 'strands-agents-tools[diagram]'`<br>`pip install 'strands-agents-tools[rss]'`<br>`pip install 'strands-agents-tools[use_computer]'` |
 | Tool name constraints | Tool names must match `^[a-zA-Z0-9_-]+` and be 1–64 characters long. Names not matching this format are replaced with `INVALID_TOOL_NAME` in assistant messages (request still succeeds but the model cannot reference the original name). | Valid: `my_tool`, `search-docs`, `FileReader123`<br>Invalid: `my tool` (space), `tool@name` (special char) |
-| `use_aws` tool IAM permissions | The `strands_tools.use_aws` tool calls arbitrary boto3 operations. It has no hardcoded IAM policy — permissions depend entirely on what the agent needs. The tool enforces confirmation prompts for mutative and credential-returning operations (create/delete/update, STS, Secrets Manager, ECR). Credentials resolved via standard AWS chain (env vars, `~/.aws/credentials`, EC2/ECS instance role, etc.). Apply least-privilege IAM policies. No single minimum policy exists. | Grant only needed policies, e.g., `AmazonBedrockReadOnly` for model invocation. Do not use `AdministratorAccess` or wildcard resource ARNs. Use explicit Deny statements. |
+| `use_aws` tool IAM permissions | The `strands_tools.use_aws` tool calls arbitrary boto3 operations. It has no hardcoded IAM policy - permissions depend entirely on what the agent needs. The tool enforces confirmation prompts for mutative and credential-returning operations (create/delete/update, STS, Secrets Manager, ECR). Credentials resolved via standard AWS chain (env vars, `~/.aws/credentials`, EC2/ECS instance role, etc.). Apply least-privilege IAM policies. No single minimum policy exists. | Grant only needed policies, e.g., `AmazonBedrockReadOnly` for model invocation. Do not use `AdministratorAccess` or wildcard resource ARNs. Use explicit Deny statements. |
 | TypeScript `McpClient` optional metadata | Accepts optional application metadata: `applicationName` (string) and `applicationVersion` (string). Passed to MCP servers as client metadata. `tool_filters` and `prefix` are NOT supported in TypeScript `McpClient`. | `new McpClient({ applicationName: 'My Agent', applicationVersion: '1.0.0', transport: ... })` |
 
 ---
@@ -942,18 +942,18 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/_
 
 ## Official sources
 
-- [Strands Agents — Tools Overview](https://strandsagents.com/docs/user-guide/concepts/tools/) — Index page covering all tool types, loading mechanisms, executors, direct invocation, and best practices. Most comprehensive entry point.
-- [Strands Agents — Creating Custom Tools](https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/) — Covers `@tool` decorator, module-based tools (TOOL_SPEC), class-based tools, ToolContext, ToolResult format, async/streaming tools.
-- [Strands Agents — MCP Tools](https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/) — Full MCP integration guide: MCPClient, transport types, lifecycle management, tool_filters, prefix, elicitation callback, troubleshooting.
-- [Strands Agents — @tool Decorator API Reference](https://strandsagents.com/docs/api/python/strands.tools.decorator/) — Full API for the `@tool` decorator: `DecoratedFunctionTool` class, `FunctionToolMetadata`, all decorator parameters (name, description, inputSchema, context).
-- [Strands Agents — MCPAgentTool API Reference](https://strandsagents.com/docs/api/python/strands.tools.mcp.mcp_agent_tool/) — Internal adapter class `MCPAgentTool(AgentTool)` that wraps MCP tools. Constructor: `MCPAgentTool(mcp_tool, mcp_client, name_override=None, timeout: timedelta | None = None)`.
-- [Strands Agents — MCPClient API Reference](https://strandsagents.com/docs/api/python/strands.tools.mcp.mcp_client/) — Full `MCPClient` constructor signature (including `startup_timeout` and `tasks_config`), `list_tools_sync()` with per-call prefix and tool_filters override, `call_tool_sync`/`async` with `read_timeout_seconds`.
-- [Strands Agents — Community Tools Package](https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/) — Complete list of 40 pre-built tools in `strands-agents-tools`, installation extras, `BYPASS_TOOL_CONSENT` documentation, `handoff_to_user` modes.
-- [Strands Agents — Tool Executors](https://strandsagents.com/docs/user-guide/concepts/tools/executors/) — `ConcurrentToolExecutor` vs `SequentialToolExecutor`, cancellation behavior, event ordering, Custom Executors tracking issue #762.
-- [Strands Agents — Vended Tools (TypeScript)](https://strandsagents.com/docs/user-guide/concepts/tools/vended-tools/) — TypeScript-only pre-built tools shipped in `@strands-agents/sdk`: `bash`, `fileEditor`, `httpRequest`, `notebook`. Node.js and browser support varies by tool.
-- [GitHub — strands-agents/tools](https://github.com/strands-agents/tools) — Source repo for `strands-agents-tools` package. Check README for latest tool list, extras install flags, and security warnings.
-- [GitHub — aws/mcp-proxy-for-aws](https://github.com/aws/mcp-proxy-for-aws) — Official AWS package for SigV4 authentication on AWS-hosted MCP servers. GA since October 2025, v1.6.0 as of May 2026.
-- [Strands Agents — Responsible AI / Tool Design](https://strandsagents.com/docs/user-guide/safety-security/responsible-ai/) — Official security principles for tool design: least privilege, input validation, audit logging, error handling.
-- [AWS Blog — Introducing Strands Agents 1.0](https://aws.amazon.com/blogs/opensource/introducing-strands-agents-1-0-production-ready-multi-agent-orchestration-made-simple/) — Announces 1.0 production-ready features: multi-agent patterns, session management, async, A2A protocol.
-- [Strands Agents Blog — TypeScript SDK 1.0](https://strandsagents.com/blog/strands-agents-typescript-v1/) — Announces TypeScript SDK GA on April 30, 2026. Covers tools, vended tools, MCP, plugins, multi-agent, streaming, session management, browser support.
-- [GitHub Issue #762 — Custom ToolExecutor support](https://github.com/strands-agents/sdk-python/issues/762) — Tracking issue for custom `ToolExecutor` interface (planned, not yet available). Open as of June 2026.
+- [Strands Agents - Tools Overview](https://strandsagents.com/docs/user-guide/concepts/tools/) - Index page covering all tool types, loading mechanisms, executors, direct invocation, and best practices. Most comprehensive entry point.
+- [Strands Agents - Creating Custom Tools](https://strandsagents.com/docs/user-guide/concepts/tools/custom-tools/) - Covers `@tool` decorator, module-based tools (TOOL_SPEC), class-based tools, ToolContext, ToolResult format, async/streaming tools.
+- [Strands Agents - MCP Tools](https://strandsagents.com/docs/user-guide/concepts/tools/mcp-tools/) - Full MCP integration guide: MCPClient, transport types, lifecycle management, tool_filters, prefix, elicitation callback, troubleshooting.
+- [Strands Agents - @tool Decorator API Reference](https://strandsagents.com/docs/api/python/strands.tools.decorator/) - Full API for the `@tool` decorator: `DecoratedFunctionTool` class, `FunctionToolMetadata`, all decorator parameters (name, description, inputSchema, context).
+- [Strands Agents - MCPAgentTool API Reference](https://strandsagents.com/docs/api/python/strands.tools.mcp.mcp_agent_tool/) - Internal adapter class `MCPAgentTool(AgentTool)` that wraps MCP tools. Constructor: `MCPAgentTool(mcp_tool, mcp_client, name_override=None, timeout: timedelta | None = None)`.
+- [Strands Agents - MCPClient API Reference](https://strandsagents.com/docs/api/python/strands.tools.mcp.mcp_client/) - Full `MCPClient` constructor signature (including `startup_timeout` and `tasks_config`), `list_tools_sync()` with per-call prefix and tool_filters override, `call_tool_sync`/`async` with `read_timeout_seconds`.
+- [Strands Agents - Community Tools Package](https://strandsagents.com/docs/user-guide/concepts/tools/community-tools-package/) - Complete list of 40 pre-built tools in `strands-agents-tools`, installation extras, `BYPASS_TOOL_CONSENT` documentation, `handoff_to_user` modes.
+- [Strands Agents - Tool Executors](https://strandsagents.com/docs/user-guide/concepts/tools/executors/) - `ConcurrentToolExecutor` vs `SequentialToolExecutor`, cancellation behavior, event ordering, Custom Executors tracking issue #762.
+- [Strands Agents - Vended Tools (TypeScript)](https://strandsagents.com/docs/user-guide/concepts/tools/vended-tools/) - TypeScript-only pre-built tools shipped in `@strands-agents/sdk`: `bash`, `fileEditor`, `httpRequest`, `notebook`. Node.js and browser support varies by tool.
+- [GitHub - strands-agents/tools](https://github.com/strands-agents/tools) - Source repo for `strands-agents-tools` package. Check README for latest tool list, extras install flags, and security warnings.
+- [GitHub - aws/mcp-proxy-for-aws](https://github.com/aws/mcp-proxy-for-aws) - Official AWS package for SigV4 authentication on AWS-hosted MCP servers. GA since October 2025, v1.6.0 as of May 2026.
+- [Strands Agents - Responsible AI / Tool Design](https://strandsagents.com/docs/user-guide/safety-security/responsible-ai/) - Official security principles for tool design: least privilege, input validation, audit logging, error handling.
+- [AWS Blog - Introducing Strands Agents 1.0](https://aws.amazon.com/blogs/opensource/introducing-strands-agents-1-0-production-ready-multi-agent-orchestration-made-simple/) - Announces 1.0 production-ready features: multi-agent patterns, session management, async, A2A protocol.
+- [Strands Agents Blog - TypeScript SDK 1.0](https://strandsagents.com/blog/strands-agents-typescript-v1/) - Announces TypeScript SDK GA on April 30, 2026. Covers tools, vended tools, MCP, plugins, multi-agent, streaming, session management, browser support.
+- [GitHub Issue #762 - Custom ToolExecutor support](https://github.com/strands-agents/sdk-python/issues/762) - Tracking issue for custom `ToolExecutor` interface (planned, not yet available). Open as of June 2026.

@@ -1,8 +1,8 @@
 {
   "name": "aws-bedrock-agentcore-skill",
-  "displayName": "AWSBedrockAgentCoreSkill",
+  "displayName": "AWS Bedrock AgentCore Skill",
   "version": "0.1.0",
-  "description": "Authoritative, source-cited playbook that lets a coding agent autonomously design, configure, deploy, and troubleshoot production-grade AI agents on AWS — Strands Agents SDK, Amazon Bedrock (Converse, Guardrails, Knowledge Bases), and Bedrock AgentCore (Runtime, Memory, Gateway, Identity, Browser/Code Interpreter) — with Terraform-first IaC and CloudWatch/OpenTelemetry observability. Every recommendation traces to an official AWS source.",
+  "description": "Authoritative, source-cited playbook that lets a coding agent autonomously design, configure, deploy, and troubleshoot production-grade AI agents on AWS - Strands Agents SDK, Amazon Bedrock (Converse, Guardrails, Knowledge Bases), and Bedrock AgentCore (Runtime, Memory, Gateway, Identity, Browser/Code Interpreter) - with Terraform-first IaC and CloudWatch/OpenTelemetry observability. Every recommendation traces to an official AWS source.",
   "author": {
     "name": "Ferdinando Bons"
   },

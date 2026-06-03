@@ -1,5 +1,5 @@
 {
-  "_comment": "Least-privilege permission policy for the AgentCore Runtime execution role (container deploy). Covers ECR image pull, CloudWatch Logs, X-Ray, CloudWatch metrics scoped to the 'bedrock-agentcore' namespace, bedrock:InvokeModel on a specific model ARN, and bedrock-agentcore:GetWorkloadAccessToken* on scoped workload identity resources. NOTE: do NOT include GetWorkloadAccessTokenForUserId in production when JWT is available — it accepts any opaque string without IdP verification. All resource wildcards in ECR/X-Ray that cannot be narrowed to a single ARN are noted inline. Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html",
+  "_comment": "Least-privilege permission policy for the AgentCore Runtime execution role (container deploy). Covers ECR image pull, CloudWatch Logs, X-Ray, CloudWatch metrics scoped to the 'bedrock-agentcore' namespace, bedrock:InvokeModel on a specific model ARN, and bedrock-agentcore:GetWorkloadAccessToken* on scoped workload identity resources. NOTE: do NOT include GetWorkloadAccessTokenForUserId in production when JWT is available - it accepts any opaque string without IdP verification. All resource wildcards in ECR/X-Ray that cannot be narrowed to a single ARN are noted inline. Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html",
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -96,7 +96,7 @@
     },
     {
       "Sid": "BedrockModelInvocation",
-      "_comment": "Scoped to the exact model ARN. Do NOT use arn:aws:bedrock:*::foundation-model/* — that grants invocation of any model, including expensive ones. Replace <MODEL_ARN> with the specific foundation-model or inference-profile ARN.",
+      "_comment": "Scoped to the exact model ARN. Do NOT use arn:aws:bedrock:*::foundation-model/* - that grants invocation of any model, including expensive ones. Replace <MODEL_ARN> with the specific foundation-model or inference-profile ARN.",
       "Effect": "Allow",
       "Action": [
         "bedrock:InvokeModel",

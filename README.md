@@ -1,4 +1,4 @@
-# AWSBedrockAgentCoreSkill
+# AWS Bedrock AgentCore Skill
 
 [![version](https://img.shields.io/badge/version-0.1.0-blue)](.claude-plugin/plugin.json) [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-orange)](https://code.claude.com/docs/en/plugins)
 
@@ -10,7 +10,7 @@ A Claude Code plugin (and agent skill) that puts the best practices for building
 
 ## What it is
 
-It is a **Distilled Knowledge Skill (DKS)**: an entire domain — Strands Agents, Amazon Bedrock, Bedrock AgentCore — reduced to its executable essence, and kept current as the surface shifts month to month. The research is already done; you skip straight to building.
+It is a **Distilled Knowledge Skill (DKS)**: an entire domain (Strands Agents, Amazon Bedrock, Bedrock AgentCore) reduced to its executable essence, and kept current as the surface shifts month to month. The research is already done; you skip straight to building.
 
 Concretely, it is not a single template or a code generator. It is a routing layer plus a reference library:
 

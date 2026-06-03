@@ -1,6 +1,6 @@
 # IaC Best Practices for AWS AI Agents (Terraform-first)
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -9,14 +9,14 @@
 - [Best practices](#best-practices)
 - [Code](#code)
   - [Remote state S3 with native locking GA (Terraform >= 1.11)](#remote-state-s3-with-native-locking-ga-terraform--111)
-  - [Provider assume_role for CI/CD — never use static access keys in pipelines](#provider-assume_role-for-cicd--never-use-static-access-keys-in-pipelines)
+  - [Provider assume_role for CI/CD - never use static access keys in pipelines](#provider-assume_role-for-cicd--never-use-static-access-keys-in-pipelines)
   - [IAM Execution Role for AgentCore Runtime with correct trust policy (confused-deputy safe)](#iam-execution-role-for-agentcore-runtime-with-correct-trust-policy-confused-deputy-safe)
   - [ECR Repository + ARM64 build + aws_bedrockagentcore_agent_runtime](#ecr-repository--arm64-build--aws_bedrockagentcore_agent_runtime)
   - [Official aws-ia/agentcore/aws module v0.0.2](#official-aws-iaagentcoreaws-module-v002)
   - [Classic Bedrock Agent (aws_bedrockagent_agent) with prepare-agent workaround](#classic-bedrock-agent-aws_bedrockagent_agent-with-prepare-agent-workaround)
   - [IAM least-privilege policy for bedrock:InvokeModel (post simplified model access Oct 2025)](#iam-least-privilege-policy-for-bedrockinvokemodel-post-simplified-model-access-oct-2025)
   - [Dockerfile ARM64 for AgentCore Runtime (/invocations + /ping contract)](#dockerfile-arm64-for-agentcore-runtime-invocations--ping-contract)
-  - [CDK STABLE (Python) — deploy container AgentCore ARM64](#cdk-stable-python--deploy-container-agentcore-arm64)
+  - [CDK STABLE (Python) - deploy container AgentCore ARM64](#cdk-stable-python--deploy-container-agentcore-arm64)
 - [Configuration reference](#configuration-reference)
 - [Gotchas](#gotchas)
 - [Official sources](#official-sources)
@@ -36,7 +36,7 @@ The `aws_bedrockagentcore_agent_runtime` resource exists as `aws_bedrockagentcor
 
 ## Key concepts
 
-**AgentCore Runtime — mandatory contract**
+**AgentCore Runtime - mandatory contract**
 Every agent must expose `/invocations` (POST) and `/ping` (GET) on port 8080 (host 0.0.0.0). The container must be ARM64 (Graviton). The service contract is verified by AgentCore before activation.
 
 **ARM64 mandatory for AgentCore Runtime**
@@ -49,10 +49,10 @@ hashicorp/aws >= 6.18 exposes `aws_bedrockagentcore_agent_runtime` (introduced i
 `aws_bedrockagent_agent` manages Bedrock agents with action groups, knowledge bases, Lambda. `aws_bedrockagentcore_agent_runtime` is for agents with arbitrary container/code in isolated microVMs. They require distinct IAM roles and deploy workflows.
 
 **Remote state S3 + native locking (Terraform >= 1.11)**
-S3 native state locking was introduced in Terraform 1.10.0 (November 2024); the `use_lockfile = true` argument and GA status arrived in Terraform 1.11.0 (February 2025), which also formally deprecated DynamoDB-based locking arguments. AWS Prescriptive Guidance recommends S3 native locking. Each environment (dev/staging/prod) must have a distinct S3 backend to isolate state. _Sources: https://github.com/hashicorp/terraform/releases/tag/v1.10.0 — https://github.com/hashicorp/terraform/releases/tag/v1.11.0_
+S3 native state locking was introduced in Terraform 1.10.0 (November 2024); the `use_lockfile = true` argument and GA status arrived in Terraform 1.11.0 (February 2025), which also formally deprecated DynamoDB-based locking arguments. AWS Prescriptive Guidance recommends S3 native locking. Each environment (dev/staging/prod) must have a distinct S3 backend to isolate state. _Sources: https://github.com/hashicorp/terraform/releases/tag/v1.10.0 - https://github.com/hashicorp/terraform/releases/tag/v1.11.0_
 
 **IAM least-privilege for Terraform CI/CD**
-The CI/CD runner (CodeBuild, GitHub Actions) must assume an IAM role via OIDC — never use long-term access keys. The role must have only the actions needed for managed resources. IAM Access Analyzer helps remove excess permissions over time.
+The CI/CD runner (CodeBuild, GitHub Actions) must assume an IAM role via OIDC - never use long-term access keys. The role must have only the actions needed for managed resources. IAM Access Analyzer helps remove excess permissions over time.
 
 **Simplified Model Access (October 2025)**
 Since October 2025, Bedrock serverless models are available automatically. The `PutFoundationModelEntitlement` permission was removed. Control is via IAM: `bedrock:InvokeModel` on specific foundation model ARNs. Anthropic still requires a one-time form before first use.
@@ -70,33 +70,33 @@ CDK constructs for Runtime, Gateway, Browser, Memory, Evaluation, Identity are m
 
 ## Best practices
 
-- **Use S3 native locking (`use_lockfile = true`) with Terraform >= 1.11 instead of DynamoDB for remote state** — S3 native state locking was introduced in Terraform 1.10.0 (November 2024) and became GA in Terraform 1.11.0 (February 2025), which also deprecated DynamoDB-based locking arguments. Native S3 locking reduces the number of resources to manage. AWS Prescriptive Guidance explicitly recommends migration. For compatibility with teams on older versions it is possible to configure both during the transition. _Source: https://github.com/hashicorp/terraform/releases/tag/v1.11.0 — https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html_
+- **Use S3 native locking (`use_lockfile = true`) with Terraform >= 1.11 instead of DynamoDB for remote state** - S3 native state locking was introduced in Terraform 1.10.0 (November 2024) and became GA in Terraform 1.11.0 (February 2025), which also deprecated DynamoDB-based locking arguments. Native S3 locking reduces the number of resources to manage. AWS Prescriptive Guidance explicitly recommends migration. For compatibility with teams on older versions it is possible to configure both during the transition. _Source: https://github.com/hashicorp/terraform/releases/tag/v1.11.0 - https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html_
 
-- **Create a distinct S3 backend per environment (dev/staging/prod), never share workspaces** — Separate backends isolate state: an error in dev does not impact prod. Simplifies per-environment IAM management (read-only on prod for most roles). AWS Prescriptive Guidance explicitly discourages using shared workspaces as a substitute for distinct backends. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html_
+- **Create a distinct S3 backend per environment (dev/staging/prod), never share workspaces** - Separate backends isolate state: an error in dev does not impact prod. Simplifies per-environment IAM management (read-only on prod for most roles). AWS Prescriptive Guidance explicitly discourages using shared workspaces as a substitute for distinct backends. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html_
 
-- **Enable S3 versioning and CloudTrail on the state bucket for audit and rollback** — Versioning allows restoring a previous state. CloudTrail tracks who modified state (PutObject), essential for compliance audit. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html_
+- **Enable S3 versioning and CloudTrail on the state bucket for audit and rollback** - Versioning allows restoring a previous state. CloudTrail tracks who modified state (PutObject), essential for compliance audit. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html_
 
-- **Use OIDC to authenticate GitHub Actions or GitLab to AWS, never static access keys** — OIDC generates temporary credentials for each run, eliminating manual secret rotation. Recommended by AWS Prescriptive Guidance for all CI/CD runners. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/security.html_
+- **Use OIDC to authenticate GitHub Actions or GitLab to AWS, never static access keys** - OIDC generates temporary credentials for each run, eliminating manual secret rotation. Recommended by AWS Prescriptive Guidance for all CI/CD runners. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/security.html_
 
-- **Always build AgentCore images on `linux/arm64` (Graviton); use `--platform linux/arm64` in docker buildx** — AgentCore Runtime runs exclusively on ARM64. An x86 image cannot be deployed. The `--platform linux/arm64` flag with docker buildx or a CodeBuild ARM64 environment is mandatory. Confirmed by official AWS documentation. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html_
+- **Always build AgentCore images on `linux/arm64` (Graviton); use `--platform linux/arm64` in docker buildx** - AgentCore Runtime runs exclusively on ARM64. An x86 image cannot be deployed. The `--platform linux/arm64` flag with docker buildx or a CodeBuild ARM64 environment is mandatory. Confirmed by official AWS documentation. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html_
 
-- **Do not create IAM roles with `BedrockAgentCoreFullAccess` in production; use custom policies with minimal actions** — `BedrockAgentCoreFullAccess` includes `GetWorkloadAccessTokenForUserId` which bypasses IdP verification. In prod use only `GetWorkloadAccessTokenForJWT` and explicitly deny `GetWorkloadAccessTokenForUserId`. Confirmed by official runtime-permissions documentation. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
+- **Do not create IAM roles with `BedrockAgentCoreFullAccess` in production; use custom policies with minimal actions** - `BedrockAgentCoreFullAccess` includes `GetWorkloadAccessTokenForUserId` which bypasses IdP verification. In prod use only `GetWorkloadAccessTokenForJWT` and explicitly deny `GetWorkloadAccessTokenForUserId`. Confirmed by official runtime-permissions documentation. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
 
-- **Include the trust policy with `aws:SourceAccount` (StringEquals) and `aws:SourceArn` (ArnLike) in the AgentCore Runtime execution role to prevent confused deputy** — Without the ArnLike condition on `aws:SourceArn`, any AgentCore runtime in the account could assume the role. The condition limits assumption to the specific runtime. Confirmed by the official trust policy in the DevGuide. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
+- **Include the trust policy with `aws:SourceAccount` (StringEquals) and `aws:SourceArn` (ArnLike) in the AgentCore Runtime execution role to prevent confused deputy** - Without the ArnLike condition on `aws:SourceArn`, any AgentCore runtime in the account could assume the role. The condition limits assumption to the specific runtime. Confirmed by the official trust policy in the DevGuide. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
 
-- **Pin the Terraform provider version with `~>` (minor version constraint) and add TFLint in CI/CD** — The hashicorp/aws v6.x provider is under active development with new AgentCore resources added every release and breaking changes vs v5.x. TFLint can detect unpinned versions and block the build. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/version.html_
+- **Pin the Terraform provider version with `~>` (minor version constraint) and add TFLint in CI/CD** - The hashicorp/aws v6.x provider is under active development with new AgentCore resources added every release and breaking changes vs v5.x. TFLint can detect unpinned versions and block the build. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/version.html_
 
-- **For `aws_bedrockagent_agent` (classic Bedrock Agents) use `terraform_data` + `local-exec` to prepare-agent after every modification** — Terraform has no native mechanism to wait for the agent's PREPARED state. The official AWS Prescriptive Guidance workaround uses triggers on the agent hash to trigger re-prepare only when needed. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-data-limitations/bedrock-agents.html_
+- **For `aws_bedrockagent_agent` (classic Bedrock Agents) use `terraform_data` + `local-exec` to prepare-agent after every modification** - Terraform has no native mechanism to wait for the agent's PREPARED state. The official AWS Prescriptive Guidance workaround uses triggers on the agent hash to trigger re-prepare only when needed. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-data-limitations/bedrock-agents.html_
 
-- **Control Bedrock model access via `bedrock:InvokeModel` on specific foundation model ARNs, not with `Resource: *`** — Since October 2025 there is no need to manually enable models. Granular control is via IAM: specify exactly the foundation model or inference profile ARNs authorized. _Source: https://aws.amazon.com/blogs/security/simplified-amazon-bedrock-model-access/_
+- **Control Bedrock model access via `bedrock:InvokeModel` on specific foundation model ARNs, not with `Resource: *`** - Since October 2025 there is no need to manually enable models. Granular control is via IAM: specify exactly the foundation model or inference profile ARNs authorized. _Source: https://aws.amazon.com/blogs/security/simplified-amazon-bedrock-model-access/_
 
-- **Use the official `aws-ia/agentcore/aws` module (v0.0.2) to manage CONTAINER runtimes with auto-generated IAM; evaluate stability before production use** — The module abstracts `awscc_bedrockagentcore_runtime`, ECR repository creation, ARM64 build via CodeBuild, and IAM configuration. However it is at version 0.0.2 (April 2026) without API stability guarantees. Evaluate whether the module is suitable for production before adoption. _Source: https://github.com/aws-ia/terraform-aws-agentcore_
+- **Use the official `aws-ia/agentcore/aws` module (v0.0.2) to manage CONTAINER runtimes with auto-generated IAM; evaluate stability before production use** - The module abstracts `awscc_bedrockagentcore_runtime`, ECR repository creation, ARM64 build via CodeBuild, and IAM configuration. However it is at version 0.0.2 (April 2026) without API stability guarantees. Evaluate whether the module is suitable for production before adoption. _Source: https://github.com/aws-ia/terraform-aws-agentcore_
 
-- **ALWAYS specify both `lifecycle_configuration` values (`idle_runtime_session_timeout` and `max_lifetime`) explicitly** — Specifying only one of the two values (e.g. only `max_lifetime`) causes a known bug (#45290) where Terraform reports `inconsistent result after apply` because the provider does not mark sub-attributes as Computed. Specifying both avoids the problem. Defaults: idle=900s, max=28800s. Constraint: idle must be <= max. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/45290_
+- **ALWAYS specify both `lifecycle_configuration` values (`idle_runtime_session_timeout` and `max_lifetime`) explicitly** - Specifying only one of the two values (e.g. only `max_lifetime`) causes a known bug (#45290) where Terraform reports `inconsistent result after apply` because the provider does not mark sub-attributes as Computed. Specifying both avoids the problem. Defaults: idle=900s, max=28800s. Constraint: idle must be <= max. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/45290_
 
-- **For CDK use the stable module `aws-cdk-lib/aws-bedrockagentcore` for Runtime, Gateway, Memory, Browser; use `aws_cdk.aws_bedrock_agentcore_alpha` ONLY for PolicyEngine** — From CDK version 2.239+, all AgentCore constructs except PolicyEngine are migrated to the stable module. Using the alpha module for already-stable constructs introduces unnecessary dependencies on experimental APIs subject to breaking changes. _Source: https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagentcore-readme.html_
+- **For CDK use the stable module `aws-cdk-lib/aws-bedrockagentcore` for Runtime, Gateway, Memory, Browser; use `aws_cdk.aws_bedrock_agentcore_alpha` ONLY for PolicyEngine** - From CDK version 2.239+, all AgentCore constructs except PolicyEngine are migrated to the stable module. Using the alpha module for already-stable constructs introduces unnecessary dependencies on experimental APIs subject to breaking changes. _Source: https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagentcore-readme.html_
 
-- **Structure Terraform code with `main.tf`, `variables.tf`, `outputs.tf`, `locals.tf`, `providers.tf`, `versions.tf` and `iam.tf` if IAM exceeds 150 lines** — The standard structure recommended by AWS Prescriptive Guidance improves readability and collaboration. Providers must be declared only in root modules, never in reusable modules. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/structure.html_
+- **Structure Terraform code with `main.tf`, `variables.tf`, `outputs.tf`, `locals.tf`, `providers.tf`, `versions.tf` and `iam.tf` if IAM exceeds 150 lines** - The standard structure recommended by AWS Prescriptive Guidance improves readability and collaboration. Providers must be declared only in root modules, never in reusable modules. _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/structure.html_
 
 ---
 
@@ -133,7 +133,7 @@ _Source: https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-
 
 ---
 
-### Provider assume_role for CI/CD — never use static access keys in pipelines
+### Provider assume_role for CI/CD - never use static access keys in pipelines
 
 ```hcl
 # providers.tf
@@ -268,7 +268,7 @@ resource "aws_iam_role_policy" "agentcore_execution" {
           "bedrock:InvokeModel",
           "bedrock:InvokeModelWithResponseStream"
         ]
-        # Specify exact ARNs (no wildcard Resource: *) — post simplified model access
+        # Specify exact ARNs (no wildcard Resource: *) - post simplified model access
         Resource = [
           "arn:aws:bedrock:*::foundation-model/us.anthropic.claude-sonnet-4-*",
           "arn:aws:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
@@ -305,7 +305,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-p
 hashicorp/aws >= 6.18 required; `code_configuration` available from 6.22.
 
 ```hcl
-# main.tf — deploy AgentCore Runtime with ARM64 container
+# main.tf - deploy AgentCore Runtime with ARM64 container
 
 resource "aws_ecr_repository" "agent" {
   name                 = "${var.project_prefix}-${var.agent_name}"
@@ -348,12 +348,12 @@ resource "time_sleep" "iam_propagation" {
   depends_on      = [aws_iam_role.agentcore_execution]
 }
 
-# aws_bedrockagentcore_agent_runtime — hashicorp/aws >= 6.18
+# aws_bedrockagentcore_agent_runtime - hashicorp/aws >= 6.18
 # NOTE: ALWAYS specify both lifecycle_configuration values
 # to avoid bug #45290 (inconsistent result after apply)
 resource "aws_bedrockagentcore_agent_runtime" "main" {
   agent_runtime_name = "${var.project_prefix}-${var.agent_name}"
-  description        = "Agent runtime for ${var.agent_name} — env ${var.environment}"
+  description        = "Agent runtime for ${var.agent_name} - env ${var.environment}"
   role_arn           = aws_iam_role.agentcore_execution.arn
 
   agent_runtime_artifact {
@@ -400,10 +400,10 @@ _Source: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resou
 
 ### Official aws-ia/agentcore/aws module v0.0.2
 
-Abstracts ECR + ARM64 build. Early-stage (v0.0.2, April 2026) — evaluate API stability before production adoption.
+Abstracts ECR + ARM64 build. Early-stage (v0.0.2, April 2026) - evaluate API stability before production adoption.
 
 ```hcl
-# main.tf — using the official aws-ia module v0.0.2
+# main.tf - using the official aws-ia module v0.0.2
 # NOTE: module is early-stage (v0.0.2, April 2026);
 # evaluate API stability before production use
 module "agentcore" {
@@ -511,7 +511,7 @@ _Source: https://aws.amazon.com/blogs/security/simplified-amazon-bedrock-model-a
 Confirmed against official getting-started-custom documentation.
 
 ```dockerfile
-# Dockerfile — ARM64 mandatory for AgentCore Runtime
+# Dockerfile - ARM64 mandatory for AgentCore Runtime
 # Use official ARM64 base image with uv (confirmed in AWS documentation)
 FROM --platform=linux/arm64 ghcr.io/astral-sh/uv:python3.11-bookworm-slim
 
@@ -535,12 +535,12 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-s
 
 ---
 
-### CDK STABLE (Python) — deploy container AgentCore ARM64
+### CDK STABLE (Python) - deploy container AgentCore ARM64
 
 Use `aws_cdk.aws_bedrockagentcore` (NOT the alpha module for Runtime). Only PolicyEngine remains in alpha.
 
 ```python
-# cdk_stack.py — STABLE module for Runtime (migrated from alpha to stable)
+# cdk_stack.py - STABLE module for Runtime (migrated from alpha to stable)
 # Import aws_cdk.aws_bedrockagentcore, NOT aws_cdk.aws_bedrock_agentcore_alpha
 import aws_cdk as cdk
 import aws_cdk.aws_bedrockagentcore as agentcore
@@ -589,7 +589,7 @@ _Source: https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagen
 | `environment_variables` | Map of environment variables injected into the container at deploy time. Use a hash of the source code as `_CODE_VERSION` to force re-deploy when code changes without touching the image URI. | `{ _CODE_VERSION = sha256(source_hash) }` |
 | `aws_bedrockagent_agent.foundation_model` | Foundation model ID for classic Bedrock Agent. Use cross-region inference profile (`us.anthropic.claude-*`) for regional resilience. | `"us.anthropic.claude-sonnet-4-20250514-v1:0"` |
 | `aws_bedrockagent_agent.idle_session_ttl_in_seconds` | Session TTL for classic Bedrock Agent. Min 60, max 5400 (per Bedrock Agents API). | `600` |
-| `backend s3 use_lockfile` | Enables S3 native locking. Introduced in Terraform 1.10.0; GA in Terraform 1.11.0 (DynamoDB locking formally deprecated in 1.11). For new projects use `required_version >= 1.11`. _Sources: https://github.com/hashicorp/terraform/releases/tag/v1.10.0 — https://github.com/hashicorp/terraform/releases/tag/v1.11.0_ | `true` |
+| `backend s3 use_lockfile` | Enables S3 native locking. Introduced in Terraform 1.10.0; GA in Terraform 1.11.0 (DynamoDB locking formally deprecated in 1.11). For new projects use `required_version >= 1.11`. _Sources: https://github.com/hashicorp/terraform/releases/tag/v1.10.0 - https://github.com/hashicorp/terraform/releases/tag/v1.11.0_ | `true` |
 | `provider aws assume_role.role_arn` | Role ARN to assume in every Terraform operation. Preferred over long-term access keys. The role must have a trust policy allowing the CI/CD runner to assume it via OIDC or instance profile. | `"arn:aws:iam::ACCOUNT_ID:role/terraform-execution-prod"` |
 
 ---
@@ -598,7 +598,7 @@ _Source: https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagen
 
 - **AgentCore Runtime runs ONLY on ARM64 (Graviton).** An x86_64/amd64 container will be rejected at deploy time. Always use `FROM --platform=linux/arm64` in the Dockerfile and `docker buildx build --platform linux/arm64`.
 
-- **`use_lockfile = true` for the S3 backend was introduced in Terraform 1.10.0 and became GA in Terraform 1.11.0.** For production use `required_version >= 1.11`. Do not configure both `use_lockfile` and `dynamodb_table` in new projects. _Sources: https://github.com/hashicorp/terraform/releases/tag/v1.10.0 — https://github.com/hashicorp/terraform/releases/tag/v1.11.0_
+- **`use_lockfile = true` for the S3 backend was introduced in Terraform 1.10.0 and became GA in Terraform 1.11.0.** For production use `required_version >= 1.11`. Do not configure both `use_lockfile` and `dynamodb_table` in new projects. _Sources: https://github.com/hashicorp/terraform/releases/tag/v1.10.0 - https://github.com/hashicorp/terraform/releases/tag/v1.11.0_
 
 - **`aws_bedrockagentcore_agent_runtime` was introduced in hashicorp/aws v6.18.0** (milestone issue #43424). Version v6.21.0 contains changes to `aws_bedrockagentcore_browser` (not `aws_bedrockagentcore_agent_runtime`). The recommended minimum constraint is `~> 6.22` to also have `code_configuration`.
 
@@ -634,28 +634,28 @@ _Source: https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagen
 
 ## Official sources
 
-- [Best practices for using the Terraform AWS Provider (AWS Prescriptive Guidance, Aug 2025)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/introduction.html) — Official AWS guide on security, S3 backend, codebase structure, provider versioning
-- [Backend best practices – Terraform AWS Provider (AWS Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html) — S3 native locking (introduced in 1.10.0, GA in 1.11.0 per HashiCorp changelog), per-environment backend separation, CloudTrail monitoring. Confirmed: DynamoDB locking deprecated. Version details sourced from https://github.com/hashicorp/terraform/releases/tag/v1.11.0
-- [Security best practices – Terraform AWS Provider (AWS Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/security.html) — IAM roles, OIDC, no long-term credentials, IAM Access Analyzer
-- [Code base structure – Terraform AWS Provider (AWS Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/structure.html) — Standard repo structure: main.tf, variables.tf, outputs.tf, locals.tf, providers.tf, versions.tf
-- [Deploying Amazon Bedrock agents – terraform_data limitations (AWS Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-data-limitations/bedrock-agents.html) — Official workaround for prepare-agent with terraform_data + local-exec + time_sleep
-- [IAM Permissions for AgentCore Runtime (DevGuide official)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) — Exact policies for execution role, trust policy with bedrock-agentcore.amazonaws.com. Confirmed: trust policy requires StringEquals aws:SourceAccount + ArnLike aws:SourceArn
-- [Get started without the AgentCore CLI – ARM64 container contract](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html) — Runtime contract: /invocations POST + /ping GET on port 8080, mandatory ARM64 image, confirmed official Dockerfile
-- [Configure Amazon Bedrock AgentCore lifecycle settings](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-lifecycle-settings.html) — Confirmed defaults: idle=900s, max=28800s. Range 60-28800s. idleRuntimeSessionTimeout must be <= maxLifetime
-- [Simplified model access in Amazon Bedrock (AWS Security Blog, Oct 2025)](https://aws.amazon.com/blogs/security/simplified-amazon-bedrock-model-access/) — PutFoundationModelEntitlement removed, automatic access, control via IAM/SCP; Anthropic still requires one-time form
-- [Prerequisites for running model inference (Amazon Bedrock UserGuide)](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-prereq.html) — Minimum IAM permissions for InvokeModel, Converse, InvokeModelWithResponseStream
-- [Deploy AI agents on Amazon Bedrock AgentCore using GitHub Actions (AWS ML Blog, Jan 2026)](https://aws.amazon.com/blogs/machine-learning/deploy-ai-agents-on-amazon-bedrock-agentcore-using-github-actions/) — CI/CD with OIDC GitHub->AWS, ECR+Inspector scan, detailed execution role policy
-- [Build AI agents with Amazon Bedrock AgentCore using AWS CloudFormation (AWS ML Blog, Jan 2026)](https://aws.amazon.com/blogs/machine-learning/build-ai-agents-with-amazon-bedrock-agentcore-using-aws-cloudformation/) — IaC best practices for AgentCore: modular templates, parametrized design, IAM least-privilege
-- [Best practices for managing Terraform State files in AWS CI/CD Pipeline (AWS DevOps Blog)](https://aws.amazon.com/blogs/devops/best-practices-for-managing-terraform-state-files-in-aws-ci-cd-pipeline/) — S3+DynamoDB (legacy), IAM policy for bucket, example with CodeBuild
-- [aws-ia/terraform-aws-agentcore (official AWS-IA module on GitHub)](https://github.com/aws-ia/terraform-aws-agentcore) — Official module v0.0.2 (April 2026): uses awscc_bedrockagentcore_runtime internally, manages ECR+CodeBuild ARM64, auto-generated IAM. Version 0.0.2 on Terraform Registry — NOT v1.0
-- [aws_bedrockagentcore_agent_runtime – Terraform Registry (hashicorp/aws)](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_agent_runtime) — Native hashicorp/aws resource, introduced in v6.18.0. In v6.22.0 added: code_configuration block, container_configuration made optional
-- [awscc_bedrockagentcore_runtime – Terraform Registry (hashicorp/awscc)](https://registry.terraform.io/providers/hashicorp/awscc/latest/docs/resources/bedrockagentcore_runtime) — Alternative awscc resource, confirmed present from awscc 1.57.0, used internally by aws-ia module
-- [awslabs/amazon-bedrock-agentcore-samples – IaC Terraform examples](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/04-infrastructure-as-code/terraform) — Official examples: basic runtime, MCP server, multi-agent, weather agent; uses CodeBuild ARM64
-- [Amazon Bedrock AgentCore Construct Library – aws-cdk-lib/aws-bedrockagentcore (STABLE)](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagentcore-readme.html) — STABLE CDK module (no longer alpha) for Runtime, Gateway, Browser, Memory, Evaluation, Identity. Import: aws_cdk.aws_bedrockagentcore. Only PolicyEngine remains in alpha
-- [Amazon Bedrock AgentCore Construct Library – aws-cdk.aws_bedrock_agentcore_alpha (Policy Engine only)](https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_bedrock_agentcore_alpha/README.html) — The alpha module contains ONLY PolicyEngine, Policy, PolicyStatement (remained experimental). All other constructs migrated to stable module
-- [AWS::BedrockAgentCore::PolicyEngine – AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-policyengine.html) — PolicyEngine is now natively supported in CloudFormation. Terraform: issue #47957 open, milestone v6.47.0
-- [Bedrock AgentCore Support – Issue #43424 (hashicorp/terraform-provider-aws)](https://github.com/hashicorp/terraform-provider-aws/issues/43424) — Original issue for the introduction of AgentCore resources in hashicorp/aws, milestone v6.18.0
-- [aws_bedrockagentcore_agent_runtime: lifecycle_configuration inconsistent result – Issue #45290](https://github.com/hashicorp/terraform-provider-aws/issues/45290) — Known bug: partially specified lifecycle_configuration produces inconsistent result after apply
+- [Best practices for using the Terraform AWS Provider (AWS Prescriptive Guidance, Aug 2025)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/introduction.html) - Official AWS guide on security, S3 backend, codebase structure, provider versioning
+- [Backend best practices – Terraform AWS Provider (AWS Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/backend.html) - S3 native locking (introduced in 1.10.0, GA in 1.11.0 per HashiCorp changelog), per-environment backend separation, CloudTrail monitoring. Confirmed: DynamoDB locking deprecated. Version details sourced from https://github.com/hashicorp/terraform/releases/tag/v1.11.0
+- [Security best practices – Terraform AWS Provider (AWS Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/security.html) - IAM roles, OIDC, no long-term credentials, IAM Access Analyzer
+- [Code base structure – Terraform AWS Provider (AWS Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-aws-provider-best-practices/structure.html) - Standard repo structure: main.tf, variables.tf, outputs.tf, locals.tf, providers.tf, versions.tf
+- [Deploying Amazon Bedrock agents – terraform_data limitations (AWS Prescriptive Guidance)](https://docs.aws.amazon.com/prescriptive-guidance/latest/terraform-data-limitations/bedrock-agents.html) - Official workaround for prepare-agent with terraform_data + local-exec + time_sleep
+- [IAM Permissions for AgentCore Runtime (DevGuide official)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) - Exact policies for execution role, trust policy with bedrock-agentcore.amazonaws.com. Confirmed: trust policy requires StringEquals aws:SourceAccount + ArnLike aws:SourceArn
+- [Get started without the AgentCore CLI – ARM64 container contract](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html) - Runtime contract: /invocations POST + /ping GET on port 8080, mandatory ARM64 image, confirmed official Dockerfile
+- [Configure Amazon Bedrock AgentCore lifecycle settings](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-lifecycle-settings.html) - Confirmed defaults: idle=900s, max=28800s. Range 60-28800s. idleRuntimeSessionTimeout must be <= maxLifetime
+- [Simplified model access in Amazon Bedrock (AWS Security Blog, Oct 2025)](https://aws.amazon.com/blogs/security/simplified-amazon-bedrock-model-access/) - PutFoundationModelEntitlement removed, automatic access, control via IAM/SCP; Anthropic still requires one-time form
+- [Prerequisites for running model inference (Amazon Bedrock UserGuide)](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-prereq.html) - Minimum IAM permissions for InvokeModel, Converse, InvokeModelWithResponseStream
+- [Deploy AI agents on Amazon Bedrock AgentCore using GitHub Actions (AWS ML Blog, Jan 2026)](https://aws.amazon.com/blogs/machine-learning/deploy-ai-agents-on-amazon-bedrock-agentcore-using-github-actions/) - CI/CD with OIDC GitHub->AWS, ECR+Inspector scan, detailed execution role policy
+- [Build AI agents with Amazon Bedrock AgentCore using AWS CloudFormation (AWS ML Blog, Jan 2026)](https://aws.amazon.com/blogs/machine-learning/build-ai-agents-with-amazon-bedrock-agentcore-using-aws-cloudformation/) - IaC best practices for AgentCore: modular templates, parametrized design, IAM least-privilege
+- [Best practices for managing Terraform State files in AWS CI/CD Pipeline (AWS DevOps Blog)](https://aws.amazon.com/blogs/devops/best-practices-for-managing-terraform-state-files-in-aws-ci-cd-pipeline/) - S3+DynamoDB (legacy), IAM policy for bucket, example with CodeBuild
+- [aws-ia/terraform-aws-agentcore (official AWS-IA module on GitHub)](https://github.com/aws-ia/terraform-aws-agentcore) - Official module v0.0.2 (April 2026): uses awscc_bedrockagentcore_runtime internally, manages ECR+CodeBuild ARM64, auto-generated IAM. Version 0.0.2 on Terraform Registry - NOT v1.0
+- [aws_bedrockagentcore_agent_runtime – Terraform Registry (hashicorp/aws)](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_agent_runtime) - Native hashicorp/aws resource, introduced in v6.18.0. In v6.22.0 added: code_configuration block, container_configuration made optional
+- [awscc_bedrockagentcore_runtime – Terraform Registry (hashicorp/awscc)](https://registry.terraform.io/providers/hashicorp/awscc/latest/docs/resources/bedrockagentcore_runtime) - Alternative awscc resource, confirmed present from awscc 1.57.0, used internally by aws-ia module
+- [awslabs/amazon-bedrock-agentcore-samples – IaC Terraform examples](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/04-infrastructure-as-code/terraform) - Official examples: basic runtime, MCP server, multi-agent, weather agent; uses CodeBuild ARM64
+- [Amazon Bedrock AgentCore Construct Library – aws-cdk-lib/aws-bedrockagentcore (STABLE)](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagentcore-readme.html) - STABLE CDK module (no longer alpha) for Runtime, Gateway, Browser, Memory, Evaluation, Identity. Import: aws_cdk.aws_bedrockagentcore. Only PolicyEngine remains in alpha
+- [Amazon Bedrock AgentCore Construct Library – aws-cdk.aws_bedrock_agentcore_alpha (Policy Engine only)](https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_bedrock_agentcore_alpha/README.html) - The alpha module contains ONLY PolicyEngine, Policy, PolicyStatement (remained experimental). All other constructs migrated to stable module
+- [AWS::BedrockAgentCore::PolicyEngine – AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-policyengine.html) - PolicyEngine is now natively supported in CloudFormation. Terraform: issue #47957 open, milestone v6.47.0
+- [Bedrock AgentCore Support – Issue #43424 (hashicorp/terraform-provider-aws)](https://github.com/hashicorp/terraform-provider-aws/issues/43424) - Original issue for the introduction of AgentCore resources in hashicorp/aws, milestone v6.18.0
+- [aws_bedrockagentcore_agent_runtime: lifecycle_configuration inconsistent result – Issue #45290](https://github.com/hashicorp/terraform-provider-aws/issues/45290) - Known bug: partially specified lifecycle_configuration produces inconsistent result after apply
 
 ---
 
@@ -669,7 +669,7 @@ Re-check the following in the provider CHANGELOG / Terraform Registry before rel
 
 3. **The `aws-ia/agentcore/aws` module is at version 0.0.2 (April 2026)** without a guaranteed stable public version. Verify the current version on Terraform Registry before production adoption.
 
-4. **`lifecycle_configuration` bug (#45290 — inconsistent result after apply with partial value):** has this been fixed in more recent provider versions? Verify in the provider CHANGELOG at the version in use.
+4. **`lifecycle_configuration` bug (#45290 - inconsistent result after apply with partial value):** has this been fixed in more recent provider versions? Verify in the provider CHANGELOG at the version in use.
 
 5. **Native Terraform support for AgentCore Observability** (CloudWatch Transaction Search, endpoint observability): issue #44742 tracks support for the `observability` block. Verify current status.
 

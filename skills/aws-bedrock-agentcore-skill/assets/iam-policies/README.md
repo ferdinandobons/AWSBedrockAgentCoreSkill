@@ -1,6 +1,6 @@
 <!-- Asset of the aws-bedrock-agentcore-skill skill. See ../SKILL.md and ../references/ for detail and official sources. -->
 
-# IAM Policy Files — AWSBedrockAgentCoreSkill
+# IAM Policy Files - AWS Bedrock AgentCore Skill
 
 Ready-to-adapt IAM JSON policy files for Amazon Bedrock and Amazon Bedrock AgentCore Runtime.
 All shapes and permissions are derived from official AWS documentation; see
@@ -44,8 +44,8 @@ model ARN.
 
 - `GetWorkloadAccessTokenForJWT` is allowed; `GetWorkloadAccessTokenForUserId` is
   **explicitly denied**. The `ForUserId` action accepts any opaque string without IdP
-  verification — enabling user impersonation. Use only in non-production environments.
-- `bedrock:InvokeModel` is scoped to `<MODEL_ARN>` — not the wildcard
+  verification - enabling user impersonation. Use only in non-production environments.
+- `bedrock:InvokeModel` is scoped to `<MODEL_ARN>` - not the wildcard
   `arn:aws:bedrock:*::foundation-model/*`. The wildcard grants invocation of every
   model (including expensive ones) and should never be used in production.
 - CloudWatch `PutMetricData` is constrained by `cloudwatch:namespace` condition to
@@ -71,7 +71,7 @@ model ARN.
 
 ### `bedrock-agents-service-role-trust.json`
 
-**What it is:** Trust policy for the Bedrock Agents classic service role — the role
+**What it is:** Trust policy for the Bedrock Agents classic service role - the role
 assumed by `bedrock.amazonaws.com` to orchestrate traditional Bedrock Agents (not
 AgentCore Runtime).
 
@@ -106,26 +106,26 @@ schemas, and `bedrock:InvokeAgent` for multi-agent collaboration. See
 **What it is:** A composite permissions policy with multiple selectable statement blocks
 covering:
 
-1. **Standard on-demand invocation** — `bedrock:InvokeModel` +
+1. **Standard on-demand invocation** - `bedrock:InvokeModel` +
    `bedrock:InvokeModelWithResponseStream` scoped to an exact model ARN.
-2. **Global cross-region inference (CRIS) — three mandatory statements.** Global CRIS
+2. **Global cross-region inference (CRIS) - three mandatory statements.** Global CRIS
    requires three distinct resource ARN forms in three separate statements. Missing even
    one causes `AccessDeniedException`:
    - Inference profile ARN in source region (with `aws:RequestedRegion` condition)
    - Foundation model ARN in source region (with `bedrock:InferenceProfileArn` condition)
-   - Global foundation model ARN — **no region, no account** — with
+   - Global foundation model ARN - **no region, no account** - with
      `aws:RequestedRegion: "unspecified"` condition
-3. **Bedrock Agents service role permissions** — `bedrock:InvokeModel` for agent
+3. **Bedrock Agents service role permissions** - `bedrock:InvokeModel` for agent
    orchestration, plus optional `bedrock:Retrieve`, `bedrock:ApplyGuardrail`, and
    `s3:GetObject` statements to include as needed.
 
 **SCP note for Global CRIS:** If your AWS Organization uses SCPs to restrict Bedrock to
 approved regions, you must explicitly include `"unspecified"` in the allowed region list.
-Global routing sets `aws:RequestedRegion` to `"unspecified"` — an SCP that does not
+Global routing sets `aws:RequestedRegion` to `"unspecified"` - an SCP that does not
 allow it will block all global inference even if the source region is whitelisted.
 
 **Adapt this file:** Remove statement blocks you do not need. Do not deploy all
-statements as-is — the file intentionally contains optional sections for different use
+statements as-is - the file intentionally contains optional sections for different use
 cases.
 
 **Placeholders:**
@@ -152,7 +152,7 @@ cases.
   Access Analyzer performs 100+ automated checks and flags wildcards, overly broad
   resources, and insecure patterns.
 - The CLI-generated AgentCore policies use `Resource: *` on many actions. Do not use
-  them in production — they are development scaffolding only.
+  them in production - they are development scaffolding only.
 - After any role policy update, allow 15–60 seconds for IAM propagation before
   creating Bedrock resources that depend on it (Terraform: use `time_sleep`).
 - For the full rationale behind every decision in these files, see

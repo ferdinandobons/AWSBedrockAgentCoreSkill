@@ -1,17 +1,17 @@
-# Deployment & IaC — Terraform (primary): Bedrock & AgentCore Resources
+# Deployment & IaC - Terraform (primary): Bedrock & AgentCore Resources
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 **Companion files (do not duplicate):**
-- `deployment-best-practices.md` — cross-cutting IaC patterns, state management, CI/CD
-- `deployment-cdk.md` — CDK constructs and AgentCore CLI (`agentcore deploy`)
-- `deployment-frameworks.md` — Strands Agents, LangGraph, CrewAI framework-level deployment
+- `deployment-best-practices.md` - cross-cutting IaC patterns, state management, CI/CD
+- `deployment-cdk.md` - CDK constructs and AgentCore CLI (`agentcore deploy`)
+- `deployment-frameworks.md` - Strands Agents, LangGraph, CrewAI framework-level deployment
 
 ---
 
 ## Table of contents
 
-- [Part 1 — Terraform for Amazon Bedrock](#part-1--terraform-for-amazon-bedrock)
+- [Part 1 - Terraform for Amazon Bedrock](#part-1--terraform-for-amazon-bedrock)
   - [Overview](#overview-part-1)
   - [Key concepts](#key-concepts-part-1)
   - [Best practices](#best-practices-part-1)
@@ -19,7 +19,7 @@
   - [Configuration reference](#configuration-reference-part-1)
   - [Gotchas](#gotchas-part-1)
   - [Official sources](#official-sources-part-1)
-- [Part 2 — Terraform for Bedrock AgentCore](#part-2--terraform-for-bedrock-agentcore)
+- [Part 2 - Terraform for Bedrock AgentCore](#part-2--terraform-for-bedrock-agentcore)
   - [Overview](#overview-part-2)
   - [Key concepts](#key-concepts-part-2)
   - [Best practices](#best-practices-part-2)
@@ -31,12 +31,12 @@
 
 ---
 
-## Part 1 — Terraform for Amazon Bedrock
+## Part 1 - Terraform for Amazon Bedrock
 
 <a id="overview-part-1"></a>
 ### Overview
 
-The `hashicorp/aws` provider (v6.x, latest ~v6.47 as of mid-2026) exposes Bedrock resources across three namespaces: `aws_bedrock_*` (account-level config), `aws_bedrockagent_*` (agent orchestration), and `aws_bedrockagentcore_*` (container-based AgentCore runtime, GA April 2026). The `hashicorp/awscc` provider mirrors CloudFormation and retains exclusive coverage for resources not yet promoted to the classic provider — most notably `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version`. The official `aws-ia/bedrock/aws` Terraform module wraps both providers and is the recommended starting point.
+The `hashicorp/aws` provider (v6.x, latest ~v6.47 as of mid-2026) exposes Bedrock resources across three namespaces: `aws_bedrock_*` (account-level config), `aws_bedrockagent_*` (agent orchestration), and `aws_bedrockagentcore_*` (container-based AgentCore runtime, GA April 2026). The `hashicorp/awscc` provider mirrors CloudFormation and retains exclusive coverage for resources not yet promoted to the classic provider - most notably `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version`. The official `aws-ia/bedrock/aws` Terraform module wraps both providers and is the recommended starting point.
 
 **Maturity:** GA in `hashicorp/aws` for core Bedrock resources (agents, knowledge bases, guardrails, flows); `aws_bedrockagentcore_*` resources are GA (April 2026, introduced v6.17.0+). Several advanced features (flow alias/version, automated reasoning, enforced guardrail config) remain `awscc`-only. Requires `hashicorp/aws >= ~6.27` for the full 8-backend knowledge base and `>= v5.69` for native `guardrail_configuration` on agents.
 
@@ -47,14 +47,14 @@ The `hashicorp/aws` provider (v6.x, latest ~v6.47 as of mid-2026) exposes Bedroc
 
 **hashicorp/aws provider namespaces for Bedrock**
 Three distinct namespaces in v6.x:
-1. `aws_bedrock_*` — account-level configuration:
+1. `aws_bedrock_*` - account-level configuration:
    - `aws_bedrock_custom_model` (added v5.35.0)
    - `aws_bedrock_guardrail` (v5.50+; `input_action`/`output_action` on PII since v6.8.0)
    - `aws_bedrock_guardrail_version` (v5.50+)
    - `aws_bedrock_inference_profile` (v5.65+)
    - `aws_bedrock_model_invocation_logging_configuration` (v5.49+)
    - `aws_bedrock_provisioned_model_throughput` (v5.45+)
-2. `aws_bedrockagent_*` — agent orchestration:
+2. `aws_bedrockagent_*` - agent orchestration:
    - `aws_bedrockagent_agent` (v5.49+; `guardrail_configuration` since v5.69)
    - `aws_bedrockagent_agent_alias` (v5.49+)
    - `aws_bedrockagent_agent_action_group` (v5.49+)
@@ -63,8 +63,8 @@ Three distinct namespaces in v6.x:
    - `aws_bedrockagent_data_source` (v5.49+)
    - `aws_bedrockagent_flow` (v6.x+)
    - `aws_bedrockagent_prompt` (v5.98+)
-   - **NOT present:** `aws_bedrockagent_flow_alias`, `aws_bedrockagent_flow_version` — use `awscc_bedrock_flow_alias` / `awscc_bedrock_flow_version`
-3. `aws_bedrockagentcore_*` — see Part 2.
+   - **NOT present:** `aws_bedrockagent_flow_alias`, `aws_bedrockagent_flow_version` - use `awscc_bedrock_flow_alias` / `awscc_bedrock_flow_version`
+3. `aws_bedrockagentcore_*` - see Part 2.
 
 **hashicorp/awscc provider for Bedrock**
 Auto-generated from CloudFormation schemas; arrives faster for new features. Confirmed resources from `all_schemas.hcl`:
@@ -89,10 +89,10 @@ As of v6.8.0 (PR #43702), `aws_bedrock_guardrail` supports granular `input_actio
 As of v6.27.0 (PR #45465, December 2025), the classic `aws_bedrockagent_knowledge_base` gained support for `OPENSEARCH_MANAGED_CLUSTER`, `NEPTUNE_ANALYTICS`, `S3_VECTORS`, and `MONGO_DB_ATLAS`. The classic provider now supports all 8 major backends: `OPENSEARCH_SERVERLESS`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`, `MONGO_DB_ATLAS`, `NEPTUNE_ANALYTICS`, `OPENSEARCH_MANAGED_CLUSTER`, `S3_VECTORS`. Using `awscc_bedrock_knowledge_base` is no longer required for these backends.
 
 **Agent lifecycle: DRAFT → version → alias**
-A Bedrock agent always starts in DRAFT state. In Terraform: `aws_bedrockagent_agent` has `prepare_agent = true` (default) to trigger preparation after agent-level changes. However, `aws_bedrockagent_agent_action_group` does **not** trigger re-preparation — requires a `null_resource` `local-exec` workaround. For SUPERVISOR agents with multi-agent collaboration, `prepare_agent` should not fire until collaborators are attached (active bug Issue #43059). `aws_bedrockagent_agent_alias` points to a specific version and is the stable endpoint for application integration.
+A Bedrock agent always starts in DRAFT state. In Terraform: `aws_bedrockagent_agent` has `prepare_agent = true` (default) to trigger preparation after agent-level changes. However, `aws_bedrockagent_agent_action_group` does **not** trigger re-preparation - requires a `null_resource` `local-exec` workaround. For SUPERVISOR agents with multi-agent collaboration, `prepare_agent` should not fire until collaborators are attached (active bug Issue #43059). `aws_bedrockagent_agent_alias` points to a specific version and is the stable endpoint for application integration.
 
 **Flow lifecycle in Terraform: classic vs awscc**
-`aws_bedrockagent_flow` exists in the classic provider for flow CRUD. However, `aws_bedrockagent_flow_alias` and `aws_bedrockagent_flow_version` do **not** exist in the classic provider — these are **only** available as `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version`. This is a confirmed gap that requires the hybrid provider pattern for any flow deployment beyond creation.
+`aws_bedrockagent_flow` exists in the classic provider for flow CRUD. However, `aws_bedrockagent_flow_alias` and `aws_bedrockagent_flow_version` do **not** exist in the classic provider - these are **only** available as `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version`. This is a confirmed gap that requires the hybrid provider pattern for any flow deployment beyond creation.
 
 **IAM service roles: naming conventions and trust scope**
 - Knowledge base role name must start with `AmazonBedrockExecutionRoleForKnowledgeBase_`
@@ -105,29 +105,29 @@ A Bedrock agent always starts in DRAFT state. In Terraform: `aws_bedrockagent_ag
 <a id="best-practices-part-1"></a>
 ### Best practices
 
-- **Use the hybrid provider pattern: hashicorp/aws for stable resources, hashicorp/awscc for features not yet in the classic provider** — The classic provider has higher quality (custom logic like `prepare_agent`, better docs, fewer drift bugs) but awscc receives new Bedrock features immediately via CloudFormation schemas. The pattern is explicitly endorsed by HashiCorp and is what the official `aws-ia/bedrock/aws` module does. _Source: https://www.hashicorp.com/en/blog/aws-and-awscc-terraform-providers-better-together_
+- **Use the hybrid provider pattern: hashicorp/aws for stable resources, hashicorp/awscc for features not yet in the classic provider** - The classic provider has higher quality (custom logic like `prepare_agent`, better docs, fewer drift bugs) but awscc receives new Bedrock features immediately via CloudFormation schemas. The pattern is explicitly endorsed by HashiCorp and is what the official `aws-ia/bedrock/aws` module does. _Source: https://www.hashicorp.com/en/blog/aws-and-awscc-terraform-providers-better-together_
 
-- **Start with the aws-ia/bedrock/aws module rather than assembling resources from scratch** — The module correctly handles the `prepare_agent` workaround, IAM role naming conventions, OpenSearch Serverless policy ordering, `awscc` vs `aws` resource selection for flow alias/version, and agent lifecycle nuances. It encodes lessons that are not obvious from provider docs alone. _Source: https://registry.terraform.io/modules/aws-ia/bedrock/aws/latest_
+- **Start with the aws-ia/bedrock/aws module rather than assembling resources from scratch** - The module correctly handles the `prepare_agent` workaround, IAM role naming conventions, OpenSearch Serverless policy ordering, `awscc` vs `aws` resource selection for flow alias/version, and agent lifecycle nuances. It encodes lessons that are not obvious from provider docs alone. _Source: https://registry.terraform.io/modules/aws-ia/bedrock/aws/latest_
 
-- **Use `aws_bedrockagent_agent` guardrail_configuration (classic provider) rather than switching to awscc_bedrock_agent just for guardrails** — As of v5.69.0, the classic provider's `aws_bedrockagent_agent` has a native `guardrail_configuration` block. Switching the entire agent resource to `awscc_bedrock_agent` introduces Cloud Control API drift risks and lower documentation quality. Only use `awscc_bedrock_agent` if you have other awscc-only requirements. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/39404_
+- **Use `aws_bedrockagent_agent` guardrail_configuration (classic provider) rather than switching to awscc_bedrock_agent just for guardrails** - As of v5.69.0, the classic provider's `aws_bedrockagent_agent` has a native `guardrail_configuration` block. Switching the entire agent resource to `awscc_bedrock_agent` introduces Cloud Control API drift risks and lower documentation quality. Only use `awscc_bedrock_agent` if you have other awscc-only requirements. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/39404_
 
-- **Use granular `input_action` / `output_action` in `aws_bedrock_guardrail` for per-direction PII control (available since v6.8.0)** — Since v6.8.0 (PR #43702) the classic provider supports `input_action`, `output_action`, `input_enabled`, and `output_enabled` on `pii_entities_config` and `regexes_config`. Use these fields rather than migrating to `awscc_bedrock_guardrail` solely for direction-specific PII control. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/42253_
+- **Use granular `input_action` / `output_action` in `aws_bedrock_guardrail` for per-direction PII control (available since v6.8.0)** - Since v6.8.0 (PR #43702) the classic provider supports `input_action`, `output_action`, `input_enabled`, and `output_enabled` on `pii_entities_config` and `regexes_config`. Use these fields rather than migrating to `awscc_bedrock_guardrail` solely for direction-specific PII control. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/42253_
 
-- **Always create an explicit `aws_bedrock_guardrail_version` with `skip_destroy = true` for production guardrails** — The DRAFT version updates in-place on every `terraform apply`, which can silently change production behavior. A pinned version is immutable. `skip_destroy = true` prevents Terraform destroy from removing versions that live production aliases may still reference. _Source: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrock_guardrail_version_
+- **Always create an explicit `aws_bedrock_guardrail_version` with `skip_destroy = true` for production guardrails** - The DRAFT version updates in-place on every `terraform apply`, which can silently change production behavior. A pinned version is immutable. `skip_destroy = true` prevents Terraform destroy from removing versions that live production aliases may still reference. _Source: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrock_guardrail_version_
 
-- **For Bedrock Flows: use `aws_bedrockagent_flow` (classic) for the flow definition, but `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version` (awscc) for versioning and aliases** — `aws_bedrockagent_flow_alias` and `aws_bedrockagent_flow_version` do not exist in the classic `hashicorp/aws` provider. The official `aws-ia` module confirms the hybrid approach. _Source: https://github.com/aws-ia/terraform-aws-bedrock_
+- **For Bedrock Flows: use `aws_bedrockagent_flow` (classic) for the flow definition, but `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version` (awscc) for versioning and aliases** - `aws_bedrockagent_flow_alias` and `aws_bedrockagent_flow_version` do not exist in the classic `hashicorp/aws` provider. The official `aws-ia` module confirms the hybrid approach. _Source: https://github.com/aws-ia/terraform-aws-bedrock_
 
-- **Add a `time_sleep` after IAM role policy attachments before creating Bedrock resources** — IAM changes take several seconds to propagate globally. Creating a Bedrock knowledge base or agent immediately after attaching the service role policy causes `AccessDeniedException`. A `time_sleep` of 15–60 seconds with `depends_on` on the IAM resources prevents this race condition. _Source: https://blog.avangards.io/how-to-manage-an-amazon-bedrock-knowledge-base-using-terraform_
+- **Add a `time_sleep` after IAM role policy attachments before creating Bedrock resources** - IAM changes take several seconds to propagate globally. Creating a Bedrock knowledge base or agent immediately after attaching the service role policy causes `AccessDeniedException`. A `time_sleep` of 15–60 seconds with `depends_on` on the IAM resources prevents this race condition. _Source: https://blog.avangards.io/how-to-manage-an-amazon-bedrock-knowledge-base-using-terraform_
 
-- **Use `prepare_agent = true` on `aws_bedrockagent_agent` and add a `null_resource` local-exec for action group changes** — `aws_bedrockagent_agent` triggers `PrepareAgent` automatically when the agent itself changes. But `aws_bedrockagent_agent_action_group` does NOT re-prepare the agent. A `null_resource` with a local-exec calling `aws bedrock-agent prepare-agent --agent-id ...` triggered by the action group SHA addresses this gap. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/39400_
+- **Use `prepare_agent = true` on `aws_bedrockagent_agent` and add a `null_resource` local-exec for action group changes** - `aws_bedrockagent_agent` triggers `PrepareAgent` automatically when the agent itself changes. But `aws_bedrockagent_agent_action_group` does NOT re-prepare the agent. A `null_resource` with a local-exec calling `aws bedrock-agent prepare-agent --agent-id ...` triggered by the action group SHA addresses this gap. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/39400_
 
-- **Pre-create the OpenSearch Serverless collection with all three policy types before creating the knowledge base, and wait for collection ACTIVE status** — `aws_bedrockagent_knowledge_base` fails if the collection does not exist or if the Bedrock service role lacks AOSS data-access permissions. All three policy types (`aws_opensearchserverless_security_policy` encryption, network; `aws_opensearchserverless_access_policy` data) must be in place before KB creation. _Source: https://blog.avangards.io/how-to-manage-an-amazon-bedrock-knowledge-base-using-terraform_
+- **Pre-create the OpenSearch Serverless collection with all three policy types before creating the knowledge base, and wait for collection ACTIVE status** - `aws_bedrockagent_knowledge_base` fails if the collection does not exist or if the Bedrock service role lacks AOSS data-access permissions. All three policy types (`aws_opensearchserverless_security_policy` encryption, network; `aws_opensearchserverless_access_policy` data) must be in place before KB creation. _Source: https://blog.avangards.io/how-to-manage-an-amazon-bedrock-knowledge-base-using-terraform_
 
-- **For BedrockAgentCore gateway resources, use `lifecycle { ignore_changes = [description, protocol_configuration] }`** — Known provider bug: the gateway resource does not read back `description` and `protocol_configuration` from the API, causing perpetual drift on every plan. The `ignore_changes` lifecycle block prevents spurious updates until the upstream issue is resolved. _Source: https://dev.to/aws-builders/terraform-your-aws-agentcore-11kl_
+- **For BedrockAgentCore gateway resources, use `lifecycle { ignore_changes = [description, protocol_configuration] }`** - Known provider bug: the gateway resource does not read back `description` and `protocol_configuration` from the API, causing perpetual drift on every plan. The `ignore_changes` lifecycle block prevents spurious updates until the upstream issue is resolved. _Source: https://dev.to/aws-builders/terraform-your-aws-agentcore-11kl_
 
-- **For multiple `aws_bedrockagent_agent_action_group` resources on the same agent, create them sequentially (not in parallel) with explicit `depends_on` chains** — Creating multiple action groups in parallel triggers concurrent `PrepareAgent` calls, causing "Prepare operation cannot be performed on Agent when it is in Preparing state" errors. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/42845_
+- **For multiple `aws_bedrockagent_agent_action_group` resources on the same agent, create them sequentially (not in parallel) with explicit `depends_on` chains** - Creating multiple action groups in parallel triggers concurrent `PrepareAgent` calls, causing "Prepare operation cannot be performed on Agent when it is in Preparing state" errors. _Source: https://github.com/hashicorp/terraform-provider-aws/issues/42845_
 
-- **Treat `aws_bedrock_model_invocation_logging_configuration` as a singleton — manage it in a dedicated Terraform state** — This resource configures a single account-region setting. If multiple Terraform configurations apply it, the last apply wins and silently disables logging configured by others. Isolate it in a shared-services state with state locking enabled. _Source: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrock_model_invocation_logging_configuration_
+- **Treat `aws_bedrock_model_invocation_logging_configuration` as a singleton - manage it in a dedicated Terraform state** - This resource configures a single account-region setting. If multiple Terraform configurations apply it, the last apply wins and silently disables logging configured by others. Isolate it in a shared-services state with state locking enabled. _Source: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrock_model_invocation_logging_configuration_
 
 ---
 
@@ -250,7 +250,7 @@ resource "aws_bedrockagent_agent_action_group" "search" {
   }
 }
 
-# action_group creation does NOT re-prepare the agent — workaround required
+# action_group creation does NOT re-prepare the agent - workaround required
 resource "null_resource" "prepare_agent" {
   triggers = {
     action_group_state = sha256(jsonencode(aws_bedrockagent_agent_action_group.search))
@@ -514,7 +514,7 @@ _Source: https://github.com/hashicorp/terraform-provider-aws/pull/45465_
 
 ---
 
-#### Flow lifecycle: aws_bedrockagent_flow (classic) + awscc_bedrock_flow_alias/version (awscc — no classic equivalent)
+#### Flow lifecycle: aws_bedrockagent_flow (classic) + awscc_bedrock_flow_alias/version (awscc - no classic equivalent)
 
 ```hcl
 # Flow definition: use classic provider
@@ -525,7 +525,7 @@ resource "aws_bedrockagent_flow" "this" {
 }
 
 # Flow VERSION and ALIAS: aws_bedrockagent_flow_alias/version do NOT exist in
-# the classic hashicorp/aws provider — use awscc_bedrock_flow_alias/version
+# the classic hashicorp/aws provider - use awscc_bedrock_flow_alias/version
 resource "awscc_bedrock_flow_version" "v1" {
   flow_arn    = aws_bedrockagent_flow.this.arn
   description = "Initial version"
@@ -707,11 +707,11 @@ _Source: https://github.com/aws-ia/terraform-aws-bedrock/blob/main/bda.tf_
 <a id="gotchas-part-1"></a>
 ### Gotchas
 
-- **CORRECTED:** `aws_bedrockagent_agent` DOES have a native `guardrail_configuration` block since v5.69.0 — it is NOT awscc-only. The earlier claim that only `awscc_bedrock_agent` supports guardrail association is outdated.
+- **CORRECTED:** `aws_bedrockagent_agent` DOES have a native `guardrail_configuration` block since v5.69.0 - it is NOT awscc-only. The earlier claim that only `awscc_bedrock_agent` supports guardrail association is outdated.
 - **CORRECTED:** `aws_bedrock_guardrail` DOES support per-direction `input_action`/`output_action` on `pii_entities_config` and `regexes_config` since v6.8.0. The earlier claim that this requires `awscc_bedrock_guardrail` is outdated for provider v6.8.0+.
 - **CORRECTED:** `aws_bedrockagent_knowledge_base` supports `MONGO_DB_ATLAS`, `NEPTUNE_ANALYTICS`, `OPENSEARCH_MANAGED_CLUSTER`, and `S3_VECTORS` in the classic provider since v6.27.0. Using `awscc_bedrock_knowledge_base` is no longer required for these backends.
 - `aws_bedrockagent_flow_alias` and `aws_bedrockagent_flow_version` **DO NOT EXIST** in the classic `hashicorp/aws` provider. For flow alias and version management, use `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version`. The official `aws-ia/terraform-aws-bedrock` module confirms this pattern.
-- `aws_bedrockagent_action_group` does NOT trigger `PrepareAgent` after creation or update — the agent stays in `NOT_PREPARED` state. A `null_resource` with `local-exec` calling `aws bedrock-agent prepare-agent --agent-id ...` is required.
+- `aws_bedrockagent_action_group` does NOT trigger `PrepareAgent` after creation or update - the agent stays in `NOT_PREPARED` state. A `null_resource` with `local-exec` calling `aws bedrock-agent prepare-agent --agent-id ...` is required.
 - Creating multiple `aws_bedrockagent_agent_action_group` resources in parallel causes "Prepare operation cannot be performed on Agent when it is in Preparing state". Use explicit `depends_on` chains between action groups to serialize creation.
 - SUPERVISOR agents with multi-agent collaboration and `prepare_agent = true` may fail during creation when no collaborators are defined yet (Issue #43059). Set `prepare_agent = false` for SUPERVISOR agents and call prepare manually via `null_resource` after all collaborators are attached.
 - `aws_bedrock_model_invocation_logging_configuration` is a singleton per account per region. Defining it in more than one Terraform state causes silent overwrites. Manage it in a dedicated shared-services stack.
@@ -719,35 +719,35 @@ _Source: https://github.com/aws-ia/terraform-aws-bedrock/blob/main/bda.tf_
 - IAM role propagation lag: attaching a policy to an IAM role and immediately creating a Bedrock knowledge base or agent causes `AccessDeniedException`. A `time_sleep` of 15–60 seconds with `depends_on` is required.
 - OpenSearch Serverless: the collection requires all three policy types (encryption, network, data access) before the collection is created, and the collection must be ACTIVE before the knowledge base can be created.
 - `awscc_bedrockagentcore_gateway` and `aws_bedrockagentcore_gateway` have a known drift issue: `description` and `protocol_configuration` are not read back from the API, causing perpetual plan diffs. Workaround: `lifecycle { ignore_changes = [description, protocol_configuration] }`.
-- `aws_bedrock_custom_model` is an asynchronous long-running job. Terraform polls until completion, which can take hours. There is no way to cancel a running training job via `terraform destroy` — destroy only removes the Terraform resource record.
+- `aws_bedrock_custom_model` is an asynchronous long-running job. Terraform polls until completion, which can take hours. There is no way to cancel a running training job via `terraform destroy` - destroy only removes the Terraform resource record.
 - The `awscc` provider and classic provider have **different resource names** for the same AgentCore concept: `awscc_bedrockagentcore_runtime` maps to `aws_bedrockagentcore_agent_runtime`; `awscc_bedrockagentcore_o_auth_2_credential_provider` maps to `aws_bedrockagentcore_oauth2_credential_provider`. Do not mix both providers managing the same logical resource.
-- System-defined cross-region inference profiles (e.g., `us.anthropic.claude-3-5-sonnet-20241022-v2:0`) are NOT managed with `aws_bedrock_inference_profile` — use `data.aws_bedrock_inference_profile`. The resource is only for creating application inference profiles.
-- Model access must be explicitly enabled in the AWS console or via the Bedrock API before any resource that invokes a foundation model can succeed. Terraform has no native resource for enabling model access — use a `null_resource` or handle it as a pre-flight step.
-- `aws_bedrockagent_data_source` has no "sync" or "ingest" capability — after creation the data source must be synced via console, CLI (`aws bedrock-agent start-ingestion-job`), or a `null_resource` `local-exec`.
+- System-defined cross-region inference profiles (e.g., `us.anthropic.claude-3-5-sonnet-20241022-v2:0`) are NOT managed with `aws_bedrock_inference_profile` - use `data.aws_bedrock_inference_profile`. The resource is only for creating application inference profiles.
+- Model access must be explicitly enabled in the AWS console or via the Bedrock API before any resource that invokes a foundation model can succeed. Terraform has no native resource for enabling model access - use a `null_resource` or handle it as a pre-flight step.
+- `aws_bedrockagent_data_source` has no "sync" or "ingest" capability - after creation the data source must be synced via console, CLI (`aws bedrock-agent start-ingestion-job`), or a `null_resource` `local-exec`.
 
 ---
 
 <a id="official-sources-part-1"></a>
 ### Official sources
 
-- [AWS CloudFormation – AWS::Bedrock resource type reference (all 20 CFN resource types)](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/AWS_Bedrock.html) — Canonical list of every Bedrock resource that CloudFormation (and therefore awscc) supports. Confirmed 20 types as of June 2026: Agent, AgentAlias, ApplicationInferenceProfile, AutomatedReasoningPolicy, AutomatedReasoningPolicyVersion, Blueprint, DataAutomationLibrary, DataAutomationProject, DataSource, EnforcedGuardrailConfiguration, Flow, FlowAlias, FlowVersion, Guardrail, GuardrailVersion, IntelligentPromptRouter, KnowledgeBase, Prompt, PromptVersion, ResourcePolicy.
-- [Amazon Bedrock – create resources with CloudFormation (Bedrock User Guide)](https://docs.aws.amazon.com/bedrock/latest/userguide/cfn-bedrock-resources.html) — Official list of supported CloudFormation resource types for Bedrock control-plane.
-- [Terraform Registry – hashicorp/aws provider (Bedrock resources)](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) — Primary reference for all `aws_bedrock_*`, `aws_bedrockagent_*`, `aws_bedrockagentcore_*` resources and data sources.
-- [Terraform Registry – hashicorp/awscc provider (awscc_bedrock_*)](https://registry.terraform.io/providers/hashicorp/awscc/latest/docs) — Cloud Control API-backed provider. Authoritative for `awscc_bedrock_flow_alias/version`, `awscc_bedrock_automated_reasoning_policy`, `awscc_bedrock_enforced_guardrail_configuration`, `awscc_bedrock_intelligent_prompt_router`, `awscc_bedrock_data_automation_library`, and all `awscc_bedrockagentcore_*` resources.
-- [aws-ia/terraform-aws-bedrock – official AWS module (Terraform Registry)](https://registry.terraform.io/modules/aws-ia/bedrock/aws/latest) — Official AWS-IA module. Internally uses `awscc_bedrock_flow_alias/version` (not `aws_`), `awscc_bedrock_prompt/prompt_version`, and `awscc_bedrock_knowledge_base` only for backends not yet in classic provider.
-- [aws-ia/terraform-aws-bedrock – GitHub source](https://github.com/aws-ia/terraform-aws-bedrock) — Source confirms the module uses `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version` for flow management; `awscc_bedrock_data_automation_project` and `awscc_bedrock_blueprint` in `bda.tf`.
-- [AWS Blog – Deploy Amazon Bedrock Knowledge Bases using Terraform for RAG](https://aws.amazon.com/blogs/machine-learning/deploy-amazon-bedrock-knowledge-bases-using-terraform-for-rag-based-generative-ai-applications/) — AWS official blog with working Terraform example for `aws_bedrockagent_knowledge_base` + OpenSearch Serverless.
-- [AWS Blog – Streamline custom model creation with Provisioned Throughput using Terraform](https://aws.amazon.com/blogs/machine-learning/streamline-custom-model-creation-and-deployment-for-amazon-bedrock-with-provisioned-throughput-using-terraform/) — Shows `aws_bedrock_provisioned_model_throughput` + aws-ia module for fine-tuning and provisioned capacity.
-- [Amazon Bedrock Agents – IAM service role permissions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-permissions.html) — Required trust policy, identity-based policies for model invocation, knowledge base retrieval, guardrail (`bedrock:ApplyGuardrail`), collaborator access, and provisioned throughput.
-- [Amazon Bedrock Knowledge Bases – IAM service role permissions](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html) — Trust policy, model invocation, S3 data source, OpenSearch Serverless, Neptune, RDS, Pinecone/Redis Secrets Manager permissions.
-- [awslabs/amazon-bedrock-agentcore-samples – Terraform IaC examples](https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/04-infrastructure-as-code/terraform/README.md) — Official AgentCore samples showing basic-runtime, mcp-server, multi-agent, and end-to-end patterns.
-- [HashiCorp Blog – AWS and AWSCC Terraform providers: Better together](https://www.hashicorp.com/en/blog/aws-and-awscc-terraform-providers-better-together) — Explains the hybrid-provider pattern: use `aws` for stable resources, `awscc` for cutting-edge/new features.
-- [hashicorp/terraform-provider-awscc – all_schemas.hcl (awscc resource list)](https://github.com/hashicorp/terraform-provider-awscc/blob/main/internal/provider/all_schemas.hcl) — Authoritative source for the complete list of `awscc_bedrock_*` and `awscc_bedrockagentcore_*` resources.
-- [AWS Prescriptive Guidance – Configure model invocation logging in Bedrock using CloudFormation](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/configure-bedrock-invocation-logging-cloudformation.html) — Architecture and IAM requirements for `aws_bedrock_model_invocation_logging_configuration`.
+- [AWS CloudFormation – AWS::Bedrock resource type reference (all 20 CFN resource types)](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/AWS_Bedrock.html) - Canonical list of every Bedrock resource that CloudFormation (and therefore awscc) supports. Confirmed 20 types as of June 2026: Agent, AgentAlias, ApplicationInferenceProfile, AutomatedReasoningPolicy, AutomatedReasoningPolicyVersion, Blueprint, DataAutomationLibrary, DataAutomationProject, DataSource, EnforcedGuardrailConfiguration, Flow, FlowAlias, FlowVersion, Guardrail, GuardrailVersion, IntelligentPromptRouter, KnowledgeBase, Prompt, PromptVersion, ResourcePolicy.
+- [Amazon Bedrock – create resources with CloudFormation (Bedrock User Guide)](https://docs.aws.amazon.com/bedrock/latest/userguide/cfn-bedrock-resources.html) - Official list of supported CloudFormation resource types for Bedrock control-plane.
+- [Terraform Registry – hashicorp/aws provider (Bedrock resources)](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) - Primary reference for all `aws_bedrock_*`, `aws_bedrockagent_*`, `aws_bedrockagentcore_*` resources and data sources.
+- [Terraform Registry – hashicorp/awscc provider (awscc_bedrock_*)](https://registry.terraform.io/providers/hashicorp/awscc/latest/docs) - Cloud Control API-backed provider. Authoritative for `awscc_bedrock_flow_alias/version`, `awscc_bedrock_automated_reasoning_policy`, `awscc_bedrock_enforced_guardrail_configuration`, `awscc_bedrock_intelligent_prompt_router`, `awscc_bedrock_data_automation_library`, and all `awscc_bedrockagentcore_*` resources.
+- [aws-ia/terraform-aws-bedrock – official AWS module (Terraform Registry)](https://registry.terraform.io/modules/aws-ia/bedrock/aws/latest) - Official AWS-IA module. Internally uses `awscc_bedrock_flow_alias/version` (not `aws_`), `awscc_bedrock_prompt/prompt_version`, and `awscc_bedrock_knowledge_base` only for backends not yet in classic provider.
+- [aws-ia/terraform-aws-bedrock – GitHub source](https://github.com/aws-ia/terraform-aws-bedrock) - Source confirms the module uses `awscc_bedrock_flow_alias` and `awscc_bedrock_flow_version` for flow management; `awscc_bedrock_data_automation_project` and `awscc_bedrock_blueprint` in `bda.tf`.
+- [AWS Blog – Deploy Amazon Bedrock Knowledge Bases using Terraform for RAG](https://aws.amazon.com/blogs/machine-learning/deploy-amazon-bedrock-knowledge-bases-using-terraform-for-rag-based-generative-ai-applications/) - AWS official blog with working Terraform example for `aws_bedrockagent_knowledge_base` + OpenSearch Serverless.
+- [AWS Blog – Streamline custom model creation with Provisioned Throughput using Terraform](https://aws.amazon.com/blogs/machine-learning/streamline-custom-model-creation-and-deployment-for-amazon-bedrock-with-provisioned-throughput-using-terraform/) - Shows `aws_bedrock_provisioned_model_throughput` + aws-ia module for fine-tuning and provisioned capacity.
+- [Amazon Bedrock Agents – IAM service role permissions](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-permissions.html) - Required trust policy, identity-based policies for model invocation, knowledge base retrieval, guardrail (`bedrock:ApplyGuardrail`), collaborator access, and provisioned throughput.
+- [Amazon Bedrock Knowledge Bases – IAM service role permissions](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html) - Trust policy, model invocation, S3 data source, OpenSearch Serverless, Neptune, RDS, Pinecone/Redis Secrets Manager permissions.
+- [awslabs/amazon-bedrock-agentcore-samples – Terraform IaC examples](https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/04-infrastructure-as-code/terraform/README.md) - Official AgentCore samples showing basic-runtime, mcp-server, multi-agent, and end-to-end patterns.
+- [HashiCorp Blog – AWS and AWSCC Terraform providers: Better together](https://www.hashicorp.com/en/blog/aws-and-awscc-terraform-providers-better-together) - Explains the hybrid-provider pattern: use `aws` for stable resources, `awscc` for cutting-edge/new features.
+- [hashicorp/terraform-provider-awscc – all_schemas.hcl (awscc resource list)](https://github.com/hashicorp/terraform-provider-awscc/blob/main/internal/provider/all_schemas.hcl) - Authoritative source for the complete list of `awscc_bedrock_*` and `awscc_bedrockagentcore_*` resources.
+- [AWS Prescriptive Guidance – Configure model invocation logging in Bedrock using CloudFormation](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/configure-bedrock-invocation-logging-cloudformation.html) - Architecture and IAM requirements for `aws_bedrock_model_invocation_logging_configuration`.
 
 ---
 
-## Part 2 — Terraform for Bedrock AgentCore
+## Part 2 - Terraform for Bedrock AgentCore
 
 <a id="overview-part-2"></a>
 ### Overview
@@ -756,7 +756,7 @@ Amazon Bedrock AgentCore is supported in Terraform via `hashicorp/aws` (first re
 
 The official module `aws-ia/terraform-aws-agentcore` is at **v1.0.0 (February 2026)** and internally uses `awscc_bedrockagentcore_runtime` (not `aws_bedrockagentcore_agent_runtime`) for runtimes, combining `awscc` and `aws` for gateway targets and memory resources.
 
-The AgentCore CLI supports CDK natively (announced April 2026). Terraform CLI support is "coming soon" — not yet released as of June 2026.
+The AgentCore CLI supports CDK natively (announced April 2026). Terraform CLI support is "coming soon" - not yet released as of June 2026.
 
 **Maturity:** GA (April 2026). Provider `hashicorp/aws`: 16 resources, 0 data sources. Provider `hashicorp/awscc`: parallel resources plus `awscc`-only resources (custom browser, custom code interpreter, dataset, evaluator, payment credential provider, policy, policy engine, browser profile). Module `aws-ia/terraform-aws-agentcore` v1.0.0: stable API. CloudFormation: 20 resource types.
 
@@ -769,7 +769,7 @@ The AgentCore CLI supports CDK natively (announced April 2026). Terraform CLI su
 Terraform native resource (provider `hashicorp/aws`, first version: v6.17.0, October 2025). Required arguments: `agent_runtime_name` (pattern `[a-zA-Z][a-zA-Z0-9_]{0,47}`), `role_arn`, `network_configuration`, `agent_runtime_artifact`. The `agent_runtime_artifact` field accepts `container_configuration` (ECR URI) or `code_configuration` (S3 zip, added in v6.22.0). `filesystem_configuration` was added in v6.46.0 (May 2026) for mounting EFS, S3 Files, or session storage. `authorizer_configuration.custom_jwt_authorizer` supports `custom_claim` (v6.38.0) and `allowed_scopes` (v6.36.0). Changing `agent_runtime_name` requires replacement.
 
 **aws_bedrockagentcore_memory**
-Manages AgentCore memory. Required arguments: `name` (pattern `[a-zA-Z][a-zA-Z0-9_]{0,47}`, ForceNew), `event_expiry_duration` (3–365 days, no interruption). Optional: `memory_execution_role_arn` (no interruption), `encryption_key_arn` (requires replacement). Memory strategies are NOT inline — use the separate `aws_bedrockagentcore_memory_strategy` resource.
+Manages AgentCore memory. Required arguments: `name` (pattern `[a-zA-Z][a-zA-Z0-9_]{0,47}`, ForceNew), `event_expiry_duration` (3–365 days, no interruption). Optional: `memory_execution_role_arn` (no interruption), `encryption_key_arn` (requires replacement). Memory strategies are NOT inline - use the separate `aws_bedrockagentcore_memory_strategy` resource.
 
 **aws_bedrockagentcore_memory_strategy**
 Separate resource for memory strategies. Required argument: `memory_id`. Built-in types: `semantic_memory_strategy`, `summary_memory_strategy`, `user_preference_memory_strategy`, `episodic_memory_strategy` (`EPISODIC` added in v6.43.0, April 2026). Limit: max 1 built-in strategy per type, max 6 strategies total per memory.
@@ -778,13 +778,13 @@ Separate resource for memory strategies. Required argument: `memory_id`. Built-i
 Gateway creates the MCP proxy toward tools and APIs. Required arguments: `name` (pattern `^([0-9a-zA-Z][-]?){1,100}$`), `role_arn`, `authorizer_type` (classic `aws` provider: `CUSTOM_JWT | AWS_IAM`; awscc/CFN also adds `NONE | AUTHENTICATE_ONLY`; ForceNew in the `aws` provider). GatewayTarget: required `name` and `target_configuration`; `gateway_identifier` is optional but requires replacement if changed. `credential_provider_configuration` made optional in v6.21.0. `mcp.mcp_server` support added v6.21.0; `target_configuration.mcp.api_gateway` added v6.38.0.
 
 **aws_bedrockagentcore_workload_identity**
-Creates an OAuth2-based identity for agentic workloads. Required argument: `name` (3–255 char, pattern `[A-Za-z0-9_.-]+`, ForceNew). Optional: `allowed_resource_oauth2_return_urls` (array of strings). Tags are a **map of strings** in Terraform HCL — NOT an array of `{key, value}` objects (that is the CloudFormation/API JSON structure, not HCL).
+Creates an OAuth2-based identity for agentic workloads. Required argument: `name` (3–255 char, pattern `[A-Za-z0-9_.-]+`, ForceNew). Optional: `allowed_resource_oauth2_return_urls` (array of strings). Tags are a **map of strings** in Terraform HCL - NOT an array of `{key, value}` objects (that is the CloudFormation/API JSON structure, not HCL).
 
 **aws_bedrockagentcore_browser and aws_bedrockagentcore_code_interpreter**
 Resources in the `aws` provider (introduced v6.17.0) for the managed browser and code interpreter. Arguments: `name`, `description`, `network_configuration.network_mode` (`PUBLIC`/`VPC`). **Critical distinction:** `aws_bedrockagentcore_browser` and `aws_bedrockagentcore_code_interpreter` (managed, no `execution_role_arn`) vs `awscc_bedrockagentcore_browser_custom` and `awscc_bedrockagentcore_code_interpreter_custom` (custom, with `execution_role_arn` and `recording_config`). The `aws-ia` module uses the `awscc` custom variants.
 
 **awscc_bedrockagentcore_runtime**
-Cloud Control resource (provider `awscc` v1.57.0+) mapping directly to `AWS::BedrockAgentCore::Runtime`. This is the resource used by the `aws-ia/terraform-aws-agentcore` module. Supports `code_configuration` (S3 source), `container_configuration` (ECR), `network_configuration.network_mode_config` with `security_groups` and `subnets`, `protocol_configuration` (string: `MCP | HTTP | A2A | AGUI` — all four valid in awscc/CFN; the classic `aws` provider supports `MCP | HTTP | A2A` only, not `AGUI`), `filesystem_configurations` (array with `EfsAccessPoint`, `S3FilesAccessPoint`, `SessionStorage`).
+Cloud Control resource (provider `awscc` v1.57.0+) mapping directly to `AWS::BedrockAgentCore::Runtime`. This is the resource used by the `aws-ia/terraform-aws-agentcore` module. Supports `code_configuration` (S3 source), `container_configuration` (ECR), `network_configuration.network_mode_config` with `security_groups` and `subnets`, `protocol_configuration` (string: `MCP | HTTP | A2A | AGUI` - all four valid in awscc/CFN; the classic `aws` provider supports `MCP | HTTP | A2A` only, not `AGUI`), `filesystem_configurations` (array with `EfsAccessPoint`, `S3FilesAccessPoint`, `SessionStorage`).
 
 **Module aws-ia/terraform-aws-agentcore v1.0.0**
 Official AWS module (org `aws-ia`) v1.0.0 (February 2026). Requires Terraform >= 1.14, `aws >= 6.18.0`, `awscc >= 1.30.0`. Internally uses: `awscc_bedrockagentcore_runtime` (for CODE and CONTAINER runtimes), `awscc_bedrockagentcore_runtime_endpoint`, `awscc_bedrockagentcore_memory`, `awscc_bedrockagentcore_gateway`, `awscc_bedrockagentcore_browser_custom`, `awscc_bedrockagentcore_code_interpreter_custom`, and `aws_bedrockagentcore_gateway_target`. Manages ARM64 build automatically via `terraform_data` + CodeBuild. No `null_resource` in recent versions.
@@ -795,7 +795,7 @@ Resource added in v6.46.0 (May 2026, `aws` provider) and v1.86.0 (`awscc`). Mana
 **Pattern: CodeBuild for container builds in awslabs samples**
 The `awslabs/agentcore-samples` use `aws_codebuild_project` + `null_resource.trigger_build` (with local-exec invoking a shell script) to build and push ARM64 images to ECR. The runtime depends on `null_resource` via `depends_on`. The `aws-ia` v1.0.0 module uses `terraform_data` for build triggers, eliminating `null_resource`. Both patterns require AWS CLI in the CI/CD environment.
 
-**AgentCore Runtime — microVM architecture and protocols**
+**AgentCore Runtime - microVM architecture and protocols**
 Each session runs in an isolated microVM (dedicated CPU, memory, filesystem). Supports real-time and long-running sessions up to 8 hours. Supported frameworks: LangGraph, CrewAI, LlamaIndex, Strands Agents, Google ADK, OpenAI Agents SDK. CloudFormation/awscc-confirmed protocols: `MCP`, `HTTP`, `A2A`, `AGUI`; the classic `aws` provider supports `MCP`, `HTTP`, `A2A` (`AGUI` is awscc/CFN only). ARM64 (AWS Graviton) only. Direct code deployment (S3 zip) supported from `aws` provider v6.22.0.
 
 ---
@@ -803,23 +803,23 @@ Each session runs in an isolated microVM (dedicated CPU, memory, filesystem). Su
 <a id="best-practices-part-2"></a>
 ### Best practices
 
-- **Use the `aws-ia/terraform-aws-agentcore` v1.0.0 module for new projects instead of calling raw resources** — The module automatically manages the ARM64 CodeBuild pipeline, minimal IAM roles, ECR lifecycle, resource dependencies, and uses `terraform_data` instead of `null_resource`. The v1.0.0 (February 2026) has a stable API. _Source: https://github.com/aws-ia/terraform-aws-agentcore_
+- **Use the `aws-ia/terraform-aws-agentcore` v1.0.0 module for new projects instead of calling raw resources** - The module automatically manages the ARM64 CodeBuild pipeline, minimal IAM roles, ECR lifecycle, resource dependencies, and uses `terraform_data` instead of `null_resource`. The v1.0.0 (February 2026) has a stable API. _Source: https://github.com/aws-ia/terraform-aws-agentcore_
 
-- **Apply the trust policy with `aws:SourceAccount` and `aws:SourceArn` conditions on the Runtime execution role** — AWS prescribes these conditions to prevent confused-deputy attacks. The primary service to authorize is `bedrock-agentcore.amazonaws.com`. Confirmed in official `awslabs/agentcore-samples` examples. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
+- **Apply the trust policy with `aws:SourceAccount` and `aws:SourceArn` conditions on the Runtime execution role** - AWS prescribes these conditions to prevent confused-deputy attacks. The primary service to authorize is `bedrock-agentcore.amazonaws.com`. Confirmed in official `awslabs/agentcore-samples` examples. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
 
-- **Do not use `BedrockAgentCoreFullAccess` without additional restrictions in production** — The managed policy includes `GetWorkloadAccessTokenForUserId` which issues tokens without IdP verification. For production, grant only `GetWorkloadAccessTokenForJWT` and `GetWorkloadAccessToken` with specific resource ARNs. However, the awslabs samples use `BedrockAgentCoreFullAccess` + supplemental inline policy: follow that pattern by adding an explicit deny on `GetWorkloadAccessTokenForUserId`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
+- **Do not use `BedrockAgentCoreFullAccess` without additional restrictions in production** - The managed policy includes `GetWorkloadAccessTokenForUserId` which issues tokens without IdP verification. For production, grant only `GetWorkloadAccessTokenForJWT` and `GetWorkloadAccessToken` with specific resource ARNs. However, the awslabs samples use `BedrockAgentCoreFullAccess` + supplemental inline policy: follow that pattern by adding an explicit deny on `GetWorkloadAccessTokenForUserId`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
 
-- **Choose `aws` vs `awscc` provider based on the specific use case** — The awslabs samples use only `aws` provider (`~> 6.21`) without `awscc`. The `aws-ia` module uses `awscc` for Runtime/RuntimeEndpoint/Memory/Gateway (for advanced `code_configuration`, `network_mode_config`, `protocol_configuration`) and `aws` for GatewayTarget. Use `awscc` when you need: `protocol_configuration` `AGUI` (the `aws` provider supports `MCP | HTTP | A2A` but not `AGUI`), `filesystem_configurations` with `EfsAccessPoint`/`S3FilesAccessPoint` structure, `recording_config` on browser, `code_configuration` S3 with alternative structure. _Source: https://github.com/aws-ia/terraform-aws-agentcore_
+- **Choose `aws` vs `awscc` provider based on the specific use case** - The awslabs samples use only `aws` provider (`~> 6.21`) without `awscc`. The `aws-ia` module uses `awscc` for Runtime/RuntimeEndpoint/Memory/Gateway (for advanced `code_configuration`, `network_mode_config`, `protocol_configuration`) and `aws` for GatewayTarget. Use `awscc` when you need: `protocol_configuration` `AGUI` (the `aws` provider supports `MCP | HTTP | A2A` but not `AGUI`), `filesystem_configurations` with `EfsAccessPoint`/`S3FilesAccessPoint` structure, `recording_config` on browser, `code_configuration` S3 with alternative structure. _Source: https://github.com/aws-ia/terraform-aws-agentcore_
 
-- **Declare `aws` provider with version `>= 6.22` for `code_configuration`, `>= 6.46` for `filesystem_configuration`** — `aws_bedrockagentcore_agent_runtime` received relevant updates: `code_configuration` in v6.22.0 (November 2025), `filesystem_configuration` in v6.46.0 (May 2026). For production, constrain to a known-good minimum version rather than `~> 6.17`. _Source: https://github.com/hashicorp/terraform-provider-aws/releases_
+- **Declare `aws` provider with version `>= 6.22` for `code_configuration`, `>= 6.46` for `filesystem_configuration`** - `aws_bedrockagentcore_agent_runtime` received relevant updates: `code_configuration` in v6.22.0 (November 2025), `filesystem_configuration` in v6.46.0 (May 2026). For production, constrain to a known-good minimum version rather than `~> 6.17`. _Source: https://github.com/hashicorp/terraform-provider-aws/releases_
 
-- **Use explicit `depends_on` between `null_resource`/`terraform_data` build steps, `aws_iam_role_policy`, and `aws_bedrockagentcore_agent_runtime`** — Terraform does not know the implicit dependency between the ECR push and runtime creation. Without `depends_on` the runtime may be created before the image is available in ECR. _Source: https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/04-infrastructure-as-code/terraform/basic-runtime/main.tf_
+- **Use explicit `depends_on` between `null_resource`/`terraform_data` build steps, `aws_iam_role_policy`, and `aws_bedrockagentcore_agent_runtime`** - Terraform does not know the implicit dependency between the ECR push and runtime creation. Without `depends_on` the runtime may be created before the image is available in ECR. _Source: https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/04-infrastructure-as-code/terraform/basic-runtime/main.tf_
 
-- **Plan `name`, `encryption_key_arn`, and `gateway_identifier` before initial deploy — they require replacement if changed** — The following fields require destroy + recreate: `agent_runtime_name` in `aws_bedrockagentcore_agent_runtime`; `name` and `encryption_key_arn` in `aws_bedrockagentcore_memory` (data loss); `name` in `aws_bedrockagentcore_workload_identity`; `gateway_identifier` in `aws_bedrockagentcore_gateway_target`; `authorizer_type` in `aws_bedrockagentcore_gateway` (ForceNew in the classic `aws` provider; CloudFormation marks it as no interruption). _Source: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-memory.html_
+- **Plan `name`, `encryption_key_arn`, and `gateway_identifier` before initial deploy - they require replacement if changed** - The following fields require destroy + recreate: `agent_runtime_name` in `aws_bedrockagentcore_agent_runtime`; `name` and `encryption_key_arn` in `aws_bedrockagentcore_memory` (data loss); `name` in `aws_bedrockagentcore_workload_identity`; `gateway_identifier` in `aws_bedrockagentcore_gateway_target`; `authorizer_type` in `aws_bedrockagentcore_gateway` (ForceNew in the classic `aws` provider; CloudFormation marks it as no interruption). _Source: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-memory.html_
 
-- **For the Gateway, prefer `AWS_IAM` for internal agent-to-agent environments; `CUSTOM_JWT` for external IdPs** — `AWS_IAM` is simpler to manage with standard IAM policies. `CUSTOM_JWT` requires an OIDC discovery URL (pattern `.+/.well-known/openid-configuration`) and management of `allowed_clients` or `allowed_audience`. `NONE` and `AUTHENTICATE_ONLY` are available in awscc/CFN only (not in the classic `aws` provider) and are for development/testing only. _Source: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-gateway.html_
+- **For the Gateway, prefer `AWS_IAM` for internal agent-to-agent environments; `CUSTOM_JWT` for external IdPs** - `AWS_IAM` is simpler to manage with standard IAM policies. `CUSTOM_JWT` requires an OIDC discovery URL (pattern `.+/.well-known/openid-configuration`) and management of `allowed_clients` or `allowed_audience`. `NONE` and `AUTHENTICATE_ONLY` are available in awscc/CFN only (not in the classic `aws` provider) and are for development/testing only. _Source: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-gateway.html_
 
-- **Configure remote state on S3 + DynamoDB for team/production environments** — The `backend.tf.example` in awslabs samples shows the recommended structure. Local state is suitable only for individual testing. _Source: https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/04-infrastructure-as-code/terraform_
+- **Configure remote state on S3 + DynamoDB for team/production environments** - The `backend.tf.example` in awslabs samples shows the recommended structure. Local state is suitable only for individual testing. _Source: https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/04-infrastructure-as-code/terraform_
 
 ---
 
@@ -994,7 +994,7 @@ _Source: https://github.com/awslabs/amazon-bedrock-agentcore-samples/blob/main/0
 
 ---
 
-#### aws_bedrockagentcore_memory with event_expiry_duration (no inline strategies — use separate aws_bedrockagentcore_memory_strategy)
+#### aws_bedrockagentcore_memory with event_expiry_duration (no inline strategies - use separate aws_bedrockagentcore_memory_strategy)
 
 ```hcl
 resource "aws_bedrockagentcore_memory" "agent_memory" {
@@ -1010,7 +1010,7 @@ resource "aws_bedrockagentcore_memory" "agent_memory" {
   }
 }
 
-# Separate resource for strategies — autonomous resource
+# Separate resource for strategies - autonomous resource
 resource "aws_bedrockagentcore_memory_strategy" "semantic" {
   memory_id = aws_bedrockagentcore_memory.agent_memory.id
 
@@ -1082,7 +1082,7 @@ _Source: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resou
 
 ---
 
-#### aws_bedrockagentcore_workload_identity — tags as MAP (not array) in Terraform
+#### aws_bedrockagentcore_workload_identity - tags as MAP (not array) in Terraform
 
 ```hcl
 resource "aws_bedrockagentcore_workload_identity" "agent_identity" {
@@ -1109,7 +1109,7 @@ _Source: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/
 
 ---
 
-#### Official aws-ia/terraform-aws-agentcore v1.0.0 module — complete example with Runtime CODE, Memory, Gateway
+#### Official aws-ia/terraform-aws-agentcore v1.0.0 module - complete example with Runtime CODE, Memory, Gateway
 
 ```hcl
 module "agentcore" {
@@ -1166,7 +1166,7 @@ _Source: https://github.com/aws-ia/terraform-aws-agentcore_
 
 ---
 
-#### awscc_bedrockagentcore_runtime as alternative — CORRECT structure for code_configuration and network_mode_config
+#### awscc_bedrockagentcore_runtime as alternative - CORRECT structure for code_configuration and network_mode_config
 
 ```hcl
 # awscc structure verified from aws-ia/terraform-aws-agentcore v1.0.0 module
@@ -1210,11 +1210,11 @@ _Source: https://github.com/aws-ia/terraform-aws-agentcore/blob/main/main.tf_
 
 | Name | Description | Default / example |
 |------|-------------|-------------------|
-| `agent_runtime_name` (`aws_bedrockagentcore_agent_runtime`) | Runtime name. Pattern: `[a-zA-Z][a-zA-Z0-9_]{0,47}`. Change requires replacement (ForceNew). Do not use hyphens — replace with underscores. | `replace("${var.stack_name}_${var.agent_name}", "-", "_")` |
+| `agent_runtime_name` (`aws_bedrockagentcore_agent_runtime`) | Runtime name. Pattern: `[a-zA-Z][a-zA-Z0-9_]{0,47}`. Change requires replacement (ForceNew). Do not use hyphens - replace with underscores. | `replace("${var.stack_name}_${var.agent_name}", "-", "_")` |
 | `role_arn` (`aws_bedrockagentcore_agent_runtime`) | ARN of IAM execution role. Pattern `arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+`. Service `bedrock-agentcore.amazonaws.com` must have `sts:AssumeRole` with `aws:SourceAccount` and `aws:SourceArn` conditions. | `aws_iam_role.agent_execution.arn` |
 | `agent_runtime_artifact` (`aws_bedrockagentcore_agent_runtime`) | Mutually exclusive: `container_configuration` (ECR URI) or `code_configuration` (S3 source, added v6.22.0 November 2025). | `container_configuration { container_uri = "${aws_ecr_repository.ecr.repository_url}:${var.image_tag}" }` |
 | `network_configuration.network_mode` (`aws_bedrockagentcore_agent_runtime`) | Network mode. Values: `PUBLIC` (default) or `VPC`. For VPC, configure `vpc_config` with `subnet_ids` and `security_group_ids`. | `"PUBLIC"` |
-| `protocol_configuration.server_protocol` (`aws_bedrockagentcore_agent_runtime`) | Runtime protocol in `aws` provider. Supported values: `MCP \| HTTP \| A2A`. `AGUI` is awscc/CFN only — use `awscc_bedrockagentcore_runtime` with `protocol_configuration` as a string for `AGUI`. _Source: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_agent_runtime_ | `"MCP"` |
+| `protocol_configuration.server_protocol` (`aws_bedrockagentcore_agent_runtime`) | Runtime protocol in `aws` provider. Supported values: `MCP \| HTTP \| A2A`. `AGUI` is awscc/CFN only - use `awscc_bedrockagentcore_runtime` with `protocol_configuration` as a string for `AGUI`. _Source: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_agent_runtime_ | `"MCP"` |
 | `authorizer_configuration.custom_jwt_authorizer` (`aws_bedrockagentcore_agent_runtime` / gateway) | JWT auth for inbound authentication. Requires `discovery_url` (pattern `.+/.well-known/openid-configuration`). Optional: `allowed_clients`, `allowed_audience`, `allowed_scopes` (added v6.36.0), `custom_claim` (added v6.38.0). | `discovery_url = "https://cognito-idp.{region}.amazonaws.com/{pool_id}/.well-known/openid-configuration"` |
 | `event_expiry_duration` (`aws_bedrockagentcore_memory`) | Days before memory events expire. Min 3, max 365. Does NOT require replacement (no interruption). Modifiable after creation. | `30` |
 | `name` (`aws_bedrockagentcore_memory`) | Memory name. Pattern `[a-zA-Z][a-zA-Z0-9_]{0,47}`. ForceNew: change destroys the resource and all data. | `replace("${var.stack_name}_memory", "-", "_")` |
@@ -1232,12 +1232,12 @@ _Source: https://github.com/aws-ia/terraform-aws-agentcore/blob/main/main.tf_
 - The `hashicorp/aws` provider has **NO data sources for `bedrockagentcore`**: 16 resources, 0 data sources confirmed. To import existing resources use `terraform import`. The `awscc` provider has both resources and data sources for all resources.
 - The first version of the `aws` provider with `bedrockagentcore` resources is **v6.17.0 (October 2025)**, not v6.21.0 as often reported. The awslabs samples use `~> 6.21` because it is the tested version, but the resources exist from v6.17.0.
 - **Critical distinction between managed and custom browser/code_interpreter:** `aws_bedrockagentcore_browser` and `aws_bedrockagentcore_code_interpreter` (aws provider) are the managed variants without `execution_role_arn` and without `recording_config`. `awscc_bedrockagentcore_browser_custom` and `awscc_bedrockagentcore_code_interpreter_custom` (awscc provider) are the custom variants with `execution_role_arn`, `recording_config` (for browser), and enterprise policies. The `aws-ia` module uses the `awscc` custom variants.
-- **CORRECTION — awscc filesystem snippet:** The previous structure using `filesystem_type='EFS'` and `efs.access_point_id`/`mount_point` does **not exist**. The correct CloudFormation/awscc structure for filesystem is: `EfsAccessPoint` (block with `EfsAccessPointConfiguration`), `S3FilesAccessPoint`, or `SessionStorage`. There is no `filesystem_type` or `mount_point` field directly.
+- **CORRECTION - awscc filesystem snippet:** The previous structure using `filesystem_type='EFS'` and `efs.access_point_id`/`mount_point` does **not exist**. The correct CloudFormation/awscc structure for filesystem is: `EfsAccessPoint` (block with `EfsAccessPointConfiguration`), `S3FilesAccessPoint`, or `SessionStorage`. There is no `filesystem_type` or `mount_point` field directly.
 - Tags on `aws_bedrockagentcore_workload_identity` in Terraform HCL are a **map of strings** (like all standard AWS Terraform tags), NOT an array of `[{key='...', value='...'}]` objects. The array-Tag structure is CloudFormation/API JSON only.
 - The `aws-ia/terraform-aws-agentcore` v1.0.0 module uses `terraform_data` for build triggers, **not** `null_resource`. Older awslabs samples use `null_resource`. Both patterns require AWS CLI configured in the CI/CD environment for `local-exec` provisioners that invoke CodeBuild.
 - `awscc_bedrockagentcore_payment_connector` is **not yet available** in the awscc provider as of June 2026. Only `awscc_bedrockagentcore_payment_credential_provider` is available (v1.85.0, May 2026). To create a `PaymentConnector`, use AWS CLI or CloudFormation directly.
 - A known bug (issue #45099) affects `aws_bedrockagentcore_agent_runtime` with VPC mode: `destroy` can hang because the runtime creates ENIs that cannot be deleted or detached even from the console. Workaround: use `PUBLIC` mode if possible, or plan the manual cleanup sequence.
-- The `authorizer_type` field on `aws_bedrockagentcore_gateway` is **ForceNew** in the classic `aws` provider: changing the authorizer type requires destroy + recreate of the gateway and all its targets. (CloudFormation/awscc marks it as "no interruption" — ForceNew is a Terraform provider behavior.)
+- The `authorizer_type` field on `aws_bedrockagentcore_gateway` is **ForceNew** in the classic `aws` provider: changing the authorizer type requires destroy + recreate of the gateway and all its targets. (CloudFormation/awscc marks it as "no interruption" - ForceNew is a Terraform provider behavior.)
 - The `aws-ia/terraform-aws-agentcore` module uses `awscc_bedrockagentcore_runtime` (not `aws_bedrockagentcore_agent_runtime`) for runtimes: this is intentional because `awscc` exposes `code_configuration` S3 and `network_mode_config` VPC with a more complete structure than the native `aws` provider.
 
 ---
@@ -1245,34 +1245,34 @@ _Source: https://github.com/aws-ia/terraform-aws-agentcore/blob/main/main.tf_
 <a id="official-sources-part-2"></a>
 ### Official sources
 
-- [AWS CloudFormation Template Reference — Bedrock AgentCore (complete index, 20 resource types)](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/AWS_BedrockAgentCore.html) — Authoritative list of 20 CloudFormation resource types: ApiKeyCredentialProvider, Browser, BrowserCustom, BrowserProfile, CodeInterpreterCustom, Dataset, Evaluator, Gateway, GatewayTarget, Harness, Memory, OAuth2CredentialProvider, OnlineEvaluationConfig, PaymentConnector, PaymentCredentialProvider, Policy, PolicyEngine, Runtime, RuntimeEndpoint, WorkloadIdentity.
-- [AWS CloudFormation — AWS::BedrockAgentCore::Runtime](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-runtime.html) — Authoritative schema: AgentRuntimeArtifact, NetworkConfiguration, ProtocolConfiguration (MCP|HTTP|A2A|AGUI), FilesystemConfigurations, LifecycleConfiguration, RequestHeaderConfiguration, AuthorizerConfiguration, EnvironmentVariables, Tags.
-- [AWS CloudFormation — AWS::BedrockAgentCore::Memory](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-memory.html) — Fields: Name (required, pattern `[a-zA-Z][a-zA-Z0-9_]{0,47}`, replacement), EventExpiryDuration (required, 3–365 days, no interruption), EncryptionKeyArn (replacement), MemoryStrategies, IndexedKeys, StreamDeliveryResources.
-- [AWS CloudFormation — AWS::BedrockAgentCore::Gateway](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-gateway.html) — Fields: Name (pattern `^([0-9a-zA-Z][-]?){1,100}$`), AuthorizerType (CUSTOM_JWT|AWS_IAM|NONE|AUTHENTICATE_ONLY), RoleArn, ProtocolConfiguration, InterceptorConfigurations, KmsKeyArn, PolicyEngineConfiguration, ExceptionLevel, ProtocolType.
-- [AWS CloudFormation — AWS::BedrockAgentCore::GatewayTarget](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-gatewaytarget.html) — Fields: Name (required), TargetConfiguration (required), GatewayIdentifier (optional, replacement), CredentialProviderConfigurations (max 1), MetadataConfiguration, Description.
-- [AWS CloudFormation — AWS::BedrockAgentCore::WorkloadIdentity](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-workloadidentity.html) — Fields: Name (required, `[A-Za-z0-9_.-]+`, 3–255 char, replacement), AllowedResourceOauth2ReturnUrls (array of strings, no interruption), Tags (Array of Tag with key/value).
-- [AWS CloudFormation — AWS::BedrockAgentCore::FilesystemConfiguration](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-bedrockagentcore-runtime-filesystemconfiguration.html) — Three types: EfsAccessPoint (EfsAccessPointConfiguration), S3FilesAccessPoint (S3FilesAccessPointConfiguration), SessionStorage (SessionStorageConfiguration). NOT the `filesystem_type` field hypothesized in earlier research.
-- [IAM Permissions for AgentCore Runtime (AWS official)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) — Canonical execution role and trust policy. Service: `bedrock-agentcore.amazonaws.com`. Conditions `aws:SourceAccount` + `aws:SourceArn` mandatory.
-- [What is Amazon Bedrock AgentCore — official overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html) — Full overview of all components: Runtime, Harness, Memory, Gateway, Identity, Code Interpreter, Browser, Observability, Payments, Evaluations, Policy, Registry.
-- [Terraform Registry — hashicorp/aws changelog (official)](https://github.com/hashicorp/terraform-provider-aws/releases) — Canonical source for `bedrockagentcore` resource release versions. First resource: v6.17.0 (October 2025). Last verified: v6.47.0 (May 2026).
-- [Terraform Registry — hashicorp/awscc releases (official)](https://github.com/hashicorp/terraform-provider-awscc/releases) — Canonical awscc source. First `bedrockagentcore` resource: v1.57.0 (September 2025). Last verified: v1.86.0 (May 2026) with `awscc_bedrockagentcore_harness`.
-- [Terraform Registry — aws_bedrockagentcore_agent_runtime](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_agent_runtime)
-- [Terraform Registry — aws_bedrockagentcore_memory](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_memory)
-- [Terraform Registry — aws_bedrockagentcore_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_gateway)
-- [Terraform Registry — aws_bedrockagentcore_gateway_target](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_gateway_target)
-- [Terraform Registry — awscc_bedrockagentcore_runtime](https://registry.terraform.io/providers/hashicorp/awscc/latest/docs/resources/bedrockagentcore_runtime) — awscc provider — uses Cloud Control API. First version: awscc 1.57.0 (September 2025).
-- [Official module aws-ia/terraform-aws-agentcore (v1.0.0)](https://github.com/aws-ia/terraform-aws-agentcore) — v1.0.0 released February 2026. Requires Terraform >= 1.14, aws >= 6.18.0, awscc >= 1.30.0. Uses awscc for Runtime/RuntimeEndpoint/Browser/CodeInterpreter/Memory/Gateway; uses aws for GatewayTarget.
-- [awslabs/agentcore-samples — Terraform IaC folder](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/04-infrastructure-as-code/terraform) — Official AWS Labs examples: basic-runtime, mcp-server, multi-agent, end-to-end-weather-agent. Use `aws` provider `~> 6.21` (without awscc).
-- [AWS Blog — Build AI agents with Amazon Bedrock AgentCore using AWS CloudFormation](https://aws.amazon.com/blogs/machine-learning/build-ai-agents-with-amazon-bedrock-agentcore-using-aws-cloudformation/)
-- [AgentCore new features: managed harness, CLI, skills (April 2026)](https://aws.amazon.com/about-aws/whats-new/2026/04/agentcore-new-features-to-build-agents-faster/) — CLI supports CDK natively. Terraform CLI support listed as "coming soon" — confirmed not yet released as of June 2026.
+- [AWS CloudFormation Template Reference - Bedrock AgentCore (complete index, 20 resource types)](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/AWS_BedrockAgentCore.html) - Authoritative list of 20 CloudFormation resource types: ApiKeyCredentialProvider, Browser, BrowserCustom, BrowserProfile, CodeInterpreterCustom, Dataset, Evaluator, Gateway, GatewayTarget, Harness, Memory, OAuth2CredentialProvider, OnlineEvaluationConfig, PaymentConnector, PaymentCredentialProvider, Policy, PolicyEngine, Runtime, RuntimeEndpoint, WorkloadIdentity.
+- [AWS CloudFormation - AWS::BedrockAgentCore::Runtime](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-runtime.html) - Authoritative schema: AgentRuntimeArtifact, NetworkConfiguration, ProtocolConfiguration (MCP|HTTP|A2A|AGUI), FilesystemConfigurations, LifecycleConfiguration, RequestHeaderConfiguration, AuthorizerConfiguration, EnvironmentVariables, Tags.
+- [AWS CloudFormation - AWS::BedrockAgentCore::Memory](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-memory.html) - Fields: Name (required, pattern `[a-zA-Z][a-zA-Z0-9_]{0,47}`, replacement), EventExpiryDuration (required, 3–365 days, no interruption), EncryptionKeyArn (replacement), MemoryStrategies, IndexedKeys, StreamDeliveryResources.
+- [AWS CloudFormation - AWS::BedrockAgentCore::Gateway](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-gateway.html) - Fields: Name (pattern `^([0-9a-zA-Z][-]?){1,100}$`), AuthorizerType (CUSTOM_JWT|AWS_IAM|NONE|AUTHENTICATE_ONLY), RoleArn, ProtocolConfiguration, InterceptorConfigurations, KmsKeyArn, PolicyEngineConfiguration, ExceptionLevel, ProtocolType.
+- [AWS CloudFormation - AWS::BedrockAgentCore::GatewayTarget](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-gatewaytarget.html) - Fields: Name (required), TargetConfiguration (required), GatewayIdentifier (optional, replacement), CredentialProviderConfigurations (max 1), MetadataConfiguration, Description.
+- [AWS CloudFormation - AWS::BedrockAgentCore::WorkloadIdentity](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrockagentcore-workloadidentity.html) - Fields: Name (required, `[A-Za-z0-9_.-]+`, 3–255 char, replacement), AllowedResourceOauth2ReturnUrls (array of strings, no interruption), Tags (Array of Tag with key/value).
+- [AWS CloudFormation - AWS::BedrockAgentCore::FilesystemConfiguration](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-bedrockagentcore-runtime-filesystemconfiguration.html) - Three types: EfsAccessPoint (EfsAccessPointConfiguration), S3FilesAccessPoint (S3FilesAccessPointConfiguration), SessionStorage (SessionStorageConfiguration). NOT the `filesystem_type` field hypothesized in earlier research.
+- [IAM Permissions for AgentCore Runtime (AWS official)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) - Canonical execution role and trust policy. Service: `bedrock-agentcore.amazonaws.com`. Conditions `aws:SourceAccount` + `aws:SourceArn` mandatory.
+- [What is Amazon Bedrock AgentCore - official overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html) - Full overview of all components: Runtime, Harness, Memory, Gateway, Identity, Code Interpreter, Browser, Observability, Payments, Evaluations, Policy, Registry.
+- [Terraform Registry - hashicorp/aws changelog (official)](https://github.com/hashicorp/terraform-provider-aws/releases) - Canonical source for `bedrockagentcore` resource release versions. First resource: v6.17.0 (October 2025). Last verified: v6.47.0 (May 2026).
+- [Terraform Registry - hashicorp/awscc releases (official)](https://github.com/hashicorp/terraform-provider-awscc/releases) - Canonical awscc source. First `bedrockagentcore` resource: v1.57.0 (September 2025). Last verified: v1.86.0 (May 2026) with `awscc_bedrockagentcore_harness`.
+- [Terraform Registry - aws_bedrockagentcore_agent_runtime](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_agent_runtime)
+- [Terraform Registry - aws_bedrockagentcore_memory](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_memory)
+- [Terraform Registry - aws_bedrockagentcore_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_gateway)
+- [Terraform Registry - aws_bedrockagentcore_gateway_target](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/bedrockagentcore_gateway_target)
+- [Terraform Registry - awscc_bedrockagentcore_runtime](https://registry.terraform.io/providers/hashicorp/awscc/latest/docs/resources/bedrockagentcore_runtime) - awscc provider - uses Cloud Control API. First version: awscc 1.57.0 (September 2025).
+- [Official module aws-ia/terraform-aws-agentcore (v1.0.0)](https://github.com/aws-ia/terraform-aws-agentcore) - v1.0.0 released February 2026. Requires Terraform >= 1.14, aws >= 6.18.0, awscc >= 1.30.0. Uses awscc for Runtime/RuntimeEndpoint/Browser/CodeInterpreter/Memory/Gateway; uses aws for GatewayTarget.
+- [awslabs/agentcore-samples - Terraform IaC folder](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/04-infrastructure-as-code/terraform) - Official AWS Labs examples: basic-runtime, mcp-server, multi-agent, end-to-end-weather-agent. Use `aws` provider `~> 6.21` (without awscc).
+- [AWS Blog - Build AI agents with Amazon Bedrock AgentCore using AWS CloudFormation](https://aws.amazon.com/blogs/machine-learning/build-ai-agents-with-amazon-bedrock-agentcore-using-aws-cloudformation/)
+- [AgentCore new features: managed harness, CLI, skills (April 2026)](https://aws.amazon.com/about-aws/whats-new/2026/04/agentcore-new-features-to-build-agents-faster/) - CLI supports CDK natively. Terraform CLI support listed as "coming soon" - confirmed not yet released as of June 2026.
 
 ---
 
 ## Verify live (open questions)
 
-> Re-check in the provider CHANGELOG / Terraform Registry before relying on the items below — these were open as of June 2026.
+> Re-check in the provider CHANGELOG / Terraform Registry before relying on the items below - these were open as of June 2026.
 
-**Part 1 — Terraform for Amazon Bedrock:**
+**Part 1 - Terraform for Amazon Bedrock:**
 
 1. **Flow alias/version in classic provider:** When will `aws_bedrockagent_flow_alias` and `aws_bedrockagent_flow_version` be added to the classic `hashicorp/aws` provider? Currently both are `awscc`-only (`awscc_bedrock_flow_alias`, `awscc_bedrock_flow_version`). No tracked issue found as of June 2026.
 2. **SUPERVISOR multi-agent stability (Issue #43059):** `prepare_agent = true` on a SUPERVISOR agent without collaborators fails. When will this be fixed in the classic provider?
@@ -1280,11 +1280,11 @@ _Source: https://github.com/aws-ia/terraform-aws-agentcore/blob/main/main.tf_
 4. **aws_bedrock_guardrail import path:** What is the correct import path when the ARN includes a version suffix? (Issue #41441 in `hashicorp/terraform-provider-aws`)
 5. **awscc_bedrock_enforced_guardrail_configuration (cross-account, GA April 2026):** Will this eventually get a classic provider equivalent in `aws_bedrock_*`?
 6. **awscc_bedrockagentcore_policy_engine:** Is this fully GA or still in preview as of June 2026?
-7. **action group re-prepare (Issue #39400):** `aws_bedrockagent_agent_action_group` still does not trigger `PrepareAgent` automatically — the `null_resource` workaround is still required. Track this issue for a native fix.
+7. **action group re-prepare (Issue #39400):** `aws_bedrockagent_agent_action_group` still does not trigger `PrepareAgent` automatically - the `null_resource` workaround is still required. Track this issue for a native fix.
 
-**Part 2 — Terraform for Bedrock AgentCore:**
+**Part 2 - Terraform for Bedrock AgentCore:**
 
-1. **Terraform CLI support in AgentCore CLI:** The Terraform support announced "coming soon" in April 2026 — has it been released? The CLI simplifies end-to-end deployment (build + push + create runtime) for Terraform similarly to CDK.
+1. **Terraform CLI support in AgentCore CLI:** The Terraform support announced "coming soon" in April 2026 - has it been released? The CLI simplifies end-to-end deployment (build + push + create runtime) for Terraform similarly to CDK.
 2. **awscc_bedrockagentcore_payment_connector:** Will this be added to the awscc provider? The CloudFormation type `AWS::BedrockAgentCore::PaymentConnector` exists but does not appear in awscc release notes as of May 2026. Same question for Dataset and BrowserProfile, which are absent from the `aws` provider.
 3. **Data sources for bedrockagentcore in aws provider:** Will the `hashicorp/aws` provider add data sources for querying existing runtimes/memory? Currently 0 data sources for `bedrockagentcore`; workaround is `terraform import` or using the `awscc` provider which has data sources.
 4. **AgentCore Runtime concurrency limits:** What are the official concurrent session limits for a single `aws_bedrockagentcore_agent_runtime`? Is auto-scaling configurable via Terraform or entirely managed by AWS transparently?

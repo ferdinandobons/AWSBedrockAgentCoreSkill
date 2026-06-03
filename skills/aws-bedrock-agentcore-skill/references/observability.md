@@ -1,6 +1,6 @@
 # Observability & Monitoring for AWS AI Agents
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -21,7 +21,7 @@
 - [Best practices](#best-practices)
 - [Code](#code)
   - [Transaction Search setup via AWS CLI](#transaction-search-setup-via-aws-cli)
-  - [Strands agent on AgentCore Runtime — zero-config OTEL](#strands-agent-on-agentcore-runtime--zero-config-otel)
+  - [Strands agent on AgentCore Runtime - zero-config OTEL](#strands-agent-on-agentcore-runtime--zero-config-otel)
   - [OTEL environment variables for non-runtime (self-hosted) agents](#otel-environment-variables-for-non-runtime-self-hosted-agents)
   - [StrandsTelemetry with OTLP exporter and session ID propagation](#strandstelemetry-with-otlp-exporter-and-session-id-propagation)
   - [Custom span inside a Strands agent](#custom-span-inside-a-strands-agent)
@@ -39,7 +39,7 @@
 
 ## Overview
 
-Amazon Bedrock AgentCore Observability (GA since October 2025) provides end-to-end visibility into AI agents through three hierarchical levels: sessions, traces, and spans. Telemetry data is emitted in OpenTelemetry (OTEL) format and stored in Amazon CloudWatch under the namespace `bedrock-agentcore`. For agents hosted on AgentCore Runtime, OTEL instrumentation is automatic (zero-config); for self-hosted agents, manual configuration via AWS Distro for OpenTelemetry (ADOT) is required. The Strands Agents SDK exposes the `StrandsTelemetry` class (Python) to connect to any OTEL-compatible backend (CloudWatch/X-Ray, Langfuse, Jaeger, Datadog, Arize Phoenix). For third-party platforms on AgentCore Runtime, `DISABLE_ADOT_OBSERVABILITY=true` must be set before configuring a custom exporter. Relevant CloudWatch namespaces are `bedrock-agentcore` (AgentCore Runtime), `AWS/Bedrock/Agents` (classic Bedrock Agents), and `AWS/Bedrock` (model invocations). There is no additional cost for GenAI Observability — only standard CloudWatch pricing applies for ingested telemetry data.
+Amazon Bedrock AgentCore Observability (GA since October 2025) provides end-to-end visibility into AI agents through three hierarchical levels: sessions, traces, and spans. Telemetry data is emitted in OpenTelemetry (OTEL) format and stored in Amazon CloudWatch under the namespace `bedrock-agentcore`. For agents hosted on AgentCore Runtime, OTEL instrumentation is automatic (zero-config); for self-hosted agents, manual configuration via AWS Distro for OpenTelemetry (ADOT) is required. The Strands Agents SDK exposes the `StrandsTelemetry` class (Python) to connect to any OTEL-compatible backend (CloudWatch/X-Ray, Langfuse, Jaeger, Datadog, Arize Phoenix). For third-party platforms on AgentCore Runtime, `DISABLE_ADOT_OBSERVABILITY=true` must be set before configuring a custom exporter. Relevant CloudWatch namespaces are `bedrock-agentcore` (AgentCore Runtime), `AWS/Bedrock/Agents` (classic Bedrock Agents), and `AWS/Bedrock` (model invocations). There is no additional cost for GenAI Observability - only standard CloudWatch pricing applies for ingested telemetry data.
 
 **Maturity note.** GA: CloudWatch GenAI Observability (October 2025), AgentCore Observability (October 2025), AgentCore Runtime (GA), AgentCore Evaluations (GA since March 31, 2026). GA regions for Evaluations: us-east-1, us-east-2, us-west-2, ap-south-1, ap-southeast-1, ap-southeast-2, ap-northeast-1, eu-central-1, eu-west-1. _Source: https://aws.amazon.com/about-aws/whats-new/2026/03/agentcore-evaluations-generally-available/_ GA regions for all other AgentCore services: us-east-1, us-east-2, us-west-2, eu-central-1, eu-west-1, ap-south-1, ap-northeast-1, ap-southeast-1, ap-southeast-2.
 
@@ -55,9 +55,9 @@ AWS service (GA) providing tracing, debugging, and monitoring of AI agents in pr
 
 Pre-configured dashboard in Amazon CloudWatch (console: `https://console.aws.amazon.com/cloudwatch/home#gen-ai-observability`) with three views:
 
-- **Agents View** — fleet overview
-- **Sessions View** — interactions per session
-- **Traces View** — execution path with timeline
+- **Agents View** - fleet overview
+- **Sessions View** - interactions per session
+- **Traces View** - execution path with timeline
 
 Includes graphs for latency, token usage, error rates, and cost attribution. Custom OTEL metrics emitted by agent code are published in Enhanced Metric Format (EMF) under the namespace `bedrock-agentcore`. Compatible with Strands, LangChain, and LangGraph.
 
@@ -65,9 +65,9 @@ Includes graphs for latency, token usage, error rates, and cost attribution. Cus
 
 Three observability levels:
 
-- **Session** — represents the entire user-agent conversation (with a unique ID) and maintains state and context across multiple exchanges.
-- **Trace** — represents a single request-response cycle inside a session (includes tool calls, LLM calls, error paths).
-- **Span** — the atomic unit of work inside a trace (with start/end timestamps, parent-child relationships, and contextual attributes).
+- **Session** - represents the entire user-agent conversation (with a unique ID) and maintains state and context across multiple exchanges.
+- **Trace** - represents a single request-response cycle inside a session (includes tool calls, LLM calls, error paths).
+- **Span** - the atomic unit of work inside a trace (with start/end timestamps, parent-child relationships, and contextual attributes).
 
 Sessions contain multiple traces; each trace contains multiple spans.
 
@@ -109,9 +109,9 @@ Enabled via `OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental,gen_ai_too
 
 Three distinct namespaces:
 
-1. **`bedrock-agentcore`** — AgentCore Runtime metrics: `Invocations`, `Throttles`, `Latency`, `SessionCount`, `CPUUsed-vCPUHours`, `MemoryUsed-GBHours`.
-2. **`AWS/Bedrock/Agents`** — Classic Bedrock Agents metrics: `InvocationCount`, `TotalTime`, `TTFT`, `InputTokenCount`, `outputTokenCount` (**note:** lowercase `o`), `ModelLatency`.
-3. **`AWS/Bedrock`** — Model inference metrics: `InvocationLatency`, `TimeToFirstToken`, `CacheReadInputTokens`, `CacheWriteInputTokens`, `EstimatedTPMQuotaUsage`.
+1. **`bedrock-agentcore`** - AgentCore Runtime metrics: `Invocations`, `Throttles`, `Latency`, `SessionCount`, `CPUUsed-vCPUHours`, `MemoryUsed-GBHours`.
+2. **`AWS/Bedrock/Agents`** - Classic Bedrock Agents metrics: `InvocationCount`, `TotalTime`, `TTFT`, `InputTokenCount`, `outputTokenCount` (**note:** lowercase `o`), `ModelLatency`.
+3. **`AWS/Bedrock`** - Model inference metrics: `InvocationLatency`, `TimeToFirstToken`, `CacheReadInputTokens`, `CacheWriteInputTokens`, `EstimatedTPMQuotaUsage`.
 
 ### StrandsTelemetry (Strands SDK Python)
 
@@ -119,9 +119,9 @@ Python class in `strands.telemetry` that manages OTEL configuration for Strands 
 
 Key methods:
 
-- `setup_otlp_exporter(**kwargs)` — sends traces to an OTLP endpoint.
-- `setup_console_exporter(**kwargs)` — prints to console (useful in development).
-- `setup_meter(enable_console_exporter, enable_otlp_exporter)` — configures meter provider.
+- `setup_otlp_exporter(**kwargs)` - sends traces to an OTLP endpoint.
+- `setup_console_exporter(**kwargs)` - prints to console (useful in development).
+- `setup_meter(enable_console_exporter, enable_otlp_exporter)` - configures meter provider.
 
 The `trace_attributes` parameter in the `Agent` constructor propagates business attributes (`session.id`, `user.id`, `tags`) to all child spans automatically.
 
@@ -145,7 +145,7 @@ Classic Bedrock Agents (not AgentCore) have a separate proprietary tracing mecha
 
 ### DISABLE_ADOT_OBSERVABILITY
 
-Officially documented environment variable for AgentCore Runtime. Setting `DISABLE_ADOT_OBSERVABILITY=true` causes the runtime to unset all default ADOT environment variables, allowing configuration of a custom OTEL backend (Langfuse, Datadog, Arize Phoenix, etc.) without conflicts. Must be passed in `env_vars` at runtime launch time — not as a local process variable in the setup script.
+Officially documented environment variable for AgentCore Runtime. Setting `DISABLE_ADOT_OBSERVABILITY=true` causes the runtime to unset all default ADOT environment variables, allowing configuration of a custom OTEL backend (Langfuse, Datadog, Arize Phoenix, etc.) without conflicts. Must be passed in `env_vars` at runtime launch time - not as a local process variable in the setup script.
 
 ---
 
@@ -157,11 +157,11 @@ Officially documented environment variable for AgentCore Runtime. Setting `DISAB
 
 - **Use consistent session IDs for multi-turn conversations of the same user.** The Session View in CloudWatch aggregates all traces with the same `session.id`. Without consistent session IDs it is impossible to see the complete conversational flow or troubleshoot specific sessions. Propagate via OTEL baggage (`baggage.set_baggage('session.id', ...)`) or via `trace_attributes` in the Strands `Agent` constructor. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html_
 
-- **Use 100% head sampling + low span indexing (1–10%) for full visibility at controlled cost.** The AWS-documented approach is: head sampling at 100% (all trace spans ingested into CloudWatch Logs) + indexing at 1% (free) for trace summaries. This guarantees complete visibility over all spans while keeping CloudWatch costs low. Do not confuse head sampling with indexing — they are distinct levels. _Source: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Transaction-Search-ingesting-spans.html_
+- **Use 100% head sampling + low span indexing (1–10%) for full visibility at controlled cost.** The AWS-documented approach is: head sampling at 100% (all trace spans ingested into CloudWatch Logs) + indexing at 1% (free) for trace summaries. This guarantees complete visibility over all spans while keeping CloudWatch costs low. Do not confuse head sampling with indexing - they are distinct levels. _Source: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Transaction-Search-ingesting-spans.html_
 
 - **Filter sensitive data from OTEL attributes before export.** Strands traces capture the full user prompt (`gen_ai.user.message`) and tool responses (`gen_ai.choice`). If the agent processes PII or confidential data, use CloudWatch Sensitive Data Protection on the log groups or sanitize attributes before export. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-get-started.html_
 
-- **Configure CloudWatch Alarms on key metrics: `Throttles` (AgentCore namespace `bedrock-agentcore`), `SystemErrors`, Latency P99.** Alarms detect problems before they impact users. Priorities: throttling (indicates need to increase quota — `InvokeAgentRuntime` default is 25 TPS per agent, adjustable), system errors (AWS infrastructure), high P99 latency (bottleneck in model or tools). For classic Bedrock Agents (namespace `AWS/Bedrock/Agents`), the equivalent metric is `InvocationThrottles`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-runtime-metrics.html_
+- **Configure CloudWatch Alarms on key metrics: `Throttles` (AgentCore namespace `bedrock-agentcore`), `SystemErrors`, Latency P99.** Alarms detect problems before they impact users. Priorities: throttling (indicates need to increase quota - `InvokeAgentRuntime` default is 25 TPS per agent, adjustable), system errors (AWS infrastructure), high P99 latency (bottleneck in model or tools). For classic Bedrock Agents (namespace `AWS/Bedrock/Agents`), the equivalent metric is `InvocationThrottles`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-runtime-metrics.html_
 
 - **For non-runtime agents, use `opentelemetry-instrument` as a wrapper command instead of modifying source code.** `opentelemetry-instrument python agent.py` auto-instruments Strands, Bedrock calls, tool invocations, and database calls without code changes. Simpler to maintain and upgrade-proof compared to manual instrumentation. ADOT handles correct context header propagation. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-get-started.html_
 
@@ -169,7 +169,7 @@ Officially documented environment variable for AgentCore Runtime. Setting `DISAB
 
 - **For multi-account environments, configure OAM Sink/Link at the AWS Organization level.** The organization-wide approach with `aws:PrincipalOrgID` automatically onboards new accounts without manual intervention, reducing the risk of unmonitored agents in newly created accounts. Select both telemetry types: Metrics AND Logs (both are required for complete visibility). _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-cross-account.html_
 
-- **To integrate with third-party platforms (Langfuse, Datadog, Arize Phoenix), set `DISABLE_ADOT_OBSERVABILITY=true` in the runtime `env_vars` at launch.** `DISABLE_ADOT_OBSERVABILITY=true` is officially documented under "Using other observability platforms". It unsets the default AgentCore Runtime ADOT environment variables. Without this variable, custom OTEL configurations are silently overwritten. Must be passed in `env_vars` at runtime launch — not as a local setup script variable. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html_
+- **To integrate with third-party platforms (Langfuse, Datadog, Arize Phoenix), set `DISABLE_ADOT_OBSERVABILITY=true` in the runtime `env_vars` at launch.** `DISABLE_ADOT_OBSERVABILITY=true` is officially documented under "Using other observability platforms". It unsets the default AgentCore Runtime ADOT environment variables. Without this variable, custom OTEL configurations are silently overwritten. Must be passed in `env_vars` at runtime launch - not as a local setup script variable. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html_
 
 - **Configure an explicit retention policy on the `/aws/spans` log group.** The `aws/spans` log group has indefinite retention by default (as do all CloudWatch log groups). On high-volume agents, storage costs can grow rapidly. Set an appropriate retention (e.g., 30 days) with `aws logs put-retention-policy --log-group-name aws/spans --retention-in-days 30`. _Source: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Transaction-Search-ingesting-span-log-groups.html_
 
@@ -229,7 +229,7 @@ _Source: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Enable-T
 
 ---
 
-### Strands agent on AgentCore Runtime — zero-config OTEL
+### Strands agent on AgentCore Runtime - zero-config OTEL
 
 AgentCore Runtime handles ADOT configuration automatically. No OTEL environment variables are needed in agent code.
 
@@ -510,7 +510,7 @@ os.environ["LANGFUSE_SECRET_KEY"] = "sk-lf-..."
 os.environ["LANGFUSE_BASE_URL"] = "https://cloud.langfuse.com"  # or https://us.cloud.langfuse.com
 
 # Step 2: Build the Basic authentication token (official method)
-# Do NOT use private SDK methods like _get_basic_auth() — they may change without notice
+# Do NOT use private SDK methods like _get_basic_auth() - they may change without notice
 langfuse_auth = base64.b64encode(
     f"{os.environ['LANGFUSE_PUBLIC_KEY']}:{os.environ['LANGFUSE_SECRET_KEY']}".encode()
 ).decode()
@@ -787,7 +787,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/trace-events.html_
 | `LANGFUSE_BASE_URL` | Regional Langfuse endpoint. Choose the correct region for data residency compliance. (Third-party/optional) | `https://cloud.langfuse.com` (EU) \| `https://us.cloud.langfuse.com` (US) |
 | `IAM: cloudwatch:PutMetricData` (conditional on namespace) | The Bedrock agent service role must have `cloudwatch:PutMetricData` permission with condition `StringEquals cloudwatch:namespace=AWS/Bedrock/Agents` to publish metrics in the correct namespace. | `{"Action": "cloudwatch:PutMetricData", "Condition": {"StringEquals": {"cloudwatch:namespace": "AWS/Bedrock/Agents"}}}` |
 | `IAM: logs:PutLogEvents` (for Transaction Search) | Resource policy on CloudWatch Logs required for `xray.amazonaws.com` to write spans to `aws/spans` and `/aws/application-signals/data` log groups. Additional IAM required to enable Transaction Search: `xray:UpdateTraceSegmentDestination`, `xray:UpdateIndexingRule`, `logs:PutRetentionPolicy`, `application-signals:StartDiscovery`. | `aws logs put-resource-policy --policy-name MyResourcePolicy --policy-document ...` |
-| Log group paths — AgentCore Runtime | Standard logs (stdout/stderr): `/aws/bedrock-agentcore/runtimes/<agent_id>-<endpoint_name>/[runtime-logs] <UUID>`. OTEL structured logs: `/aws/bedrock-agentcore/runtimes/<agent_id>-<endpoint_name>/otel-rt-logs`. Spans: `/aws/spans`. Memory/Gateway (console default): `/aws/vendedlogs/bedrock-agentcore/{resource-type}/APPLICATION_LOGS/{resource-id}`. | `/aws/bedrock-agentcore/runtimes/my-agent-abc123-myendpoint/otel-rt-logs` |
+| Log group paths - AgentCore Runtime | Standard logs (stdout/stderr): `/aws/bedrock-agentcore/runtimes/<agent_id>-<endpoint_name>/[runtime-logs] <UUID>`. OTEL structured logs: `/aws/bedrock-agentcore/runtimes/<agent_id>-<endpoint_name>/otel-rt-logs`. Spans: `/aws/spans`. Memory/Gateway (console default): `/aws/vendedlogs/bedrock-agentcore/{resource-type}/APPLICATION_LOGS/{resource-id}`. | `/aws/bedrock-agentcore/runtimes/my-agent-abc123-myendpoint/otel-rt-logs` |
 | CloudWatch namespace `bedrock-agentcore` (AgentCore Runtime metrics) | Dimensions: `Service=AgentCore.Runtime`, `Resource=Agent ARN`, `Name=AgentName::EndpointName`. Metrics: `Invocations`, `Throttles`, `SystemErrors`, `UserErrors`, `Latency`, `SessionCount`, `ActiveStreamingConnections`, `InboundStreamingBytesProcessed`, `OutboundStreamingBytesProcessed`, `CPUUsed-vCPUHours`, `MemoryUsed-GBHours`. | `Namespace: bedrock-agentcore` |
 | CloudWatch namespace `AWS/Bedrock/Agents` (classic Bedrock Agents) | Dimensions: `Operation`, `ModelId`, `AgentAliasArn`. Metrics: `InvocationCount`, `TotalTime`, `TTFT`, `InvocationThrottles`, `InvocationServerErrors`, `InvocationClientErrors`, `ModelLatency`, `ModelInvocationCount`, `ModelInvocationThrottles`, `ModelInvocationClientErrors`, `ModelInvocationServerErrors`, `InputTokenCount`, `outputTokenCount` (WARNING: lowercase `o` in the CloudWatch API). | `Namespace: AWS/Bedrock/Agents` |
 | AgentCore Runtime invocation quota | `InvokeAgentRuntime`: 25 TPS per agent per account (adjustable via Service Quotas). Active session workloads: 1000 in us-east-1/us-west-2, 500 in other regions (adjustable). Maximum timeout for synchronous invocation: 15 minutes (not adjustable). Maximum payload: 100 MB. | `25 TPS per agent per account` |
@@ -798,7 +798,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/trace-events.html_
 
 - **Transaction Search must be enabled BEFORE deploying agents.** If enabled after, already-generated traces are not retroactively indexed. Wait 10 minutes after enabling and verify with `aws xray get-trace-segment-destination` before sending the first trace.
 
-- **`DISABLE_ADOT_OBSERVABILITY=true` is mandatory for third-party backends (Langfuse, Datadog, etc.) on AgentCore Runtime.** Without this variable, default AgentCore ADOT env vars silently overwrite custom OTEL configuration. Must be passed in `env_vars` at runtime launch time — not set in the local Python process.
+- **`DISABLE_ADOT_OBSERVABILITY=true` is mandatory for third-party backends (Langfuse, Datadog, etc.) on AgentCore Runtime.** Without this variable, default AgentCore ADOT env vars silently overwrite custom OTEL configuration. Must be passed in `env_vars` at runtime launch time - not set in the local Python process.
 
 - **The OTEL structured log group on AgentCore Runtime is `otel-rt-logs`, not `runtime-logs`.** Confusing the two paths leads to searching for data in the wrong place. Standard logs (stdout/stderr) go to `[runtime-logs] <UUID>`; OTEL structured logs go to `otel-rt-logs`.
 
@@ -814,7 +814,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/trace-events.html_
 
 - **For non-Strands/LangChain/CrewAI agents, a separate instrumentation library may be needed** to emit valid OTEL GenAI semantic conventions (OpenInference, Openllmetry, OpenLit, or Traceloop).
 
-- **`langfuse.flush()` is mandatory in short-lived applications (scripts, Lambda, tests).** Without explicit flush, observations may not be exported before process termination. (Third-party/optional — applies only when using Langfuse.)
+- **`langfuse.flush()` is mandatory in short-lived applications (scripts, Lambda, tests).** Without explicit flush, observations may not be exported before process termination. (Third-party/optional - applies only when using Langfuse.)
 
 - **The `/aws/spans` log group has indefinite retention by default.** On high-volume agents, storage costs can grow. Set explicit retention with `aws logs put-retention-policy --log-group-name aws/spans --retention-in-days <N>`.
 
@@ -830,23 +830,23 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/trace-events.html_
 
 ## Official sources
 
-- [Observe your agent applications on Amazon Bedrock AgentCore Observability](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability.html) — Main AgentCore Observability page: overview, links to all sub-topics (configure, telemetry, service-provided data, view, cross-account)
-- [Get started with AgentCore Observability](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-get-started.html) — Step-by-step guide: enabling Transaction Search, configuring ADOT for runtime and non-runtime agents, complete environment variables, code examples, links to official GitHub notebooks
-- [Add observability to your Amazon Bedrock AgentCore resources](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html) — Detailed ADOT SDK configuration, enabling Transaction Search via API, delivery sources/destinations with boto3, custom HTTP headers for enhanced tracing, section "Using other observability platforms" with DISABLE_ADOT_OBSERVABILITY
-- [Understand observability for agentic resources in AgentCore (sessions/traces/spans)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-telemetry.html) — Definitions and hierarchical relationships between sessions, traces, and spans; required attributes at each level
-- [AgentCore generated runtime observability data](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-runtime-metrics.html) — Complete list of AgentCore runtime metrics: Invocations, Throttles, Latency, SessionCount, WebSocket metrics, CPU/Memory vended metrics, InvokeAgentRuntime span with all attributes, error types
-- [Amazon Bedrock AgentCore generated observability data (overview per resource type)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-service-provided.html) — Summary table: which resource type (Agent, Memory, Gateway, Tools, Policy) provides metrics/spans/logs and where they are visible (CloudWatch GenAI vs CloudWatch Logs)
-- [View observability data for your Amazon Bedrock AgentCore agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-view.html) — How to navigate the CloudWatch GenAI dashboard: Agents View, Sessions View, Traces View; log group paths for standard and OTEL structured logs; OTEL metrics published in EMF format under namespace bedrock-agentcore
-- [Generative AI observability (CloudWatch User Guide)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/GenAI-observability.html) — Overview CloudWatch GenAI Observability: pre-built dashboards for Model Invocations and AgentCore agents, key metrics, compatibility with Strands/LangChain/LangGraph
-- [Enable transaction search](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Enable-TransactionSearch.html) — Complete procedure (console + API) for enabling Transaction Search; required IAM permissions; verifying status with GetTraceSegmentDestination; 1% of spans indexed for free
-- [Ingesting spans for complete visibility](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Transaction-Search-ingesting-spans.html) — Head sampling vs span indexing; configuration of 100% head sampling + low indexing percentage for cost-effective approach; spans in log group aws/spans use standard CloudWatch Logs features
-- [Spans log group](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Transaction-Search-ingesting-span-log-groups.html) — Features available for the aws/spans log group: Metric filters, Subscriptions, Log anomaly detection, Contributor Insights. Does NOT support direct PutLogEvents or log transformation.
-- [Monitor AgentCore resources across accounts](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-cross-account.html) — Cross-account observability via CloudWatch OAM (Observability Access Manager): sink/link setup, CloudFormation templates, account filtering. Limitation: only within the same AWS region.
-- [Monitor Amazon Bedrock Agents using CloudWatch Metrics](https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-agents-cw-metrics.html) — CloudWatch metrics for classic Bedrock Agents: namespace AWS/Bedrock/Agents, InvocationCount, TotalTime, TTFT, InputTokenCount, outputTokenCount (lowercase), dimensions Operation/ModelId/AgentAliasArn
-- [Monitor bedrock-runtime inference using CloudWatch metrics](https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-runtime-metrics.html) — Namespace AWS/Bedrock metrics: InvocationLatency, TimeToFirstToken, InputTokenCount, OutputTokenCount, CacheReadInputTokens, CacheWriteInputTokens, EstimatedTPMQuotaUsage; official note that EstimatedTPMQuotaUsage is an approximation
-- [Track agent's step-by-step reasoning process using trace (Bedrock Agents classic)](https://docs.aws.amazon.com/bedrock/latest/userguide/trace-events.html) — Native tracing mechanism for classic Bedrock Agents (not AgentCore): enableTrace=true on InvokeAgent returns TracePart in the response stream with PreProcessingTrace, OrchestrationTrace, PostProcessingTrace, FailureTrace, GuardrailTrace. Separate mechanism from OTEL/Transaction Search.
-- [Amazon Bedrock AgentCore and AWS X-Ray](https://docs.aws.amazon.com/xray/latest/devguide/xray-services-agentcore.html) — AgentCore + X-Ray integration: context propagation via X-Amzn-Trace-Id header, custom ADOT SDK instrumentation. Requires Transaction Search enabled.
-- [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) — Complete quotas: Runtime 25 TPS per agent (adjustable), 1000 active session workloads per account (us-east-1/us-west-2), 500 other regions; 15-minute timeout, 100 MB payload, 8-hour max session
-- [Strands Agents SDK - Traces documentation](https://strandsagents.com/docs/user-guide/observability-evaluation/traces/) — Official Strands SDK documentation: StrandsTelemetry class, setup_otlp_exporter(), setup_console_exporter(), trace_attributes, custom spans, full attribute table, CloudWatch X-Ray integration
-- [Open Source Observability for Amazon Bedrock AgentCore - Langfuse](https://langfuse.com/integrations/frameworks/amazon-agentcore) — **Third-party / optional.** Official Langfuse + AgentCore integration: DISABLE_ADOT_OBSERVABILITY=true, building Basic auth header with base64, OTEL_EXPORTER_OTLP_ENDPOINT pointing to Langfuse OTEL endpoint
-- [Generative AI observability now generally available for Amazon CloudWatch](https://aws.amazon.com/about-aws/whats-new/2025/10/generative-ai-observability-amazon-cloudwatch/) — GA announcement October 2025: extended coverage to Built-in Tools, Gateways, Memory, Identity; no additional pricing
+- [Observe your agent applications on Amazon Bedrock AgentCore Observability](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability.html) - Main AgentCore Observability page: overview, links to all sub-topics (configure, telemetry, service-provided data, view, cross-account)
+- [Get started with AgentCore Observability](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-get-started.html) - Step-by-step guide: enabling Transaction Search, configuring ADOT for runtime and non-runtime agents, complete environment variables, code examples, links to official GitHub notebooks
+- [Add observability to your Amazon Bedrock AgentCore resources](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-configure.html) - Detailed ADOT SDK configuration, enabling Transaction Search via API, delivery sources/destinations with boto3, custom HTTP headers for enhanced tracing, section "Using other observability platforms" with DISABLE_ADOT_OBSERVABILITY
+- [Understand observability for agentic resources in AgentCore (sessions/traces/spans)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-telemetry.html) - Definitions and hierarchical relationships between sessions, traces, and spans; required attributes at each level
+- [AgentCore generated runtime observability data](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-runtime-metrics.html) - Complete list of AgentCore runtime metrics: Invocations, Throttles, Latency, SessionCount, WebSocket metrics, CPU/Memory vended metrics, InvokeAgentRuntime span with all attributes, error types
+- [Amazon Bedrock AgentCore generated observability data (overview per resource type)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-service-provided.html) - Summary table: which resource type (Agent, Memory, Gateway, Tools, Policy) provides metrics/spans/logs and where they are visible (CloudWatch GenAI vs CloudWatch Logs)
+- [View observability data for your Amazon Bedrock AgentCore agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-view.html) - How to navigate the CloudWatch GenAI dashboard: Agents View, Sessions View, Traces View; log group paths for standard and OTEL structured logs; OTEL metrics published in EMF format under namespace bedrock-agentcore
+- [Generative AI observability (CloudWatch User Guide)](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/GenAI-observability.html) - Overview CloudWatch GenAI Observability: pre-built dashboards for Model Invocations and AgentCore agents, key metrics, compatibility with Strands/LangChain/LangGraph
+- [Enable transaction search](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Enable-TransactionSearch.html) - Complete procedure (console + API) for enabling Transaction Search; required IAM permissions; verifying status with GetTraceSegmentDestination; 1% of spans indexed for free
+- [Ingesting spans for complete visibility](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Transaction-Search-ingesting-spans.html) - Head sampling vs span indexing; configuration of 100% head sampling + low indexing percentage for cost-effective approach; spans in log group aws/spans use standard CloudWatch Logs features
+- [Spans log group](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Transaction-Search-ingesting-span-log-groups.html) - Features available for the aws/spans log group: Metric filters, Subscriptions, Log anomaly detection, Contributor Insights. Does NOT support direct PutLogEvents or log transformation.
+- [Monitor AgentCore resources across accounts](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/observability-cross-account.html) - Cross-account observability via CloudWatch OAM (Observability Access Manager): sink/link setup, CloudFormation templates, account filtering. Limitation: only within the same AWS region.
+- [Monitor Amazon Bedrock Agents using CloudWatch Metrics](https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-agents-cw-metrics.html) - CloudWatch metrics for classic Bedrock Agents: namespace AWS/Bedrock/Agents, InvocationCount, TotalTime, TTFT, InputTokenCount, outputTokenCount (lowercase), dimensions Operation/ModelId/AgentAliasArn
+- [Monitor bedrock-runtime inference using CloudWatch metrics](https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring-runtime-metrics.html) - Namespace AWS/Bedrock metrics: InvocationLatency, TimeToFirstToken, InputTokenCount, OutputTokenCount, CacheReadInputTokens, CacheWriteInputTokens, EstimatedTPMQuotaUsage; official note that EstimatedTPMQuotaUsage is an approximation
+- [Track agent's step-by-step reasoning process using trace (Bedrock Agents classic)](https://docs.aws.amazon.com/bedrock/latest/userguide/trace-events.html) - Native tracing mechanism for classic Bedrock Agents (not AgentCore): enableTrace=true on InvokeAgent returns TracePart in the response stream with PreProcessingTrace, OrchestrationTrace, PostProcessingTrace, FailureTrace, GuardrailTrace. Separate mechanism from OTEL/Transaction Search.
+- [Amazon Bedrock AgentCore and AWS X-Ray](https://docs.aws.amazon.com/xray/latest/devguide/xray-services-agentcore.html) - AgentCore + X-Ray integration: context propagation via X-Amzn-Trace-Id header, custom ADOT SDK instrumentation. Requires Transaction Search enabled.
+- [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) - Complete quotas: Runtime 25 TPS per agent (adjustable), 1000 active session workloads per account (us-east-1/us-west-2), 500 other regions; 15-minute timeout, 100 MB payload, 8-hour max session
+- [Strands Agents SDK - Traces documentation](https://strandsagents.com/docs/user-guide/observability-evaluation/traces/) - Official Strands SDK documentation: StrandsTelemetry class, setup_otlp_exporter(), setup_console_exporter(), trace_attributes, custom spans, full attribute table, CloudWatch X-Ray integration
+- [Open Source Observability for Amazon Bedrock AgentCore - Langfuse](https://langfuse.com/integrations/frameworks/amazon-agentcore) - **Third-party / optional.** Official Langfuse + AgentCore integration: DISABLE_ADOT_OBSERVABILITY=true, building Basic auth header with base64, OTEL_EXPORTER_OTLP_ENDPOINT pointing to Langfuse OTEL endpoint
+- [Generative AI observability now generally available for Amazon CloudWatch](https://aws.amazon.com/about-aws/whats-new/2025/10/generative-ai-observability-amazon-cloudwatch/) - GA announcement October 2025: extended coverage to Built-in Tools, Gateways, Memory, Identity; no additional pricing

@@ -1,6 +1,6 @@
-# Strands Agents — Multi-Agent Patterns
+# Strands Agents - Multi-Agent Patterns
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -38,16 +38,16 @@
 
 Strands Agents SDK (open source, **GA 1.0 released 15 July 2025** by AWS; Python SDK now at v1.42.x, TypeScript SDK at v1.4.x) provides four native primitives for multi-agent systems:
 
-- **Agents-as-Tools** — orchestrator → specialist hierarchy
-- **Swarm** — autonomous team with mutable SharedContext (Python) or serialized JSON (TypeScript)
-- **Graph** — deterministic DAG with conditional routing; OR semantics in Python, AND semantics in TypeScript
-- **Workflow** — task DAG with parallelism, available only via `strands_tools.workflow` in Python
+- **Agents-as-Tools** - orchestrator → specialist hierarchy
+- **Swarm** - autonomous team with mutable SharedContext (Python) or serialized JSON (TypeScript)
+- **Graph** - deterministic DAG with conditional routing; OR semantics in Python, AND semantics in TypeScript
+- **Workflow** - task DAG with parallelism, available only via `strands_tools.workflow` in Python
 
 The A2A protocol enables cross-platform communication via `A2AServer` and `A2AAgent`; supported in agents-as-tools and Graph, **not supported in Swarm** (architectural limitation confirmed, feature request #913 open). The default model provider is Amazon Bedrock (Claude Sonnet 4 in Python, Claude Sonnet 4.6 in TypeScript).
 
-Amazon Bedrock AgentCore Runtime is GA since 13 October 2025 with A2A support and VPC/PrivateLink added. The `agent_graph` tool in `strands_tools` is **deprecated** — the replacement is `GraphBuilder` from the SDK.
+Amazon Bedrock AgentCore Runtime is GA since 13 October 2025 with A2A support and VPC/PrivateLink added. The `agent_graph` tool in `strands_tools` is **deprecated** - the replacement is `GraphBuilder` from the SDK.
 
-**Maturity:** GA — Strands Agents Python SDK 1.0 (15 July 2025, current v1.42.x as of June 2026). TypeScript SDK 1.0 — GA 30 April 2026 with Graph, Swarm, A2A, and agents-as-tools. **Warning:** TypeScript pre-1.0 beta did NOT have multi-agent patterns; code written with the beta is not compatible with 1.0. Workflow (`strands_tools.workflow`) is Python-only — it is NOT a native primitive in the TypeScript SDK 1.0. Amazon Bedrock AgentCore Runtime: GA since 13 October 2025 (was public preview from July 2025); VPC/PrivateLink, A2A protocol support, CloudFormation, and resource tagging were added at GA.
+**Maturity:** GA - Strands Agents Python SDK 1.0 (15 July 2025, current v1.42.x as of June 2026). TypeScript SDK 1.0 - GA 30 April 2026 with Graph, Swarm, A2A, and agents-as-tools. **Warning:** TypeScript pre-1.0 beta did NOT have multi-agent patterns; code written with the beta is not compatible with 1.0. Workflow (`strands_tools.workflow`) is Python-only - it is NOT a native primitive in the TypeScript SDK 1.0. Amazon Bedrock AgentCore Runtime: GA since 13 October 2025 (was public preview from July 2025); VPC/PrivateLink, A2A protocol support, CloudFormation, and resource tagging were added at GA.
 
 ---
 
@@ -57,9 +57,9 @@ Amazon Bedrock AgentCore Runtime is GA since 13 October 2025 with A2A support an
 
 Hierarchical pattern where an orchestrator agent calls specialist agents as tools. The orchestrator receives specialist agents in the `tools` array and invokes them through the model's normal tool-selection loop. Three methods:
 
-1. **Direct passing** — pass the `Agent` directly in `tools[]`; the SDK automatically generates a schema with an `input` parameter.
-2. **`.as_tool(name, description, preserve_context)` / `.asTool({name, description, preserveContext})`** — explicit control over name, description, and context continuity.
-3. **`@tool` decorator (manual)** — custom pre/post logic and error handling.
+1. **Direct passing** - pass the `Agent` directly in `tools[]`; the SDK automatically generates a schema with an `input` parameter.
+2. **`.as_tool(name, description, preserve_context)` / `.asTool({name, description, preserveContext})`** - explicit control over name, description, and context continuity.
+3. **`@tool` decorator (manual)** - custom pre/post logic and error handling.
 
 An agent tool's context resets to empty by default between invocations (`preserve_context=False`).
 
@@ -75,18 +75,18 @@ Deterministic directed-graph orchestration. Nodes are `Agent`, `Swarm`, or other
 
 Task DAG with explicit dependencies via `strands_tools.workflow`. **Python only** (Workflow as a native primitive does not exist in the TypeScript SDK 1.0). Two approaches:
 
-1. **Imperative code** — manual chain of `agent()` calls.
-2. **Built-in workflow tool** — define tasks with `task_id`, `description`, `system_prompt`, `dependencies[]`, `priority`; actions: `create`, `start`, `status`, `pause`, `resume`, `list`, `delete`. Executes tasks in parallel when dependencies are satisfied.
+1. **Imperative code** - manual chain of `agent()` calls.
+2. **Built-in workflow tool** - define tasks with `task_id`, `description`, `system_prompt`, `dependencies[]`, `priority`; actions: `create`, `start`, `status`, `pause`, `resume`, `list`, `delete`. Executes tasks in parallel when dependencies are satisfied.
 
 Does not support cycles. Suited for repeatable, deterministic processes.
 
 ### Agent-to-Agent (A2A) Protocol
 
-**Cross-vendor open standard** (not AWS-specific — maintained by the A2A project at https://github.com/a2aproject/A2A) for cross-platform communication between agents on different networks. Strands implements:
+**Cross-vendor open standard** (not AWS-specific - maintained by the A2A project at https://github.com/a2aproject/A2A) for cross-platform communication between agents on different networks. Strands implements:
 
-- **`A2AServer`** (Python) / **`A2AExpressServer`** (TypeScript) — exposes an Agent via HTTP, auto-generates an agent card from tool descriptions, endpoint `/.well-known/agent-card.json`.
-- **`A2AAgent`** — client that consumes a remote agent, auto-populates name/description from the agent card.
-- **`A2AClientToolProvider`** — dynamically discovers multiple remote agents.
+- **`A2AServer`** (Python) / **`A2AExpressServer`** (TypeScript) - exposes an Agent via HTTP, auto-generates an agent card from tool descriptions, endpoint `/.well-known/agent-card.json`.
+- **`A2AAgent`** - client that consumes a remote agent, auto-populates name/description from the agent card.
+- **`A2AClientToolProvider`** - dynamically discovers multiple remote agents.
 
 Supported in agents-as-tools and as a node in Graph. **NOT supported in Swarm** (architectural limitation, feature request #913 open).
 
@@ -96,13 +96,13 @@ Dictionary of state/context passed to all nodes in a Graph or Swarm without appe
 
 ### SharedContext (Swarm Python)
 
-Dataclass that maintains shared memory between Swarm agents in Python. API: `SharedContext.add_context(node: SwarmNode, key: str, value: Any) -> None` — adds key-value pairs associated with the calling node. Reading does not happen via direct getters exposed to agents — the orchestrator constructs handoff messages that include all accumulated values in the SharedContext. In TypeScript there is no mutable SharedContext: context is serialized as JSON in the structured handoff messages.
+Dataclass that maintains shared memory between Swarm agents in Python. API: `SharedContext.add_context(node: SwarmNode, key: str, value: Any) -> None` - adds key-value pairs associated with the calling node. Reading does not happen via direct getters exposed to agents - the orchestrator constructs handoff messages that include all accumulated values in the SharedContext. In TypeScript there is no mutable SharedContext: context is serialized as JSON in the structured handoff messages.
 
 ### MultiAgentState / MultiAgentResult
 
 `MultiAgentState` / `SwarmState` contains: `current_node`, `task`, `shared_context`, `node_history`, `results`, `handoff_node`, `handoff_message`. `SwarmResult` extends `MultiAgentResult` with: `status`, `node_history`, `results` (dict by `node_id`), `execution_time` (ms), `accumulated_usage` (`inputTokens`, `outputTokens`, `totalTokens`, `cacheReadInputTokens`, `cacheWriteInputTokens`). `accumulated_usage` aggregates tokens from all invocations of all agents in the Swarm; it does not include separate system overhead.
 
-`GraphResult` also extends `MultiAgentResult` and exposes: `results` (dict by node_id string, type `dict[str, NodeResult]`), `accumulated_usage`, `execution_order`, `total_nodes`, `completed_nodes`, `failed_nodes`, `execution_time`. **The key in `GraphResult.results` is the node_id string passed as the second argument to `GraphBuilder.add_node(executor, node_id)`** — it is NOT the agent's `name` attribute. A missing key returns `None` from `.get()` but raises `KeyError` if accessed directly; always use `.get(node_id)` to avoid silent errors. Per-node output is in `result.results[node_id].result` (an `AgentResult` or nested `MultiAgentResult`). `accumulated_usage` aggregates token counts across all nodes in the Graph execution, analogous to `SwarmResult.accumulated_usage`.
+`GraphResult` also extends `MultiAgentResult` and exposes: `results` (dict by node_id string, type `dict[str, NodeResult]`), `accumulated_usage`, `execution_order`, `total_nodes`, `completed_nodes`, `failed_nodes`, `execution_time`. **The key in `GraphResult.results` is the node_id string passed as the second argument to `GraphBuilder.add_node(executor, node_id)`** - it is NOT the agent's `name` attribute. A missing key returns `None` from `.get()` but raises `KeyError` if accessed directly; always use `.get(node_id)` to avoid silent errors. Per-node output is in `result.results[node_id].result` (an `AgentResult` or nested `MultiAgentResult`). `accumulated_usage` aggregates token counts across all nodes in the Graph execution, analogous to `SwarmResult.accumulated_usage`.
 
 ### SessionManager
 
@@ -110,33 +110,33 @@ Abstraction for agent state persistence. **Python**: `FileSessionManager` (dev) 
 
 ### Nested Patterns (composition)
 
-Patterns are composable: a Swarm can be a node in a Graph (`GraphBuilder.add_node(swarm, 'id')`), a Graph can orchestrate Swarms, and agents-as-tools work anywhere. Agents-as-tools, Graph, and Swarm are available in both Python and TypeScript 1.0. Workflow (`strands_tools.workflow`) is Python only. `agent_graph` (`strands_tools.agent_graph`) is **deprecated** — use `GraphBuilder`.
+Patterns are composable: a Swarm can be a node in a Graph (`GraphBuilder.add_node(swarm, 'id')`), a Graph can orchestrate Swarms, and agents-as-tools work anywhere. Agents-as-tools, Graph, and Swarm are available in both Python and TypeScript 1.0. Workflow (`strands_tools.workflow`) is Python only. `agent_graph` (`strands_tools.agent_graph`) is **deprecated** - use `GraphBuilder`.
 
 ---
 
 ## Best practices
 
-- **Choose pattern based on execution flow: Graph for conditional logic and approved processes, Swarm for emergent multi-perspective collaboration, Workflow for repeatable and deterministic processes, Agents-as-Tools for hierarchies with distinct specialists.** — Each pattern has different cost/benefit trade-offs. Graph offers control but requires upfront design; Swarm offers flexibility but high token cost for iterations; Workflow provides predictability but rigidity (no cycles). Choosing the wrong pattern leads to unnecessary overhead or unexpected behaviors. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/_
+- **Choose pattern based on execution flow: Graph for conditional logic and approved processes, Swarm for emergent multi-perspective collaboration, Workflow for repeatable and deterministic processes, Agents-as-Tools for hierarchies with distinct specialists.** - Each pattern has different cost/benefit trade-offs. Graph offers control but requires upfront design; Swarm offers flexibility but high token cost for iterations; Workflow provides predictability but rigidity (no cycles). Choosing the wrong pattern leads to unnecessary overhead or unexpected behaviors. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/_
 
-- **Always configure execution limits in production. For Swarm Python: `max_handoffs=20`, `max_iterations=20`, `execution_timeout=900.0`, `node_timeout=300.0`, `repetitive_handoff_detection_window=8`, `repetitive_handoff_min_unique_agents=3`. For Swarm TypeScript: `maxSteps` (single limit). For Graph Python: `set_max_node_executions()`, `set_execution_timeout()`, `reset_on_revisit(True)` for feedback loops.** — `repetitive_handoff_detection_window` and `repetitive_handoff_min_unique_agents` default to 0 (disabled). Without limits, infinite loops consume unlimited tokens in production. `repetitive_handoff_detection_window` prevents A⟺B ping-pong cycles. In TypeScript, exceeding `maxSteps` raises an exception (fail-fast); in Python it returns a FAILED result. _Source: https://strandsagents.com/docs/api/python/strands.multiagent.swarm/_
+- **Always configure execution limits in production. For Swarm Python: `max_handoffs=20`, `max_iterations=20`, `execution_timeout=900.0`, `node_timeout=300.0`, `repetitive_handoff_detection_window=8`, `repetitive_handoff_min_unique_agents=3`. For Swarm TypeScript: `maxSteps` (single limit). For Graph Python: `set_max_node_executions()`, `set_execution_timeout()`, `reset_on_revisit(True)` for feedback loops.** - `repetitive_handoff_detection_window` and `repetitive_handoff_min_unique_agents` default to 0 (disabled). Without limits, infinite loops consume unlimited tokens in production. `repetitive_handoff_detection_window` prevents A⟺B ping-pong cycles. In TypeScript, exceeding `maxSteps` raises an exception (fail-fast); in Python it returns a FAILED result. _Source: https://strandsagents.com/docs/api/python/strands.multiagent.swarm/_
 
-- **Use `invocation_state` for configuration context (role, feature flags, DB connections), not concatenated to the agent prompt. Access it via `@tool(context=True)` and `ToolContext.invocation_state`.** — `invocation_state` is invisible to the model but accessible to tools. Avoids polluting LLM context with system data and enables conditional routing via edge condition functions without modifying prompts. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/_
+- **Use `invocation_state` for configuration context (role, feature flags, DB connections), not concatenated to the agent prompt. Access it via `@tool(context=True)` and `ToolContext.invocation_state`.** - `invocation_state` is invisible to the model but accessible to tools. Avoids polluting LLM context with system data and enables conditional routing via edge condition functions without modifying prompts. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/_
 
-- **Add `SessionManager` ONLY to the orchestrator (Graph/Swarm), never to internal agents. In TypeScript use `S3Storage` for production with `snapshotTrigger` for immutable checkpoints.** — Python raises `ValueError` if an agent with a session manager is added to a Graph/Swarm. The orchestrator snapshots and restores each agent node's state on every execution; a session manager at the agent level would create conflicts. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/_
+- **Add `SessionManager` ONLY to the orchestrator (Graph/Swarm), never to internal agents. In TypeScript use `S3Storage` for production with `snapshotTrigger` for immutable checkpoints.** - Python raises `ValueError` if an agent with a session manager is added to a Graph/Swarm. The orchestrator snapshots and restores each agent node's state on every execution; a session manager at the agent level would create conflicts. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/_
 
-- **Use A2A only for agents on different servers (network). For local coordination (same process) use Swarm, Graph, or agents-as-tools. Do not use `A2AClientToolProvider` for local agents.** — `A2AServer` + `A2AClientToolProvider` for local agents adds significant HTTP latency vs function calls. A2A is not supported in Swarm due to architectural limitations (issue #913 open); use Graph as an alternative for workflows with remote agents. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/agent-to-agent/_
+- **Use A2A only for agents on different servers (network). For local coordination (same process) use Swarm, Graph, or agents-as-tools. Do not use `A2AClientToolProvider` for local agents.** - `A2AServer` + `A2AClientToolProvider` for local agents adds significant HTTP latency vs function calls. A2A is not supported in Swarm due to architectural limitations (issue #913 open); use Graph as an alternative for workflows with remote agents. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/agent-to-agent/_
 
-- **Design specialist agents with tightly focused roles, descriptive names, and system prompts that clearly indicate expertise and when to invoke them.** — The orchestrator's tool selection is based on tool descriptions. If two agents have overlapping descriptions, the model has no basis for choosing correctly. This is one of the primary causes of wrong routing. _Source: https://aws.amazon.com/blogs/machine-learning/multi-agent-collaboration-patterns-with-strands-agents-and-amazon-nova/_
+- **Design specialist agents with tightly focused roles, descriptive names, and system prompts that clearly indicate expertise and when to invoke them.** - The orchestrator's tool selection is based on tool descriptions. If two agents have overlapping descriptions, the model has no basis for choosing correctly. This is one of the primary causes of wrong routing. _Source: https://aws.amazon.com/blogs/machine-learning/multi-agent-collaboration-patterns-with-strands-agents-and-amazon-nova/_
 
-- **Enable OTEL tracing in production with `trace_attributes` for cross-agent correlation, sending to CloudWatch/X-Ray via AWS OTEL Collector.** — Multi-agent systems are hard to debug without visibility into node transitions. `trace_attributes` propagate to all spans and allow tracing the complete request path. _Source: https://strandsagents.com/docs/user-guide/observability-evaluation/traces/_
+- **Enable OTEL tracing in production with `trace_attributes` for cross-agent correlation, sending to CloudWatch/X-Ray via AWS OTEL Collector.** - Multi-agent systems are hard to debug without visibility into node transitions. `trace_attributes` propagate to all spans and allow tracing the complete request path. _Source: https://strandsagents.com/docs/user-guide/observability-evaluation/traces/_
 
-- **In Graph Python, for nodes with multiple predecessors that require AND behavior (wait for all), implement conditional edges that manually check the state of other nodes via `GraphState.results`.** — Python uses OR semantics by default: a node fires as soon as any predecessor completes. Feature request #1081 proposes adding AND semantics as a constructor option, but it is still open. TypeScript natively uses AND semantics. _Source: https://github.com/strands-agents/sdk-python/issues/1081_
+- **In Graph Python, for nodes with multiple predecessors that require AND behavior (wait for all), implement conditional edges that manually check the state of other nodes via `GraphState.results`.** - Python uses OR semantics by default: a node fires as soon as any predecessor completes. Feature request #1081 proposes adding AND semantics as a constructor option, but it is still open. TypeScript natively uses AND semantics. _Source: https://github.com/strands-agents/sdk-python/issues/1081_
 
-- **Do not use `strands_tools.agent_graph`: it is deprecated with removal planned at the next major release. Use `GraphBuilder` from the main SDK.** — `agent_graph` is a `strands_tools` tool that creates agent networks with message-passing topologies; it already has a deprecation warning and will be removed. `GraphBuilder` is the official primitive for graph orchestration. _Source: https://github.com/strands-agents/tools_
+- **Do not use `strands_tools.agent_graph`: it is deprecated with removal planned at the next major release. Use `GraphBuilder` from the main SDK.** - `agent_graph` is a `strands_tools` tool that creates agent networks with message-passing topologies; it already has a deprecation warning and will be removed. `GraphBuilder` is the official primitive for graph orchestration. _Source: https://github.com/strands-agents/tools_
 
-- **Always specify `region_name` explicitly in the `BedrockModel` constructor for predictable behavior. In production on Bedrock, scope down the IAM `Resource` to specific model ARNs instead of wildcards.** — `AWS_REGION` has lower priority than the region set in the AWS profile. Not specifying it explicitly leads to invocations in an unexpected region. The principle of least privilege requires specific ARNs. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/_
+- **Always specify `region_name` explicitly in the `BedrockModel` constructor for predictable behavior. In production on Bedrock, scope down the IAM `Resource` to specific model ARNs instead of wildcards.** - `AWS_REGION` has lower priority than the region set in the AWS profile. Not specifying it explicitly leads to invocations in an unexpected region. The principle of least privilege requires specific ARNs. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/_
 
-- **Minimize dependencies between tasks in Workflow to maximize automatic parallelism. Only Workflow natively executes independent tasks in parallel.** — The workflow tool automatically resolves which tasks can run in parallel. Unnecessary dependencies serialize execution and increase latency. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/workflow/_
+- **Minimize dependencies between tasks in Workflow to maximize automatic parallelism. Only Workflow natively executes independent tasks in parallel.** - The workflow tool automatically resolves which tasks can run in parallel. Unnecessary dependencies serialize execution and increase latency. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/workflow/_
 
 ---
 
@@ -159,7 +159,7 @@ product_agent = Agent(
     system_prompt="You are a product expert. Answer product-related queries about selection, pricing, and availability."
 )
 
-# Method 1: Direct passing (simplest — SDK automatically generates schema with 'input' parameter)
+# Method 1: Direct passing (simplest - SDK automatically generates schema with 'input' parameter)
 orchestrator_direct = Agent(
     system_prompt="Route queries to the appropriate specialist.",
     tools=[research_agent, product_agent]
@@ -289,7 +289,7 @@ logging.getLogger("strands.multiagent").setLevel(logging.DEBUG)
 #   SharedContext.add_context(node: SwarmNode, key: str, value: Any) -> None
 # Reading happens implicitly: the orchestrator builds the handoff message
 # including all accumulated values in SharedContext for the next agent.
-# There is no public get_context() method — context is serialized
+# There is no public get_context() method - context is serialized
 # in the messages each agent receives at the start of its turn.
 
 researcher = Agent(
@@ -310,7 +310,7 @@ analyst = Agent(
 writer = Agent(
     name="writer",
     system_prompt="""You are a report writing specialist.
-    Write comprehensive reports. Do not hand off — produce the final output.""",
+    Write comprehensive reports. Do not hand off - produce the final output.""",
     tools=[file_write, memory]
 )
 
@@ -385,7 +385,7 @@ import { Agent } from '@strands-agents/sdk'
 import { Swarm } from '@strands-agents/sdk/multiagent'
 
 // In TypeScript agents use structured output ({agentId, message, context})
-// instead of tool calls for handoffs — no handoff_to_agent tool is injected.
+// instead of tool calls for handoffs - no handoff_to_agent tool is injected.
 // Omitting agentId produces the final Swarm result.
 
 const researcher = new Agent({
@@ -405,7 +405,7 @@ const analyst = new Agent({
 const writer = new Agent({
   id: 'writer',
   systemPrompt: `You are a writer. Write the final report and return:
-    { message: "<final report>" } (no agentId — this ends the swarm).`
+    { message: "<final report>" } (no agentId - this ends the swarm).`
 })
 
 // TypeScript Swarm: maxSteps instead of separate max_handoffs + max_iterations
@@ -448,7 +448,7 @@ from strands.multiagent import GraphBuilder, Swarm
 from strands.multiagent.graph import GraphState
 
 # === EXAMPLE 1: Conditional routing with invocation_state ===
-# NOTE: Python uses OR semantics — a node fires when ANY incoming edge completes.
+# NOTE: Python uses OR semantics - a node fires when ANY incoming edge completes.
 # For AND semantics, implement a conditional edge that checks all predecessors.
 
 router = Agent(name="router", system_prompt="Categorize the request.")
@@ -855,10 +855,10 @@ agent_string = Agent(model="anthropic.claude-sonnet-4-20250514-v1:0")
 # Region priority: explicit parameter > session region > AWS_DEFAULT_REGION > AWS_REGION > us-west-2
 bedrock_model = BedrockModel(
     model_id="anthropic.claude-sonnet-4-20250514-v1:0",
-    region_name="us-west-2",  # EXPLICIT — avoids surprises from boto3 precedence
+    region_name="us-west-2",  # EXPLICIT - avoids surprises from boto3 precedence
     temperature=0.3,
     max_tokens=4096,
-    streaming=True  # default True — uses InvokeModelWithResponseStream
+    streaming=True  # default True - uses InvokeModelWithResponseStream
 )
 
 # Cross-region inference: add regional prefix when on-demand throughput is not supported
@@ -916,7 +916,7 @@ strands_telemetry.setup_otlp_exporter()  # requires OTEL_EXPORTER_OTLP_ENDPOINT
 # For development:
 # strands_telemetry.setup_console_exporter()
 
-# S3SessionManager — IAM required: s3:PutObject, s3:GetObject, s3:DeleteObject, s3:ListBucket
+# S3SessionManager - IAM required: s3:PutObject, s3:GetObject, s3:DeleteObject, s3:ListBucket
 s3_session_manager = S3SessionManager(
     session_id="customer-session-uuid-here",
     bucket="my-agent-sessions-bucket"
@@ -1005,7 +1005,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 | `Swarm.repetitive_handoff_min_unique_agents` | Minimum number of distinct agents required in the detection window. 0 = disabled (default!). | `0` (disabled). Recommended for production: `3` |
 | `Swarm.entry_point` (Python) / `start` (TypeScript) | Agent (Python: `Agent \| None`) or agent id (TypeScript: `string`) where Swarm execution starts. | `None` (Python: first in list); first element (TypeScript) |
 | `Swarm.maxSteps` (TypeScript) | Single limit for total node executions in the TypeScript Swarm. Replaces Python's separate `max_handoffs` + `max_iterations`. Exceeding it raises an exception. | `Infinity` |
-| `GraphBuilder.set_session_manager(session_manager)` | Attach a `SessionManager` to the Graph orchestrator for state persistence across invocations and resume-from-interrupt support. **Orchestrator-only** — do NOT set a session manager on individual agent nodes (Python raises `ValueError`). Signature: `set_session_manager(session_manager: SessionManager) -> GraphBuilder`. | `None` (no persistence). Use `S3SessionManager` in production. |
+| `GraphBuilder.set_session_manager(session_manager)` | Attach a `SessionManager` to the Graph orchestrator for state persistence across invocations and resume-from-interrupt support. **Orchestrator-only** - do NOT set a session manager on individual agent nodes (Python raises `ValueError`). Signature: `set_session_manager(session_manager: SessionManager) -> GraphBuilder`. | `None` (no persistence). Use `S3SessionManager` in production. |
 | `GraphBuilder.set_max_node_executions()` | Maximum total number of node executions in the Graph (cumulative sum of all nodes). CRITICAL for feedback loops. | No limit. Recommended for feedback loops: `10` |
 | `GraphBuilder.set_execution_timeout()` | Total timeout in seconds for Graph execution. | No timeout. Recommended for production: `300`–`600` |
 | `GraphBuilder.reset_on_revisit()` | If `True`, resets the agent state when a node is revisited in a feedback loop. | `False` |
@@ -1031,7 +1031,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 
 - **Python Graph uses OR semantics for edges; TypeScript Graph uses AND semantics.** In Python, a node fires when ANY incoming edge completes. In TypeScript, a node waits for ALL incoming edges. In graphs with join nodes (multiple predecessors pointing to one node), in Python the node will execute multiple times (once per completed predecessor) unless you implement conditional edges that manually check AND logic via `GraphState.results`. Feature request #1081 proposes adding AND mode to Python.
 
-- **SharedContext in Python Swarm has only `SharedContext.add_context(node, key, value)` as a public method.** There is no directly exposed `get_context()` for agents — reading happens via handoff messages constructed by the orchestrator that include accumulated context. In TypeScript there is no mutable SharedContext: use the serialized JSON `context` field in structured handoff messages.
+- **SharedContext in Python Swarm has only `SharedContext.add_context(node, key, value)` as a public method.** There is no directly exposed `get_context()` for agents - reading happens via handoff messages constructed by the orchestrator that include accumulated context. In TypeScript there is no mutable SharedContext: use the serialized JSON `context` field in structured handoff messages.
 
 - **Session Manager in multi-agent: ONLY the orchestrator (Graph/Swarm) should have a session manager.** Python raises `ValueError` if an agent with a session manager is added to a Graph/Swarm. The Graph's session manager persists orchestrator state, not individual agent histories.
 
@@ -1045,7 +1045,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 
 - **AgentCore Runtime `runtimeSessionId` minimum length is 33 characters, maximum 256** (confirmed in the official API reference). A session ID that is too short causes a `ValidationException`.
 
-- **AgentCore Runtime requires `linux/arm64`, port 8080, and two mandatory endpoints: `POST /invocations` and `GET /ping`.** Python 3.10+ or Node.js 20+ required. The `agentcore-starter-toolkit` tool is deprecated — use the new AgentCore CLI (`npm install -g @aws/agentcore`).
+- **AgentCore Runtime requires `linux/arm64`, port 8080, and two mandatory endpoints: `POST /invocations` and `GET /ping`.** Python 3.10+ or Node.js 20+ required. The `agentcore-starter-toolkit` tool is deprecated - use the new AgentCore CLI (`npm install -g @aws/agentcore`).
 
 - **TypeScript SDK 1.0 (GA April 2026) supports Graph, Swarm, agents-as-tools, and A2A. It does NOT include Workflow as a native primitive** (`strands_tools.workflow` is Python only). Pre-1.0 beta code is not compatible with 1.0.
 
@@ -1057,7 +1057,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 
 - **`GraphResult.accumulated_usage` aggregates token counts across all node executions in the Graph** (inherited from `MultiAgentResult`). It is directly available on the `GraphResult` object returned by `graph(task)`, identical in shape to `SwarmResult.accumulated_usage`. Per-node token usage is available via `result.results[node_id].accumulated_usage`. _Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/_
 
-- **`accumulated_usage` in `SwarmResult` aggregates `inputTokens`, `outputTokens`, `totalTokens`, `cacheReadInputTokens`, `cacheWriteInputTokens` from ALL invocations of ALL agents in the Swarm.** It is not just an application-level sum — it includes all LLM traffic in the system.
+- **`accumulated_usage` in `SwarmResult` aggregates `inputTokens`, `outputTokens`, `totalTokens`, `cacheReadInputTokens`, `cacheWriteInputTokens` from ALL invocations of ALL agents in the Swarm.** It is not just an application-level sum - it includes all LLM traffic in the system.
 
 - **`invocation_state` is not visible to the LLM model:** data here is accessible only to tools (via `ToolContext.invocation_state`) and edge condition functions. If the model needs to "see" the context, include it in the `system_prompt` or user message.
 
@@ -1065,24 +1065,24 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 
 ## Official sources
 
-- [Strands Agents — Multi-agent Patterns (user guide)](https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/) — Main page comparing Graph, Swarm, Workflow with a comparison table, selection criteria, and `invocation_state`
-- [Strands Agents — Agents-as-Tools](https://strandsagents.com/docs/user-guide/concepts/multi-agent/agents-as-tools/) — Direct agent passing, `.as_tool()` / `.asTool()`, `@tool` decorator, `preserve_context` / `preserveContext`, `A2AAgent` as tool
-- [Strands Agents — Swarm Pattern](https://strandsagents.com/docs/user-guide/concepts/multi-agent/swarm/) — `Swarm` constructor, `handoff_to_agent`, `SharedContext`, `SwarmResult`, repetitive handoff detection, streaming
-- [Strands Agents — Graph Pattern](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/) — Full `GraphBuilder` API, OR vs AND semantics, conditional edges, nested patterns (swarm-in-graph), feedback loops, streaming
-- [Strands Agents — Workflow Pattern](https://strandsagents.com/docs/user-guide/concepts/multi-agent/workflow/) — Sequential workflow with `strands_tools.workflow`, task DAG, actions `create` / `start` / `status` / `pause` / `resume`
-- [Strands Agents — Agent-to-Agent (A2A) Protocol](https://strandsagents.com/docs/user-guide/concepts/multi-agent/agent-to-agent/) — `A2AAgent`, `A2AServer`, `A2AClientToolProvider`, not supported in Swarm, Graph integration, TypeScript `A2AExpressServer`
-- [Strands Agents — Python API Reference: strands.multiagent.swarm](https://strandsagents.com/docs/api/python/strands.multiagent.swarm/) — Exact signatures of `SharedContext.add_context()`, `SwarmNode`, `SwarmState`, `Swarm.__init__()` with all parameters
-- [Strands Agents — Python API Reference: strands.multiagent.graph](https://strandsagents.com/docs/api/python/strands.multiagent.graph/) — Full signatures of `GraphBuilder`, `Graph`, `GraphState`, `GraphNode`, `GraphEdge`, `GraphResult`
-- [Strands Agents — Session Management](https://strandsagents.com/docs/user-guide/concepts/agents/session-management/) — `FileSessionManager`, `S3SessionManager`, `FileStorage` / `S3Storage` in TypeScript, multi-agent session rules, immutable snapshots
-- [Strands Agents — Traces/Observability](https://strandsagents.com/docs/user-guide/observability-evaluation/traces/) — `StrandsTelemetry`, OTEL env vars, CloudWatch X-Ray integration, `trace_attributes` for multi-agent correlation
-- [Blog AWS — Introducing Strands Agents 1.0](https://aws.amazon.com/blogs/opensource/introducing-strands-agents-1-0-production-ready-multi-agent-orchestration-made-simple/) — GA announcement 15 July 2025: `SessionManager`, async streaming, handoffs, A2A, code for all 1.0 patterns
-- [Blog AWS — Multi-Agent Collaboration with Strands and Amazon Nova](https://aws.amazon.com/blogs/machine-learning/multi-agent-collaboration-patterns-with-strands-agents-and-amazon-nova/) — Practical comparison of the 4 patterns with pros/cons and code; uses Nova Pro as alternative model
-- [Amazon Bedrock AgentCore — GA announcement](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/) — GA on 13 October 2025: VPC/PrivateLink, A2A protocol support, CloudFormation, resource tagging added
-- [Strands Agents — Deploy to AgentCore Runtime (Python)](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md) — Requirements: `linux/arm64`, port 8080, `/invocations` POST and `/ping` GET mandatory; AgentCore CLI and `boto3` manual deployment
-- [IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) — Full IAM permissions for execution: `BedrockModelInvocation`, ECR, CloudWatch Logs, X-Ray, `bedrock-agentcore:*`
-- [InvokeAgentRuntime API Reference](https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_InvokeAgentRuntime.html) — `runtimeSessionId`: minimum length 33, maximum 256 characters (officially confirmed)
-- [Strands Agents — Amazon Bedrock Model Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/) — `BedrockModel` config, region resolution priority, minimum IAM policy, caching, guardrails, cross-region inference
-- [GitHub Issue #1081 — Add Graph AND semantics option (Python)](https://github.com/strands-agents/sdk-python/issues/1081) — Feature request to add AND semantics to the Python Graph; status: open, no linked PR
-- [GitHub Issue #913 — Improve Swarm Handoff Extensibility (A2A in Swarm)](https://github.com/strands-agents/sdk-python/issues/913) — Feature request for A2A node integration in Swarm; status: open, no linked PR
-- [Strands Agents TypeScript 1.0 announcement](https://strandsagents.com/blog/strands-agents-typescript-v1/) — TypeScript 1.0 GA on 30 April 2026: Graph, Swarm, agents-as-tools, A2A available; Workflow (`strands_tools`) Python only
-- [A2A Protocol — GitHub Organization](https://github.com/a2aproject/A2A) — **Cross-vendor open standard** (not AWS) — open standard specification for the Agent-to-Agent protocol, Python and TypeScript SDKs
+- [Strands Agents - Multi-agent Patterns (user guide)](https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/) - Main page comparing Graph, Swarm, Workflow with a comparison table, selection criteria, and `invocation_state`
+- [Strands Agents - Agents-as-Tools](https://strandsagents.com/docs/user-guide/concepts/multi-agent/agents-as-tools/) - Direct agent passing, `.as_tool()` / `.asTool()`, `@tool` decorator, `preserve_context` / `preserveContext`, `A2AAgent` as tool
+- [Strands Agents - Swarm Pattern](https://strandsagents.com/docs/user-guide/concepts/multi-agent/swarm/) - `Swarm` constructor, `handoff_to_agent`, `SharedContext`, `SwarmResult`, repetitive handoff detection, streaming
+- [Strands Agents - Graph Pattern](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/) - Full `GraphBuilder` API, OR vs AND semantics, conditional edges, nested patterns (swarm-in-graph), feedback loops, streaming
+- [Strands Agents - Workflow Pattern](https://strandsagents.com/docs/user-guide/concepts/multi-agent/workflow/) - Sequential workflow with `strands_tools.workflow`, task DAG, actions `create` / `start` / `status` / `pause` / `resume`
+- [Strands Agents - Agent-to-Agent (A2A) Protocol](https://strandsagents.com/docs/user-guide/concepts/multi-agent/agent-to-agent/) - `A2AAgent`, `A2AServer`, `A2AClientToolProvider`, not supported in Swarm, Graph integration, TypeScript `A2AExpressServer`
+- [Strands Agents - Python API Reference: strands.multiagent.swarm](https://strandsagents.com/docs/api/python/strands.multiagent.swarm/) - Exact signatures of `SharedContext.add_context()`, `SwarmNode`, `SwarmState`, `Swarm.__init__()` with all parameters
+- [Strands Agents - Python API Reference: strands.multiagent.graph](https://strandsagents.com/docs/api/python/strands.multiagent.graph/) - Full signatures of `GraphBuilder`, `Graph`, `GraphState`, `GraphNode`, `GraphEdge`, `GraphResult`
+- [Strands Agents - Session Management](https://strandsagents.com/docs/user-guide/concepts/agents/session-management/) - `FileSessionManager`, `S3SessionManager`, `FileStorage` / `S3Storage` in TypeScript, multi-agent session rules, immutable snapshots
+- [Strands Agents - Traces/Observability](https://strandsagents.com/docs/user-guide/observability-evaluation/traces/) - `StrandsTelemetry`, OTEL env vars, CloudWatch X-Ray integration, `trace_attributes` for multi-agent correlation
+- [Blog AWS - Introducing Strands Agents 1.0](https://aws.amazon.com/blogs/opensource/introducing-strands-agents-1-0-production-ready-multi-agent-orchestration-made-simple/) - GA announcement 15 July 2025: `SessionManager`, async streaming, handoffs, A2A, code for all 1.0 patterns
+- [Blog AWS - Multi-Agent Collaboration with Strands and Amazon Nova](https://aws.amazon.com/blogs/machine-learning/multi-agent-collaboration-patterns-with-strands-agents-and-amazon-nova/) - Practical comparison of the 4 patterns with pros/cons and code; uses Nova Pro as alternative model
+- [Amazon Bedrock AgentCore - GA announcement](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/) - GA on 13 October 2025: VPC/PrivateLink, A2A protocol support, CloudFormation, resource tagging added
+- [Strands Agents - Deploy to AgentCore Runtime (Python)](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md) - Requirements: `linux/arm64`, port 8080, `/invocations` POST and `/ping` GET mandatory; AgentCore CLI and `boto3` manual deployment
+- [IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) - Full IAM permissions for execution: `BedrockModelInvocation`, ECR, CloudWatch Logs, X-Ray, `bedrock-agentcore:*`
+- [InvokeAgentRuntime API Reference](https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_InvokeAgentRuntime.html) - `runtimeSessionId`: minimum length 33, maximum 256 characters (officially confirmed)
+- [Strands Agents - Amazon Bedrock Model Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/) - `BedrockModel` config, region resolution priority, minimum IAM policy, caching, guardrails, cross-region inference
+- [GitHub Issue #1081 - Add Graph AND semantics option (Python)](https://github.com/strands-agents/sdk-python/issues/1081) - Feature request to add AND semantics to the Python Graph; status: open, no linked PR
+- [GitHub Issue #913 - Improve Swarm Handoff Extensibility (A2A in Swarm)](https://github.com/strands-agents/sdk-python/issues/913) - Feature request for A2A node integration in Swarm; status: open, no linked PR
+- [Strands Agents TypeScript 1.0 announcement](https://strandsagents.com/blog/strands-agents-typescript-v1/) - TypeScript 1.0 GA on 30 April 2026: Graph, Swarm, agents-as-tools, A2A available; Workflow (`strands_tools`) Python only
+- [A2A Protocol - GitHub Organization](https://github.com/a2aproject/A2A) - **Cross-vendor open standard** (not AWS) - open standard specification for the Agent-to-Agent protocol, Python and TypeScript SDKs

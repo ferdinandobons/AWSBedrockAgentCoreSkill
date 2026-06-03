@@ -1,6 +1,6 @@
 # Amazon Bedrock AgentCore Memory
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -45,9 +45,9 @@
 
 ## Overview
 
-Amazon Bedrock AgentCore Memory is a fully managed, stateful memory service for AI agents, offering two complementary memory types: **short-term memory** (raw immutable events per session, stored via `CreateEvent`) and **long-term memory** (structured insights extracted asynchronously using configurable strategies). It integrates natively with the Strands Agents SDK via `AgentCoreMemorySessionManager`, with LangChain/LangGraph via `AgentCoreMemorySaver` and `AgentCoreMemoryStore` (package `langgraph-checkpoint-aws`), and with boto3 through two separate clients: `bedrock-agentcore-control` (control plane, resource lifecycle) and `bedrock-agentcore` (data plane, event and record operations). Memory strategies — Semantic, User Preference, Summary/Summarization, and Episodic — drive LTM extraction; each strategy writes records into namespaces you define using template variables like `{actorId}`, `{sessionId}`, and `{memoryStrategyId}`. Pricing is consumption-based: $0.25 per 1,000 create events (STM), $0.75/$0.25 per 1,000 records stored per month for built-in/custom strategies (LTM), and $0.50 per 1,000 retrieve calls.
+Amazon Bedrock AgentCore Memory is a fully managed, stateful memory service for AI agents, offering two complementary memory types: **short-term memory** (raw immutable events per session, stored via `CreateEvent`) and **long-term memory** (structured insights extracted asynchronously using configurable strategies). It integrates natively with the Strands Agents SDK via `AgentCoreMemorySessionManager`, with LangChain/LangGraph via `AgentCoreMemorySaver` and `AgentCoreMemoryStore` (package `langgraph-checkpoint-aws`), and with boto3 through two separate clients: `bedrock-agentcore-control` (control plane, resource lifecycle) and `bedrock-agentcore` (data plane, event and record operations). Memory strategies - Semantic, User Preference, Summary/Summarization, and Episodic - drive LTM extraction; each strategy writes records into namespaces you define using template variables like `{actorId}`, `{sessionId}`, and `{memoryStrategyId}`. Pricing is consumption-based: $0.25 per 1,000 create events (STM), $0.75/$0.25 per 1,000 records stored per month for built-in/custom strategies (LTM), and $0.50 per 1,000 retrieve calls.
 
-**Maturity:** Generally Available (GA). Preview began July 2025, full GA in early 2026. Memory Record Streaming GA March 2026. LTM metadata/filtering GA May 2026. LangChain/LangGraph integration GA (package: `langgraph-checkpoint-aws`). LangGraph agent framework integration uses Converse API via `bedrock_converse` model provider. AgentCore Optimization and AWS Agent Registry are still in public **Preview** as of June 2026 — do not treat them as production defaults.
+**Maturity:** Generally Available (GA). Preview began July 2025, full GA in early 2026. Memory Record Streaming GA March 2026. LTM metadata/filtering GA May 2026. LangChain/LangGraph integration GA (package: `langgraph-checkpoint-aws`). LangGraph agent framework integration uses Converse API via `bedrock_converse` model provider. AgentCore Optimization and AWS Agent Registry are still in public **Preview** as of June 2026 - do not treat them as production defaults.
 
 ---
 
@@ -61,19 +61,19 @@ Top-level container for an agent's memory. Created once via `bedrock-agentcore-c
 
 Raw, immutable, timestamped events stored per `(actorId, sessionId)` pair via the `CreateEvent` API. Supports two payload types:
 
-- **`conversational`** — role + text content; the **only** payload type that flows into LTM extraction.
-- **`blob`** — binary/JSON data for custom use such as LangGraph checkpoints; stored in STM only, never extracted to LTM.
+- **`conversational`** - role + text content; the **only** payload type that flows into LTM extraction.
+- **`blob`** - binary/JSON data for custom use such as LangGraph checkpoints; stored in STM only, never extracted to LTM.
 
 Events are retained up to the configured expiration (7–365 days, default 90). Supports event branching via `branch.rootEventId` and `branch.name` for conversation editing. Hard limits: max 100 messages per `CreateEvent` call, max 100 KB per message, max 10 MB per event.
 
 ### Long-term Memory (LTM)
 
-Structured insights **asynchronously extracted** from conversational STM events by memory strategies. Stored as memory records in namespaces. Extraction runs after `CreateEvent` completes — typically 60+ seconds later. Only events created **after** a strategy becomes `ACTIVE` are processed. LTM enables semantic search via `RetrieveMemoryRecords` (cosine similarity) and metadata-filtered listing via `ListMemoryRecords`.
+Structured insights **asynchronously extracted** from conversational STM events by memory strategies. Stored as memory records in namespaces. Extraction runs after `CreateEvent` completes - typically 60+ seconds later. Only events created **after** a strategy becomes `ACTIVE` are processed. LTM enables semantic search via `RetrieveMemoryRecords` (cosine similarity) and metadata-filtered listing via `ListMemoryRecords`.
 
 ### Actor and Session
 
-- **Actor** — entity interacting with the agent (user, another agent, system). Identified by `actorId`. Template variable: `{actorId}`.
-- **Session** — a single continuous conversation grouped by `sessionId`. All `CreateEvent` calls within a session share the same `sessionId`. In LangGraph, `thread_id` maps to `sessionId`. Template variable: `{sessionId}`.
+- **Actor** - entity interacting with the agent (user, another agent, system). Identified by `actorId`. Template variable: `{actorId}`.
+- **Session** - a single continuous conversation grouped by `sessionId`. All `CreateEvent` calls within a session share the same `sessionId`. In LangGraph, `thread_id` maps to `sessionId`. Template variable: `{sessionId}`.
 
 ### Memory Strategy
 
@@ -82,7 +82,7 @@ Configuration on the memory resource that defines **how** to extract LTM records
 | Flavor | Infrastructure | Cost (LTM storage) | Customization |
 |---|---|---|---|
 | Built-in | Fully managed, no extra infra | $0.75/1,000 records/month | None |
-| Built-in with overrides | Uses your Bedrock account for inference | $0.25/1,000 records/month | `appendToPrompt` (≤30 KB, **replaces** default prompt — see best practices), model override |
+| Built-in with overrides | Uses your Bedrock account for inference | $0.25/1,000 records/month | `appendToPrompt` (≤30 KB, **replaces** default prompt - see best practices), model override |
 | Self-managed | SNS + S3 + Lambda (yours) | $0.25/1,000 records/month | Full custom pipeline |
 
 Maximum **6 strategies per memory resource** (not adjustable).
@@ -103,10 +103,10 @@ The Episodic strategy's Reflection step requires a **separate** `namespaceTempla
 Hierarchical path string used to organize LTM records. Rules:
 
 - Defined in `namespaceTemplates` when creating a strategy.
-- **Must start and end with `/`** — e.g., `/users/{actorId}/preferences/`.
+- **Must start and end with `/`** - e.g., `/users/{actorId}/preferences/`.
 - Supported template variables: `{actorId}`, `{sessionId}`, `{memoryStrategyId}`.
 - `RetrieveMemoryRecords` supports exact `namespace` or hierarchical `namespacePath` (prefix match).
-- **IAM condition keys** express paths **without** a leading slash — e.g., `summaries/agent1/*`.
+- **IAM condition keys** express paths **without** a leading slash - e.g., `summaries/agent1/*`.
 
 Granularity options:
 
@@ -144,18 +144,18 @@ Using the wrong client will cause `Unknown service` errors.
 
 ### AgentCoreMemorySessionManager (Strands integration)
 
-Class from `bedrock_agentcore.memory.integrations.strands.session_manager`. Takes `AgentCoreMemoryConfig` and `region_name`. Implements the Strands `session_manager` interface — passed directly to the `Agent()` constructor. Key parameters:
+Class from `bedrock_agentcore.memory.integrations.strands.session_manager`. Takes `AgentCoreMemoryConfig` and `region_name`. Implements the Strands `session_manager` interface - passed directly to the `Agent()` constructor. Key parameters:
 
-- `retrieval_config` — dict mapping namespace paths to `RetrievalConfig` objects defining `top_k` (default 10, max 1000) and `relevance_score` (default 0.2, range 0.0–1.0) for LTM retrieval at agent startup.
-- `batch_size` — messages to buffer before sending (default 1). When `> 1`, **must use context manager or `close()`** or buffered messages are permanently lost.
+- `retrieval_config` - dict mapping namespace paths to `RetrievalConfig` objects defining `top_k` (default 10, max 1000) and `relevance_score` (default 0.2, range 0.0–1.0) for LTM retrieval at agent startup.
+- `batch_size` - messages to buffer before sending (default 1). When `> 1`, **must use context manager or `close()`** or buffered messages are permanently lost.
 - Only **one Strands agent per session** is supported.
 
 ### LangChain/LangGraph Integration
 
 Package: `langgraph-checkpoint-aws`. Two classes:
 
-- **`AgentCoreMemorySaver`** — LangGraph checkpointer for STM persistence using blob payloads. Saves/loads full graph state. **Does not trigger LTM extraction** (blob payload).
-- **`AgentCoreMemoryStore`** — LTM store for saving conversational messages and performing async extraction + semantic search.
+- **`AgentCoreMemorySaver`** - LangGraph checkpointer for STM persistence using blob payloads. Saves/loads full graph state. **Does not trigger LTM extraction** (blob payload).
+- **`AgentCoreMemoryStore`** - LTM store for saving conversational messages and performing async extraction + semantic search.
 
 Both require only a `memory_id` and `region_name`. Runtime config must supply `actor_id` and `thread_id` (maps to `actorId` and `sessionId` respectively). Models are invoked via `bedrock_converse` model provider (Converse API).
 
@@ -184,45 +184,45 @@ When triggered, AgentCore puts the conversation payload to S3 and publishes a JS
 
 ## Best practices
 
-- **Use trailing slashes in all namespace paths and prefer hierarchical namespaces** — The trailing slash prevents prefix collisions in multi-tenant apps — `/actors/Alice/` will not accidentally match `/actors/AliceBob/`. Use the most granular namespace when storing and `namespacePath` for broad retrieval across multiple sessions. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-organization.html_
+- **Use trailing slashes in all namespace paths and prefer hierarchical namespaces** - The trailing slash prevents prefix collisions in multi-tenant apps - `/actors/Alice/` will not accidentally match `/actors/AliceBob/`. Use the most granular namespace when storing and `namespacePath` for broad retrieval across multiple sessions. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-organization.html_
 
-- **Poll for `ACTIVE` status after `CreateMemory` before writing events or starting agents** — Memory creation is async (2–3 min). If you call `CreateEvent` before the resource is `ACTIVE` or before a new strategy is `ACTIVE`, those events will NOT be processed for LTM extraction. Use a polling loop checking `GetMemory` status, or use the SDK helper `create_memory_and_wait()`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-enabling-long-term-memory.html_
+- **Poll for `ACTIVE` status after `CreateMemory` before writing events or starting agents** - Memory creation is async (2–3 min). If you call `CreateEvent` before the resource is `ACTIVE` or before a new strategy is `ACTIVE`, those events will NOT be processed for LTM extraction. Use a polling loop checking `GetMemory` status, or use the SDK helper `create_memory_and_wait()`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-enabling-long-term-memory.html_
 
-- **Account for LTM extraction latency — do not read LTM immediately after writing** — LTM extraction is asynchronous and can take 60+ seconds after `CreateEvent`. The official customer scenario example uses an explicit `time.sleep(60)` before querying LTM. In production, retrieve LTM at the start of a new session (for context from prior sessions), not immediately after writing. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-customer-scenario.html_
+- **Account for LTM extraction latency - do not read LTM immediately after writing** - LTM extraction is asynchronous and can take 60+ seconds after `CreateEvent`. The official customer scenario example uses an explicit `time.sleep(60)` before querying LTM. In production, retrieve LTM at the start of a new session (for context from prior sessions), not immediately after writing. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-customer-scenario.html_
 
-- **Combine multiple strategies on a single memory resource to capture complementary memory types** — A single memory can have `SEMANTIC` + `SUMMARIZATION` + `USER_PREFERENCE` strategies simultaneously (max 6). This gives agents facts, conversation condensations, and personalization data without managing separate memory resources. CLI: `agentcore add memory --name X --strategies SEMANTIC,SUMMARIZATION,USER_PREFERENCE`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/strands-sdk-memory.html_
+- **Combine multiple strategies on a single memory resource to capture complementary memory types** - A single memory can have `SEMANTIC` + `SUMMARIZATION` + `USER_PREFERENCE` strategies simultaneously (max 6). This gives agents facts, conversation condensations, and personalization data without managing separate memory resources. CLI: `agentcore add memory --name X --strategies SEMANTIC,SUMMARIZATION,USER_PREFERENCE`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/strands-sdk-memory.html_
 
-- **Use customer-managed KMS keys for sensitive workloads** — All data is always encrypted at rest, but a customer-managed KMS key (`encryptionKeyArn` in `CreateMemory` / `kmsKey` in CDK) gives you full audit and revocation control. Event metadata is NOT encrypted with customer KMS — avoid storing sensitive content in event metadata. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/best-practices.html_
+- **Use customer-managed KMS keys for sensitive workloads** - All data is always encrypted at rest, but a customer-managed KMS key (`encryptionKeyArn` in `CreateMemory` / `kmsKey` in CDK) gives you full audit and revocation control. Event metadata is NOT encrypted with customer KMS - avoid storing sensitive content in event metadata. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/best-practices.html_
 
-- **Sanitize and validate all user input before writing it to memory via `CreateEvent`** — LTM extraction uses an LLM on the conversational payload. Malicious users can embed prompt injection instructions to corrupt memory stores or escalate privilege. Apply Amazon Bedrock Guardrails before persisting events. AWS secures infrastructure; you are responsible for input validation. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/best-practices.html_
+- **Sanitize and validate all user input before writing it to memory via `CreateEvent`** - LTM extraction uses an LLM on the conversational payload. Malicious users can embed prompt injection instructions to corrupt memory stores or escalate privilege. Apply Amazon Bedrock Guardrails before persisting events. AWS secures infrastructure; you are responsible for input validation. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/best-practices.html_
 
-- **Use IAM condition keys (`namespace`, `namespacePath`, `actorId`, `sessionId`) for least-privilege access control** — Scope IAM policies to specific namespaces using `bedrock-agentcore:namespace` (exact match with `StringEquals`) or `bedrock-agentcore:namespacePath` (prefix match via `StringLike`). Note: IAM condition values are expressed **without** a leading slash (e.g., `summaries/agent1/*`). This enables multi-tenant isolation so Agent A cannot read Actor B's memories. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-organization.html_
+- **Use IAM condition keys (`namespace`, `namespacePath`, `actorId`, `sessionId`) for least-privilege access control** - Scope IAM policies to specific namespaces using `bedrock-agentcore:namespace` (exact match with `StringEquals`) or `bedrock-agentcore:namespacePath` (prefix match via `StringLike`). Note: IAM condition values are expressed **without** a leading slash (e.g., `summaries/agent1/*`). This enables multi-tenant isolation so Agent A cannot read Actor B's memories. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-organization.html_
 
-- **Always use a context manager (`with` block) or call `close()` when using `batch_size > 1` with `AgentCoreMemorySessionManager`** — When `batch_size > 1`, messages are buffered. If the session ends without flush, buffered messages are permanently lost. The context manager guarantees flush on exit, including on exceptions. Alternatively, wrap in `try/finally` with `session_manager.close()`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/strands-sdk-memory.html_
+- **Always use a context manager (`with` block) or call `close()` when using `batch_size > 1` with `AgentCoreMemorySessionManager`** - When `batch_size > 1`, messages are buffered. If the session ends without flush, buffered messages are permanently lost. The context manager guarantees flush on exit, including on exceptions. Alternatively, wrap in `try/finally` with `session_manager.close()`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/strands-sdk-memory.html_
 
-- **Use built-in with overrides (not full self-managed) when you only need to customize extraction domain or language** — Built-in with overrides lets you replace the extraction/consolidation system prompt via `appendToPrompt` (up to 30 KB; despite the name, it replaces the default — see the best practice below) and change the Bedrock model without building SNS/S3/Lambda infrastructure. Full self-managed is only needed when you require a custom output schema, non-Bedrock models, or external database integration. Overrides also cost less per stored record ($0.25 vs $0.75). _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-custom-strategy.html_
+- **Use built-in with overrides (not full self-managed) when you only need to customize extraction domain or language** - Built-in with overrides lets you replace the extraction/consolidation system prompt via `appendToPrompt` (up to 30 KB; despite the name, it replaces the default - see the best practice below) and change the Bedrock model without building SNS/S3/Lambda infrastructure. Full self-managed is only needed when you require a custom output schema, non-Bedrock models, or external database integration. Overrides also cost less per stored record ($0.25 vs $0.75). _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-custom-strategy.html_
 
-- **`appendToPrompt` REPLACES the default system prompt entirely — always copy the full base prompt, then append your domain lines** — Despite the parameter name, the official docs state: "The content of `appendToPrompt` replaces the default instructions in the system prompt." The base extraction/consolidation prompts contain critical logic (schema definitions, role instructions, output constraints). To customise safely: retrieve the full base prompt text for your strategy type (see the system-prompt pages linked from the official docs), append your domain-specific lines, and pass the complete combined text as `appendToPrompt`. Never pass only your new lines — this discards the base logic and will silently corrupt the LTM pipeline. Also never rename consolidation operations (`AddMemory`, `UpdateMemory`) or attempt to modify the output schema. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-custom-strategy.html_
+- **`appendToPrompt` REPLACES the default system prompt entirely - always copy the full base prompt, then append your domain lines** - Despite the parameter name, the official docs state: "The content of `appendToPrompt` replaces the default instructions in the system prompt." The base extraction/consolidation prompts contain critical logic (schema definitions, role instructions, output constraints). To customise safely: retrieve the full base prompt text for your strategy type (see the system-prompt pages linked from the official docs), append your domain-specific lines, and pass the complete combined text as `appendToPrompt`. Never pass only your new lines - this discards the base logic and will silently corrupt the LTM pipeline. Also never rename consolidation operations (`AddMemory`, `UpdateMemory`) or attempt to modify the output schema. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-custom-strategy.html_
 
-- **Use validation constraints on LTM metadata schema keys for consistent filter matching** — Without `allowedValues`, the LLM may produce `'High'`, `'high'`, `'HIGH'` for the same concept, breaking filter equality checks. Define `stringValidation.allowedValues` for `STRING` keys (max 10 values, each max 256 chars), `stringListValidation` for `STRINGLIST`, and `numberValidation.minValue/maxValue` for `NUMBER`. The `definition` field should be specific and descriptive. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-memory-metadata.html_
+- **Use validation constraints on LTM metadata schema keys for consistent filter matching** - Without `allowedValues`, the LLM may produce `'High'`, `'high'`, `'HIGH'` for the same concept, breaking filter equality checks. Define `stringValidation.allowedValues` for `STRING` keys (max 10 values, each max 256 chars), `stringListValidation` for `STRINGLIST`, and `numberValidation.minValue/maxValue` for `NUMBER`. The `definition` field should be specific and descriptive. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-memory-metadata.html_
 
-- **Use `RetrieveMemoryRecords` (semantic search) for context injection; use `ListMemoryRecords` for browse/audit; optionally filter by `memoryStrategyId`** — `RetrieveMemoryRecords` performs vector similarity search, ideal for finding top-K most relevant facts at inference time. You can scope it to a specific strategy with the optional `memoryStrategyId` parameter. `ListMemoryRecords` does no semantic ranking — use it for auditing or backfill. `topK` default is 10, max 100; note that `topK` is a **per-page limit** — paginate through all results using `nextToken` when you need more than one page. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-retrieve-records.html_
+- **Use `RetrieveMemoryRecords` (semantic search) for context injection; use `ListMemoryRecords` for browse/audit; optionally filter by `memoryStrategyId`** - `RetrieveMemoryRecords` performs vector similarity search, ideal for finding top-K most relevant facts at inference time. You can scope it to a specific strategy with the optional `memoryStrategyId` parameter. `ListMemoryRecords` does no semantic ranking - use it for auditing or backfill. `topK` default is 10, max 100; note that `topK` is a **per-page limit** - paginate through all results using `nextToken` when you need more than one page. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-retrieve-records.html_
 
-- **Use Memory Record Streaming instead of polling when building downstream workflows triggered by LTM changes** — Polling `ListMemoryRecords` is expensive and introduces latency. Kinesis streaming delivers push events in real time, enabling event-driven pipelines, data lake ingestion, and audit trails. Verify the `StreamingEnabled` test event is received after creating the memory. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-record-streaming.html_
+- **Use Memory Record Streaming instead of polling when building downstream workflows triggered by LTM changes** - Polling `ListMemoryRecords` is expensive and introduces latency. Kinesis streaming delivers push events in real time, enabling event-driven pipelines, data lake ingestion, and audit trails. Verify the `StreamingEnabled` test event is received after creating the memory. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-record-streaming.html_
 
-- **Use LTM for personal user context and RAG (Bedrock Knowledge Bases) for authoritative factual content — they are complementary** — LTM answers "who is the user and what happened before". RAG answers "what do trusted sources say now". Mixing them gives agents both personalization and factual grounding. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-ltm-rag.html_
+- **Use LTM for personal user context and RAG (Bedrock Knowledge Bases) for authoritative factual content - they are complementary** - LTM answers "who is the user and what happened before". RAG answers "what do trusted sources say now". Mixing them gives agents both personalization and factual grounding. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-ltm-rag.html_
 
-- **Set event expiration to match your compliance requirements, not the maximum** — Raw STM events can be retained from 7 to 365 days (default 90). Storing raw conversations longer than needed increases cost and attack surface. Once LTM records are extracted, the full event history is often not needed for agent personalization. The official example uses 30 days. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-create-a-memory-store.html_
+- **Set event expiration to match your compliance requirements, not the maximum** - Raw STM events can be retained from 7 to 365 days (default 90). Storing raw conversations longer than needed increases cost and attack surface. Once LTM records are extracted, the full event history is often not needed for agent personalization. The official example uses 30 days. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-create-a-memory-store.html_
 
-- **Monitor token quota for built-in strategy LTM extraction; request increases before going to production** — Built-in strategies have a quota of 150,000 tokens/min for LTM extraction (adjustable). Episodic strategies have an additional per-session limit of 50,000 tokens/min (not adjustable). For built-in with overrides, your Bedrock account quotas apply — throttling causes ingestion failures. Monitor the `TokenCount` CloudWatch metric in the `Bedrock-AgentCore` namespace. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html_
+- **Monitor token quota for built-in strategy LTM extraction; request increases before going to production** - Built-in strategies have a quota of 150,000 tokens/min for LTM extraction (adjustable). Episodic strategies have an additional per-session limit of 50,000 tokens/min (not adjustable). For built-in with overrides, your Bedrock account quotas apply - throttling causes ingestion failures. Monitor the `TokenCount` CloudWatch metric in the `Bedrock-AgentCore` namespace. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html_
 
-- **Plan your indexed key budget carefully before creating the memory** — A memory resource supports up to 10 indexed keys total; they cannot be removed once added, and adding a new key does not backfill existing records. Declare at most the 3–5 filter dimensions you truly need. Keys in the `metadataSchema` but not in `indexedKeys` are visible on records but cannot be used in filter expressions. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-memory-metadata.html_
+- **Plan your indexed key budget carefully before creating the memory** - A memory resource supports up to 10 indexed keys total; they cannot be removed once added, and adding a new key does not backfill existing records. Declare at most the 3–5 filter dimensions you truly need. Keys in the `metadataSchema` but not in `indexedKeys` are visible on records but cannot be used in filter expressions. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-memory-metadata.html_
 
 ---
 
 ## Code
 
-### Create memory resource with all 3 common built-in strategies (Boto3 control plane) — poll until ACTIVE
+### Create memory resource with all 3 common built-in strategies (Boto3 control plane) - poll until ACTIVE
 
 ```python
 import boto3
@@ -230,7 +230,7 @@ import time
 
 # Control plane client (resource lifecycle)
 control_client = boto3.client('bedrock-agentcore-control', region_name='us-east-1')
-# Data plane client (events and records) — separate client required
+# Data plane client (events and records) - separate client required
 data_client = boto3.client('bedrock-agentcore', region_name='us-east-1')
 
 # Create the memory resource with defined strategies
@@ -272,7 +272,7 @@ while True:
         break
     elif status == 'FAILED':
         raise Exception(f"Memory creation FAILED: {mem_status['memory'].get('failureReason')}")
-    print(f'Status: {status} — waiting...')
+    print(f'Status: {status} - waiting...')
     time.sleep(10)
 ```
 
@@ -323,7 +323,7 @@ data_client.create_event(
         {
             'conversational': {
                 'role': 'ASSISTANT',
-                'content': {'text': 'Noted — I will remember your preference for FedEx.'}
+                'content': {'text': 'Noted - I will remember your preference for FedEx.'}
             }
         }
     ]
@@ -371,7 +371,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-cu
 
 ---
 
-### Semantic search on long-term memory records (RetrieveMemoryRecords) — exact namespace and prefix search
+### Semantic search on long-term memory records (RetrieveMemoryRecords) - exact namespace and prefix search
 
 ```python
 import boto3
@@ -397,13 +397,13 @@ pref_response = data_client.retrieve_memory_records(
     }
 )
 for record in pref_response.get('memoryRecordSummaries', []):
-    # score is cosine similarity (NOT a percentage) — field name is 'score' per MemoryRecordSummary API
+    # score is cosine similarity (NOT a percentage) - field name is 'score' per MemoryRecordSummary API
     print(f"Score: {record.get('score')} | {record.get('content')}")
 
 # Example 2: Retrieve across all sessions for an actor (namespacePath prefix search)
 issue_response = data_client.retrieve_memory_records(
     memoryId=memory_id,
-    namespacePath=f'/summaries/{actor_id}/',  # prefix match — all sessions
+    namespacePath=f'/summaries/{actor_id}/',  # prefix match - all sessions
     searchCriteria={
         'searchQuery': 'What problems did the user report with their orders?',
         'topK': 10
@@ -453,7 +453,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term
 
 ---
 
-### Strands Agent with short-term memory (STM only) — no retrieval config
+### Strands Agent with short-term memory (STM only) - no retrieval config
 
 ```python
 # pip install bedrock-agentcore strands-agents
@@ -561,7 +561,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/strands-s
 
 ---
 
-### Episodic memory strategy configuration (Boto3) — requires separate reflection namespaceTemplates
+### Episodic memory strategy configuration (Boto3) - requires separate reflection namespaceTemplates
 
 ```python
 import boto3
@@ -768,7 +768,7 @@ _Source: https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagen
 
 ---
 
-### IAM policy for agent data plane — create events and retrieve LTM records with namespace restriction
+### IAM policy for agent data plane - create events and retrieve LTM records with namespace restriction
 
 ```json
 {
@@ -894,7 +894,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-in
 
 ---
 
-### AgentCore SDK (bedrock-agentcore) — MemoryClient and MemorySessionManager for pure Python agents
+### AgentCore SDK (bedrock-agentcore) - MemoryClient and MemorySessionManager for pure Python agents
 
 ```python
 from bedrock_agentcore.memory import MemoryClient
@@ -931,7 +931,7 @@ client.create_event(
 # Wait for async LTM extraction
 time.sleep(60)
 
-# Semantic search (retrieve_memories) — namespace must match strategy template
+# Semantic search (retrieve_memories) - namespace must match strategy template
 memories = client.retrieve_memories(
     memory_id=memory.get('id'),
     namespace='/summaries/User84/OrderSupportSession1/',
@@ -940,7 +940,7 @@ memories = client.retrieve_memories(
 
 # Low-level session manager (for multi-turn incremental writes)
 # MemorySessionManager takes memory_id; actor_id/session_id are passed to each method call.
-# There is no create_memory_session factory — methods are invoked directly on the manager.
+# There is no create_memory_session factory - methods are invoked directly on the manager.
 session_mgr = MemorySessionManager(memory_id=memory.get('id'), region_name='us-east-1')
 
 # Add turns individually
@@ -981,8 +981,8 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore
 | `namespaceTemplates` (strategy config) | List of namespace path templates for a strategy. Must start and end with `/`. Supported variables: `{actorId}`, `{sessionId}`, `{memoryStrategyId}`. In IAM condition keys, paths are expressed WITHOUT a leading slash. | `['/users/{actorId}/preferences/']` |
 | `MEMORY_<NAME>_ID` (environment variable) | After `agentcore deploy`, each memory resource automatically injects this env var into the agent runtime. `<NAME>` is the memory name uppercased with underscores. Strands and AgentCore SDK integrations should read this variable instead of hardcoding the ID. | `MEMORY_MYAGENTMEMORY_ID=mem-xxxxxxxxxx` |
 | `topK` (RetrieveMemoryRecords `searchCriteria`) | Per-page limit on semantically relevant LTM records returned. `topK` is a **per-page limit** (max 100); use `nextToken` in the response to paginate through additional pages. | Default: 10. Max: 100 |
-| `top_k` / `relevance_score` (RetrievalConfig — Strands) | Per-namespace retrieval settings in `AgentCoreMemoryConfig`. `relevance_score` is the minimum cosine similarity threshold; records below this score are filtered out. | `top_k` default: 10 (range 1–1000). `relevance_score` default: 0.2 (range 0.0–1.0) |
-| `batch_size` (AgentCoreMemoryConfig — Strands) | Number of Strands messages to buffer before sending to AgentCore. `batch_size=1` sends immediately; `batch_size>1` buffers. Always use context manager or `close()` with `batch_size>1`. | Default: 1. Max: 100 |
+| `top_k` / `relevance_score` (RetrievalConfig - Strands) | Per-namespace retrieval settings in `AgentCoreMemoryConfig`. `relevance_score` is the minimum cosine similarity threshold; records below this score are filtered out. | `top_k` default: 10 (range 1–1000). `relevance_score` default: 0.2 (range 0.0–1.0) |
+| `batch_size` (AgentCoreMemoryConfig - Strands) | Number of Strands messages to buffer before sending to AgentCore. `batch_size=1` sends immediately; `batch_size>1` buffers. Always use context manager or `close()` with `batch_size>1`. | Default: 1. Max: 100 |
 | `indexedKeys` (CreateMemory) | Indexed metadata keys for LTM record filtering. Types: `STRING`, `NUMBER`, `STRINGLIST`. Key pattern: `^[a-zA-Z0-9\s._:/=+@-]*$` (max 128 chars). Max 10 indexed keys per memory. Cannot be removed once added. Does not backfill existing records. | `[{"key": "priority", "type": "STRING"}, {"key": "tags", "type": "STRINGLIST"}]` |
 | `metadataFilters` (RetrieveMemoryRecords / ListMemoryRecords) | Up to 5 AND-combined filter expressions on indexed keys. `STRING` supports `StringEquals`/`StringNotEquals`; `STRINGLIST` supports `ContainsAny`/`ContainsAll`; `NUMBER` supports `NumberGreaterThan`/`LessThan` etc.; `dateTimeValue` system fields support `BEFORE`/`AFTER`. | max 5 filters, AND logic only |
 | `messageCount` / `tokenCount` / `idleSessionTimeout` (self-managed `triggerConditions`) | Trigger conditions for self-managed strategies. First to fire wins. `messageCount`: N conversational turns. `tokenCount`: N tokens in the window. `idleSessionTimeout`: minutes of inactivity. | `messageCount: 6, tokenCount: 1000, idleSessionTimeout: 30` |
@@ -993,9 +993,9 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore
 | CreateEvent TPS limits | Account-wide: 10 TPS. Per-actor/per-session with conversational payloads: 5 TPS (not adjustable). Per-actor/per-session without conversational payloads: 10 TPS (not adjustable). Max 100 messages per call, max 100 KB per message, max 10 MB per event. | 10 TPS account-wide (adjustable); 5 TPS per-actor/session with conversational payload (not adjustable) |
 | RetrieveMemoryRecords / ListMemoryRecords TPS | Both operations have a default quota of 30 TPS per account per region. Adjustable via Service Quotas. | 30 TPS (adjustable) |
 | LTM extraction token quota (built-in strategies) | Maximum tokens per minute for LTM extraction using built-in strategies. Monitor via `TokenCount` CloudWatch metric in `Bedrock-AgentCore` namespace. Episodic strategy has an additional fixed 50,000 tokens/min per-session limit. | 150,000 tokens/min (adjustable). Episodic per-session: 50,000 tokens/min (not adjustable) |
-| IAM Actions — control plane | `CreateMemory` (requires `iam:PassRole` when using execution roles), `UpdateMemory`, `GetMemory`, `DeleteMemory`, `ListMemories`. In IAM policy Action field the prefix is `bedrock-agentcore` even for control-plane operations. | `bedrock-agentcore:CreateMemory, bedrock-agentcore:GetMemory` |
-| IAM Actions — data plane | `bedrock-agentcore` prefix actions: `CreateEvent` (condition keys: `sessionId`, `actorId`), `RetrieveMemoryRecords` (condition keys: `namespace`, `namespacePath`), `ListMemoryRecords`, `GetMemoryRecord`, `ListEvents`, `GetEvent`, `ListSessions`, `BatchCreateMemoryRecords`, `BatchUpdateMemoryRecords`, `BatchDeleteMemoryRecords`. | `bedrock-agentcore:CreateEvent, bedrock-agentcore:RetrieveMemoryRecords` |
-| IAM Condition Keys (memory-specific) | `bedrock-agentcore:namespace` (`StringEquals`, exact match — WITHOUT leading slash in IAM), `bedrock-agentcore:namespacePath` (`StringLike`, prefix match — WITHOUT leading slash, e.g., `summaries/agent1/*`), `bedrock-agentcore:actorId` (`StringEquals`), `bedrock-agentcore:sessionId` (`StringEquals`), `bedrock-agentcore:KmsKeyArn` (on `CreateMemory`). | `"bedrock-agentcore:namespacePath": "summaries/alice/*"` |
+| IAM Actions - control plane | `CreateMemory` (requires `iam:PassRole` when using execution roles), `UpdateMemory`, `GetMemory`, `DeleteMemory`, `ListMemories`. In IAM policy Action field the prefix is `bedrock-agentcore` even for control-plane operations. | `bedrock-agentcore:CreateMemory, bedrock-agentcore:GetMemory` |
+| IAM Actions - data plane | `bedrock-agentcore` prefix actions: `CreateEvent` (condition keys: `sessionId`, `actorId`), `RetrieveMemoryRecords` (condition keys: `namespace`, `namespacePath`), `ListMemoryRecords`, `GetMemoryRecord`, `ListEvents`, `GetEvent`, `ListSessions`, `BatchCreateMemoryRecords`, `BatchUpdateMemoryRecords`, `BatchDeleteMemoryRecords`. | `bedrock-agentcore:CreateEvent, bedrock-agentcore:RetrieveMemoryRecords` |
+| IAM Condition Keys (memory-specific) | `bedrock-agentcore:namespace` (`StringEquals`, exact match - WITHOUT leading slash in IAM), `bedrock-agentcore:namespacePath` (`StringLike`, prefix match - WITHOUT leading slash, e.g., `summaries/agent1/*`), `bedrock-agentcore:actorId` (`StringEquals`), `bedrock-agentcore:sessionId` (`StringEquals`), `bedrock-agentcore:KmsKeyArn` (on `CreateMemory`). | `"bedrock-agentcore:namespacePath": "summaries/alice/*"` |
 | CloudWatch namespace for metrics | AgentCore Memory emits metrics under the `Bedrock-AgentCore` CloudWatch namespace. Key metrics: `CreateEvent` Invocations/Latency/Errors, `RetrieveMemoryRecord` Invocations/Latency/Errors, `TokenCount` (extraction token usage), extraction/consolidation `NumberOfMemoryRecords` per strategy. | Namespace: `Bedrock-AgentCore` |
 | Memory resource ARN format | Resource ARN pattern for IAM policies targeting a specific memory. | `arn:aws:bedrock-agentcore:{region}:{account-id}:memory/{memory-id}` |
 | Memory pricing | STM: $0.25/1,000 create event requests. LTM storage: $0.75/1,000 records stored/month (built-in); $0.25/1,000 records stored/month (built-in with overrides or self-managed). LTM retrieval: $0.50/1,000 retrieve memory record requests. For built-in with overrides, additional Bedrock model inference charges apply. Billed hourly assuming a 31-day month for storage. | STM: $0.25/1K events; LTM storage: $0.75/$0.25 per 1K records/month; LTM retrieval: $0.50/1K requests |
@@ -1006,13 +1006,13 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore
 
 - **Two separate Boto3 clients are required**: `bedrock-agentcore-control` for resource management (`CreateMemory`, `UpdateMemory`) and `bedrock-agentcore` for data operations (`CreateEvent`, `RetrieveMemoryRecords`). Using the wrong client will result in `Unknown service` errors.
 
-- **LTM extraction is asynchronous** — events written via `CreateEvent` are NOT immediately available in `RetrieveMemoryRecords`. The official example uses `time.sleep(60)` before querying. Do not write and immediately read LTM in the same code path.
+- **LTM extraction is asynchronous** - events written via `CreateEvent` are NOT immediately available in `RetrieveMemoryRecords`. The official example uses `time.sleep(60)` before querying. Do not write and immediately read LTM in the same code path.
 
-- **Only events created AFTER a strategy becomes `ACTIVE` are processed for LTM**. If you add a strategy to an existing memory via `UpdateMemory`, all historical events are ignored — only new events trigger extraction.
+- **Only events created AFTER a strategy becomes `ACTIVE` are processed for LTM**. If you add a strategy to an existing memory via `UpdateMemory`, all historical events are ignored - only new events trigger extraction.
 
-- **Memory creation itself is asynchronous** — you must poll `GetMemory` until `status == 'ACTIVE'` (2–3 minutes) before writing events or the memory may silently ignore events or return errors. Use the SDK helper `create_memory_and_wait()` to avoid polling boilerplate.
+- **Memory creation itself is asynchronous** - you must poll `GetMemory` until `status == 'ACTIVE'` (2–3 minutes) before writing events or the memory may silently ignore events or return errors. Use the SDK helper `create_memory_and_wait()` to avoid polling boilerplate.
 
-- **Only `conversational` payload type flows into LTM extraction**. `blob` payloads are stored in STM but are never processed by memory strategies. LangGraph `AgentCoreMemorySaver` uses blob payloads for state persistence — so checkpointed state does NOT trigger LTM extraction.
+- **Only `conversational` payload type flows into LTM extraction**. `blob` payloads are stored in STM but are never processed by memory strategies. LangGraph `AgentCoreMemorySaver` uses blob payloads for state persistence - so checkpointed state does NOT trigger LTM extraction.
 
 - **Event metadata (attached to STM events) is NOT encrypted** with customer-managed KMS. Do not store sensitive PII or secrets in event metadata fields.
 
@@ -1022,9 +1022,9 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore
 
 - **Only one Strands agent per session is supported** with `AgentCoreMemorySessionManager`. Running two agents with the same `session_id` against the same memory is not supported.
 
-- **`appendToPrompt` REPLACES (not appends to) the default system prompt** — despite the parameter name, the official docs confirm it replaces the default instructions entirely. Always pass the complete combined text (base prompt + your domain additions). Also NEVER rename the consolidation operations `AddMemory` or `UpdateMemory` — this silently breaks the LTM pipeline. The output schema is also not editable in built-in with overrides mode.
+- **`appendToPrompt` REPLACES (not appends to) the default system prompt** - despite the parameter name, the official docs confirm it replaces the default instructions entirely. Always pass the complete combined text (base prompt + your domain additions). Also NEVER rename the consolidation operations `AddMemory` or `UpdateMemory` - this silently breaks the LTM pipeline. The output schema is also not editable in built-in with overrides mode.
 
-- **The relevance score returned by `RetrieveMemoryRecords` is a cosine similarity value, NOT a percentage**. The field is named `score` on each `MemoryRecordSummary` object (per the API type definition — not `relevanceScore`). Values near 0.2 are often already highly relevant for well-formed queries.
+- **The relevance score returned by `RetrieveMemoryRecords` is a cosine similarity value, NOT a percentage**. The field is named `score` on each `MemoryRecordSummary` object (per the API type definition - not `relevanceScore`). Values near 0.2 are often already highly relevant for well-formed queries.
 
 - **Namespace templates must start AND end with `/`**. However, IAM condition key values for `bedrock-agentcore:namespace` and `bedrock-agentcore:namespacePath` are expressed WITHOUT a leading slash (official docs show `summaries/agent1/` and `summaries/agent1/*`).
 
@@ -1032,7 +1032,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore
 
 - **Self-managed strategy SLA is shared between AgentCore and your custom pipeline**. Use FIFO SNS topics when session ordering matters (e.g., for summarization). Set S3 lifecycle policies to auto-delete processed payloads.
 
-- **Memory Record Streaming requires a `memoryExecutionRoleArn`** with `kinesis:PutRecords` + `kinesis:DescribeStream`. For custom strategies also add `bedrock:InvokeModel`. A `StreamingEnabled` validation event is published on memory creation — if your consumer does not receive it, permissions are wrong.
+- **Memory Record Streaming requires a `memoryExecutionRoleArn`** with `kinesis:PutRecords` + `kinesis:DescribeStream`. For custom strategies also add `bedrock:InvokeModel`. A `StreamingEnabled` validation event is published on memory creation - if your consumer does not receive it, permissions are wrong.
 
 - **The per-actor/per-session limit for `CreateEvent` with conversational payloads is 5 TPS and is NOT adjustable**. For high-frequency, concurrent multi-user agents, design your session architecture to stay within this limit.
 
@@ -1044,35 +1044,35 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore
 
 ## Official sources
 
-- [AgentCore Memory — Developer Guide (root)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory.html) — Primary entry point; links to all sub-topics on memory types, strategies, and examples
-- [Memory Types (Short-term and Long-term)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-types.html) — Explains STM (raw events per session) vs LTM (asynchronously extracted insights); includes API names
-- [Get Started with AgentCore Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-get-started.html) — Step-by-step quickstart: AgentCore CLI, Boto3, AgentCore SDK; installs, create memory, write events, retrieve records
-- [Memory Strategies Overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-strategies.html) — Compares built-in (higher cost, no infra), built-in with overrides (customized prompts/model, lower cost), and self-managed (full custom, lowest cost) strategies
-- [Built-in Memory Strategies](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/built-in-strategies.html) — Describes the 4 built-in strategies: Semantic, UserPreference, Summary, Episodic; extraction/consolidation/reflection steps
-- [Configure Built-in Strategies (with Boto3 examples)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-configuring-built-in-strategies.html) — Full Boto3 create_memory code for each of the 4 built-in strategies with namespaceTemplates
-- [Memory Organization — Namespaces, Actors, Sessions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-organization.html) — Namespace templates, hierarchy levels, IAM condition-key based access restriction per namespace
-- [Create an AgentCore Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-create-a-memory-store.html) — Console, CLI, and SDK creation paths; event retention, KMS, strategies
-- [Use Short-term Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-memory-short-term.html) — Links to CreateEvent, GetEvent, ListEvents, DeleteEvent operations
-- [Create an Event (STM)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/short-term-create-event.html) — Payload types (conversational, blob), event branching with branch.rootEventId and branch.name
-- [Enable Long-term Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-enabling-long-term-memory.html) — Creating new memory with strategies and adding strategies to existing memory via update_memory
-- [Save and Retrieve Insights (LTM)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-saving-and-retrieving-insights.html) — Full AgentCore SDK example: add_turns, search_long_term_memories with namespace and namespace_path
-- [Retrieve Memory Records (RetrieveMemoryRecords API)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-retrieve-records.html) — Required params: memoryId, namespace/namespacePath, searchCriteria; response: relevance score (cosine similarity). Optional param: memoryStrategyId for strategy-scoped search
-- [Customize a Built-in Strategy or Create Your Own](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-custom-strategy.html) — Built-in with overrides: appendToPrompt, model selection, which steps are overridable per strategy; do not rename AddMemory/UpdateMemory consolidation operations
-- [Self-managed Strategy](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-self-managed-strategies.html) — SNS + S3 trigger architecture, trigger conditions (message count, token count, idle timeout), BatchCreateMemoryRecords; IAM role requires s3:PutObject + sns:Publish
-- [Structured Metadata for Long-term Memories](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-memory-metadata.html) — Indexed keys (up to 10 per memory), metadata schema per strategy, LLM extraction, filter operators (up to 5 AND-combined), quotas; system fields x-amz-agentcore-memory-createdAt/updatedAt always available
-- [Memory Record Streaming (Kinesis)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-record-streaming.html) — Push-based Kinesis delivery for LTM record lifecycle events: MemoryRecordCreated/Updated/Deleted schemas; METADATA_ONLY or FULL_CONTENT level
-- [Best Practices (official)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/best-practices.html) — Encryption (KMS), memory poisoning / prompt injection threats, least-privilege IAM; input validation with guardrails is customer responsibility
-- [Customer Support Scenario (full end-to-end code)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-customer-scenario.html) — 6-step walkthrough with all Boto3 code: create, start session, capture events, retrieve STM and LTM; includes 60-second wait for async extraction
-- [Strands Agents SDK Memory Integration (official docs)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/strands-sdk-memory.html) — AgentCoreMemoryConfig, AgentCoreMemorySessionManager, MemoryClient, batch_size, context manager usage; pip install bedrock-agentcore strands-agents
-- [LangChain / LangGraph Integration](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-integrate-lang.html) — AgentCoreMemorySaver (checkpointer, STM via blob) and AgentCoreMemoryStore (LTM search); package langgraph-checkpoint-aws; uses actor_id + thread_id in RunnableConfig
-- [Amazon Bedrock AgentCore SDK (Python) Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-sdk-memory.html) — MemoryClient higher-level API: create_memory, create_memory_and_wait, create_event (takes messages as list of tuples), retrieve_memories
-- [IAM Actions, Resources, and Condition Keys for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockagentcore.html) — Full IAM action list with service prefix bedrock-agentcore; condition keys sessionId, actorId, namespace, KmsKeyArn
-- [CDK Memory Construct (aws-cdk-lib.aws_bedrockagentcore.Memory)](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagentcore.Memory.html) — TypeScript/Python CDK construct; grant* methods, metric* methods, MemoryProps, addMemoryStrategy
-- [Compare LTM with RAG](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-ltm-rag.html) — When to use LTM vs Knowledge Bases (RAG): personal context vs authoritative current facts
-- [Boto3 bedrock-agentcore-control client reference](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-agentcore-control.html) — Control plane: CreateMemory, UpdateMemory, GetMemory, DeleteMemory, ListMemories
-- [Boto3 bedrock-agentcore client reference](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-agentcore.html) — Data plane: CreateEvent, GetEvent, ListEvents, ListSessions, RetrieveMemoryRecords, ListMemoryRecords, GetMemoryRecord, BatchCreateMemoryRecords, BatchUpdateMemoryRecords, BatchDeleteMemoryRecords
-- [AgentCore Memory Service Quotas](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) — All TPS limits: CreateEvent 10 TPS (account), 5 TPS per-actor/session; RetrieveMemoryRecords 30 TPS; ListMemoryRecords 30 TPS; max 6 strategies per memory; max 150 memories per region; max 100 messages per CreateEvent
-- [AgentCore Memory Pricing](https://aws.amazon.com/bedrock/agentcore/pricing/) — STM $0.25/1,000 events; LTM storage $0.75/1,000 records/month (built-in), $0.25/1,000 records/month (built-in with overrides or self-managed); LTM retrieval $0.50/1,000 requests
-- [Amazon Bedrock Capacity for Built-in with Overrides Strategies](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-capacity.html) — Bedrock model usage for custom strategies is attributed to and billed in your own account; throttling from Bedrock quotas can cause ingestion failures
-- [AgentCore Samples Repository (GitHub)](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/01-tutorials) — Runnable tutorial notebooks for memory quickstart and end-to-end scenarios
-- [bedrock-agentcore-sdk-python (Strands integration source)](https://github.com/aws/bedrock-agentcore-sdk-python/tree/main/src/bedrock_agentcore/memory/integrations/strands) — Source for AgentCoreMemorySessionManager, AgentCoreMemoryConfig, RetrievalConfig classes
+- [AgentCore Memory - Developer Guide (root)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory.html) - Primary entry point; links to all sub-topics on memory types, strategies, and examples
+- [Memory Types (Short-term and Long-term)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-types.html) - Explains STM (raw events per session) vs LTM (asynchronously extracted insights); includes API names
+- [Get Started with AgentCore Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-get-started.html) - Step-by-step quickstart: AgentCore CLI, Boto3, AgentCore SDK; installs, create memory, write events, retrieve records
+- [Memory Strategies Overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-strategies.html) - Compares built-in (higher cost, no infra), built-in with overrides (customized prompts/model, lower cost), and self-managed (full custom, lowest cost) strategies
+- [Built-in Memory Strategies](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/built-in-strategies.html) - Describes the 4 built-in strategies: Semantic, UserPreference, Summary, Episodic; extraction/consolidation/reflection steps
+- [Configure Built-in Strategies (with Boto3 examples)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-configuring-built-in-strategies.html) - Full Boto3 create_memory code for each of the 4 built-in strategies with namespaceTemplates
+- [Memory Organization - Namespaces, Actors, Sessions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-organization.html) - Namespace templates, hierarchy levels, IAM condition-key based access restriction per namespace
+- [Create an AgentCore Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-create-a-memory-store.html) - Console, CLI, and SDK creation paths; event retention, KMS, strategies
+- [Use Short-term Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-memory-short-term.html) - Links to CreateEvent, GetEvent, ListEvents, DeleteEvent operations
+- [Create an Event (STM)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/short-term-create-event.html) - Payload types (conversational, blob), event branching with branch.rootEventId and branch.name
+- [Enable Long-term Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-enabling-long-term-memory.html) - Creating new memory with strategies and adding strategies to existing memory via update_memory
+- [Save and Retrieve Insights (LTM)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-saving-and-retrieving-insights.html) - Full AgentCore SDK example: add_turns, search_long_term_memories with namespace and namespace_path
+- [Retrieve Memory Records (RetrieveMemoryRecords API)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-retrieve-records.html) - Required params: memoryId, namespace/namespacePath, searchCriteria; response: relevance score (cosine similarity). Optional param: memoryStrategyId for strategy-scoped search
+- [Customize a Built-in Strategy or Create Your Own](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-custom-strategy.html) - Built-in with overrides: appendToPrompt, model selection, which steps are overridable per strategy; do not rename AddMemory/UpdateMemory consolidation operations
+- [Self-managed Strategy](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-self-managed-strategies.html) - SNS + S3 trigger architecture, trigger conditions (message count, token count, idle timeout), BatchCreateMemoryRecords; IAM role requires s3:PutObject + sns:Publish
+- [Structured Metadata for Long-term Memories](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/long-term-memory-metadata.html) - Indexed keys (up to 10 per memory), metadata schema per strategy, LLM extraction, filter operators (up to 5 AND-combined), quotas; system fields x-amz-agentcore-memory-createdAt/updatedAt always available
+- [Memory Record Streaming (Kinesis)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-record-streaming.html) - Push-based Kinesis delivery for LTM record lifecycle events: MemoryRecordCreated/Updated/Deleted schemas; METADATA_ONLY or FULL_CONTENT level
+- [Best Practices (official)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/best-practices.html) - Encryption (KMS), memory poisoning / prompt injection threats, least-privilege IAM; input validation with guardrails is customer responsibility
+- [Customer Support Scenario (full end-to-end code)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-customer-scenario.html) - 6-step walkthrough with all Boto3 code: create, start session, capture events, retrieve STM and LTM; includes 60-second wait for async extraction
+- [Strands Agents SDK Memory Integration (official docs)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/strands-sdk-memory.html) - AgentCoreMemoryConfig, AgentCoreMemorySessionManager, MemoryClient, batch_size, context manager usage; pip install bedrock-agentcore strands-agents
+- [LangChain / LangGraph Integration](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-integrate-lang.html) - AgentCoreMemorySaver (checkpointer, STM via blob) and AgentCoreMemoryStore (LTM search); package langgraph-checkpoint-aws; uses actor_id + thread_id in RunnableConfig
+- [Amazon Bedrock AgentCore SDK (Python) Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-sdk-memory.html) - MemoryClient higher-level API: create_memory, create_memory_and_wait, create_event (takes messages as list of tuples), retrieve_memories
+- [IAM Actions, Resources, and Condition Keys for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrockagentcore.html) - Full IAM action list with service prefix bedrock-agentcore; condition keys sessionId, actorId, namespace, KmsKeyArn
+- [CDK Memory Construct (aws-cdk-lib.aws_bedrockagentcore.Memory)](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagentcore.Memory.html) - TypeScript/Python CDK construct; grant* methods, metric* methods, MemoryProps, addMemoryStrategy
+- [Compare LTM with RAG](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-ltm-rag.html) - When to use LTM vs Knowledge Bases (RAG): personal context vs authoritative current facts
+- [Boto3 bedrock-agentcore-control client reference](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-agentcore-control.html) - Control plane: CreateMemory, UpdateMemory, GetMemory, DeleteMemory, ListMemories
+- [Boto3 bedrock-agentcore client reference](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/bedrock-agentcore.html) - Data plane: CreateEvent, GetEvent, ListEvents, ListSessions, RetrieveMemoryRecords, ListMemoryRecords, GetMemoryRecord, BatchCreateMemoryRecords, BatchUpdateMemoryRecords, BatchDeleteMemoryRecords
+- [AgentCore Memory Service Quotas](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) - All TPS limits: CreateEvent 10 TPS (account), 5 TPS per-actor/session; RetrieveMemoryRecords 30 TPS; ListMemoryRecords 30 TPS; max 6 strategies per memory; max 150 memories per region; max 100 messages per CreateEvent
+- [AgentCore Memory Pricing](https://aws.amazon.com/bedrock/agentcore/pricing/) - STM $0.25/1,000 events; LTM storage $0.75/1,000 records/month (built-in), $0.25/1,000 records/month (built-in with overrides or self-managed); LTM retrieval $0.50/1,000 requests
+- [Amazon Bedrock Capacity for Built-in with Overrides Strategies](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-capacity.html) - Bedrock model usage for custom strategies is attributed to and billed in your own account; throttling from Bedrock quotas can cause ingestion failures
+- [AgentCore Samples Repository (GitHub)](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/01-tutorials) - Runnable tutorial notebooks for memory quickstart and end-to-end scenarios
+- [bedrock-agentcore-sdk-python (Strands integration source)](https://github.com/aws/bedrock-agentcore-sdk-python/tree/main/src/bedrock_agentcore/memory/integrations/strands) - Source for AgentCoreMemorySessionManager, AgentCoreMemoryConfig, RetrievalConfig classes

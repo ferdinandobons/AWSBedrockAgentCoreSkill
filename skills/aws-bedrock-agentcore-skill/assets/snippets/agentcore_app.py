@@ -1,10 +1,10 @@
 # <!-- Asset of the aws-bedrock-agentcore-skill skill. See ../SKILL.md and ../references/ for detail and official sources. -->
 #
-# BedrockAgentCoreApp entrypoint — respects the /invocations + /ping contract.
+# BedrockAgentCoreApp entrypoint - respects the /invocations + /ping contract.
 #
 # AgentCore Runtime requires ANY hosted agent to expose exactly:
-#   POST /invocations  — receives payload dict, returns JSON or SSE stream
-#   GET  /ping         — returns {"status": "Healthy"|"HealthyBusy",
+#   POST /invocations  - receives payload dict, returns JSON or SSE stream
+#   GET  /ping         - returns {"status": "Healthy"|"HealthyBusy",
 #                                 "time_of_last_update": <unix_seconds>}
 # Both on port 8080, ARM64. BedrockAgentCoreApp handles this automatically.
 #
@@ -36,13 +36,13 @@ from bedrock_agentcore.runtime import BedrockAgentCoreApp
 # ------------------------------------------------------------------
 app = BedrockAgentCoreApp()
 
-# Create your agent — swap in any model or tools here.
+# Create your agent - swap in any model or tools here.
 agent = Agent(
     system_prompt="You are a helpful assistant deployed on Bedrock AgentCore Runtime.",
 )
 
 # ------------------------------------------------------------------
-# Pattern 1 — Synchronous entrypoint (simplest path)
+# Pattern 1 - Synchronous entrypoint (simplest path)
 # ------------------------------------------------------------------
 # Uncomment this block and comment out the async generator below to use it.
 #
@@ -62,13 +62,13 @@ agent = Agent(
 #     return {"result": str(result.message)}
 
 # ------------------------------------------------------------------
-# Pattern 2 — Async generator entrypoint (SSE streaming)
+# Pattern 2 - Async generator entrypoint (SSE streaming)
 # SDK automatically sets Content-Type: text/event-stream.
 # Each yielded value becomes one SSE data chunk.
 # ------------------------------------------------------------------
 @app.entrypoint
 async def agent_invocation(payload, context):
-    """Streaming SSE entrypoint — recommended for interactive agents."""
+    """Streaming SSE entrypoint - recommended for interactive agents."""
     user_message = payload.get(
         "prompt",
         "No prompt found. Send JSON with a 'prompt' key.",
@@ -78,14 +78,14 @@ async def agent_invocation(payload, context):
 
 
 # ------------------------------------------------------------------
-# Pattern 3 — Async background task with /ping HealthyBusy management
+# Pattern 3 - Async background task with /ping HealthyBusy management
 #
 # app.add_async_task(name)    → SDK sets /ping to HealthyBusy
 # app.complete_async_task(id) → SDK reverts /ping to Healthy
 # Without this, a long background job looks idle and the session is
 # terminated after the configured idleRuntimeSessionTimeout (default 15 min).
 # IMPORTANT: omitting time_of_last_update from /ping causes premature
-# termination even when HealthyBusy is set — the SDK fills it in automatically.
+# termination even when HealthyBusy is set - the SDK fills it in automatically.
 # ------------------------------------------------------------------
 @tool
 def start_background_task(duration: int = 5) -> str:
@@ -107,7 +107,7 @@ def start_background_task(duration: int = 5) -> str:
 
 
 # ------------------------------------------------------------------
-# Entry point — starts HTTP server on 0.0.0.0:8080
+# Entry point - starts HTTP server on 0.0.0.0:8080
 # ------------------------------------------------------------------
 if __name__ == "__main__":
     app.run()

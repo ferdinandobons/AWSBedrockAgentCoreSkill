@@ -21,10 +21,10 @@ from strands.models import BedrockModel
 
 model = BedrockModel(
     model_id="anthropic.claude-sonnet-4-20250514-v1:0",
-    region_name="us-east-1",   # explicit — do NOT rely on AWS_REGION
+    region_name="us-east-1",   # explicit - do NOT rely on AWS_REGION
     temperature=0.3,
     max_tokens=4096,
-    streaming=True,            # default True — uses Converse streaming API
+    streaming=True,            # default True - uses Converse streaming API
 )
 
 agent = Agent(
@@ -37,5 +37,5 @@ print(result)               # full response text
 print(result.stop_reason)   # 'end_turn'
 print(result.metrics.get_summary())  # latency, token usage
 
-# Equivalent shorthand — Agent(model="...") auto-creates a BedrockModel:
+# Equivalent shorthand - Agent(model="...") auto-creates a BedrockModel:
 #   agent2 = Agent(model="anthropic.claude-sonnet-4-20250514-v1:0")

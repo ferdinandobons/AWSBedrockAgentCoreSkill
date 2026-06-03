@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "We're a B2B SaaS company and I need to build a customer-support agent on AWS. It has to answer questions from our product manuals (a few hundred PDFs sitting in an S3 bucket) and it needs to remember each customer's past tickets and preferences across separate chat sessions. It'll run behind our web app's backend, so it needs to scale and not cost a fortune when idle. I've never used Bedrock or AgentCore before — what's the right architecture and how do I wire it up? Python.",
+      "prompt": "We're a B2B SaaS company and I need to build a customer-support agent on AWS. It has to answer questions from our product manuals (a few hundred PDFs sitting in an S3 bucket) and it needs to remember each customer's past tickets and preferences across separate chat sessions. It'll run behind our web app's backend, so it needs to scale and not cost a fortune when idle. I've never used Bedrock or AgentCore before - what's the right architecture and how do I wire it up? Python.",
       "expected_output": "Recommends: Bedrock Knowledge Base (RAG over the S3 PDFs) + AgentCore Memory (long-term, per-user namespaces) + a Strands agent on AgentCore Runtime (serverless, scale-to-zero). Uses BedrockModel/Converse (not InvokeModel). Calls out: explicit region, model access before deploy, async LTM extraction, session-to-user mapping in the backend, IAM least-privilege, ARM64 runtime contract. Points to the relevant reference files and official sources. Should not invent APIs.",
       "files": []
     },

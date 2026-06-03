@@ -1,6 +1,6 @@
 # <!-- Asset of the aws-bedrock-agentcore-skill skill. See ../SKILL.md and ../references/ for detail and official sources. -->
 #
-# GraphBuilder with production limits — three patterns in one file:
+# GraphBuilder with production limits - three patterns in one file:
 #   1. Conditional routing via invocation_state (feature-flag / role-based dispatch)
 #   2. Feedback loop with set_max_node_executions + reset_on_revisit
 #   3. Nested Swarm as a graph node (composable multi-agent)
@@ -11,10 +11,10 @@
 #   edges). For AND behaviour in Python, use a conditional edge that checks
 #   GraphState.results for all expected predecessors manually.
 #
-# Production limits checklist (set ALL of these — defaults are unbounded):
-#   set_max_node_executions()  — total node fires across all nodes (critical for loops)
-#   set_execution_timeout()    — wall-clock seconds for the whole graph
-#   reset_on_revisit(True)     — clears agent state when a loop revisits a node
+# Production limits checklist (set ALL of these - defaults are unbounded):
+#   set_max_node_executions()  - total node fires across all nodes (critical for loops)
+#   set_execution_timeout()    - wall-clock seconds for the whole graph
+#   reset_on_revisit(True)     - clears agent state when a loop revisits a node
 #
 # Source: https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/
 #         https://strandsagents.com/docs/api/python/strands.multiagent.graph/
@@ -27,7 +27,7 @@ from strands.multiagent.graph import GraphState
 
 
 # ------------------------------------------------------------------
-# Shared model config — one BedrockModel per agent for clarity
+# Shared model config - one BedrockModel per agent for clarity
 # (you can share a single instance if you prefer)
 # ------------------------------------------------------------------
 def make_model(region: str = "us-east-1") -> BedrockModel:
@@ -40,7 +40,7 @@ def make_model(region: str = "us-east-1") -> BedrockModel:
 
 
 # ==================================================================
-# Pattern 1 — Conditional routing based on invocation_state
+# Pattern 1 - Conditional routing based on invocation_state
 # Use invocation_state to pass config (roles, feature flags, DB
 # connections) without polluting the LLM context.
 # ==================================================================
@@ -69,7 +69,7 @@ routing_builder.set_execution_timeout(120)           # seconds
 routing_builder.set_max_node_executions(10)          # safety cap
 routing_graph = routing_builder.build()
 
-# Invoke — invocation_state is invisible to the model but visible to
+# Invoke - invocation_state is invisible to the model but visible to
 # edge conditions and @tool(context=True) handlers.
 result = routing_graph(
     "Please approve the quarterly budget.",
@@ -79,8 +79,8 @@ print("Routing result:", result.status)
 
 
 # ==================================================================
-# Pattern 2 — Feedback loop (writer → reviewer → writer …)
-# set_max_node_executions is CRITICAL here — without it a loop that
+# Pattern 2 - Feedback loop (writer → reviewer → writer …)
+# set_max_node_executions is CRITICAL here - without it a loop that
 # never returns "approved" runs forever and burns tokens.
 # ==================================================================
 
@@ -129,7 +129,7 @@ print("Feedback loop result:", result2.status)
 
 
 # ==================================================================
-# Pattern 3 — Nested Swarm as a Graph node
+# Pattern 3 - Nested Swarm as a Graph node
 # Each Swarm agent has no session_manager (Python raises ValueError otherwise).
 # session_manager belongs ONLY on the outer Graph/Swarm orchestrator.
 # ==================================================================
@@ -141,7 +141,7 @@ swarm_agents = [
     Agent(name="tech_researcher", model=make_model(),
           system_prompt="Technology research specialist. Hand off to economic_researcher when done."),
     Agent(name="economic_researcher", model=make_model(),
-          system_prompt="Economic research specialist. Do NOT hand off — produce final output."),
+          system_prompt="Economic research specialist. Do NOT hand off - produce final output."),
 ]
 research_swarm = Swarm(
     nodes=swarm_agents,

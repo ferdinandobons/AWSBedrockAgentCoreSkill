@@ -1,6 +1,6 @@
 {
   "name": "aws-agent-skills",
-  "description": "Marketplace for the AWSBedrockAgentCoreSkill skill — official-source best practices for building production AI agents on AWS.",
+  "description": "Marketplace for the AWS Bedrock AgentCore Skill skill - official-source best practices for building production AI agents on AWS.",
   "owner": {
     "name": "Ferdinando Bons"
   },

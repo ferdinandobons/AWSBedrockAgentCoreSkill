@@ -1,10 +1,10 @@
 {
-  "_comment": "Three-statement IAM policy pattern for Bedrock InvokeModel with full cross-region inference coverage: (1) standard on-demand invocation via exact model ARN, (2) geographic/regional cross-region inference profile, (3) global cross-region inference (three required ARN forms). Global CRIS requires ALL three statements — missing even one causes AccessDeniedException. Source: https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html and https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html",
+  "_comment": "Three-statement IAM policy pattern for Bedrock InvokeModel with full cross-region inference coverage: (1) standard on-demand invocation via exact model ARN, (2) geographic/regional cross-region inference profile, (3) global cross-region inference (three required ARN forms). Global CRIS requires ALL three statements - missing even one causes AccessDeniedException. Source: https://docs.aws.amazon.com/bedrock/latest/userguide/global-cross-region-inference.html and https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples.html",
   "Version": "2012-10-17",
   "Statement": [
     {
       "Sid": "InvokeModelDirectOnDemand",
-      "_comment": "Standard on-demand invocation. Scoped to a specific foundation model ARN. Do NOT use arn:aws:bedrock:*::foundation-model/* — that grants access to any model. Replace <MODEL_ID> with e.g. anthropic.claude-sonnet-4-6 or anthropic.claude-opus-4-6-v1.",
+      "_comment": "Standard on-demand invocation. Scoped to a specific foundation model ARN. Do NOT use arn:aws:bedrock:*::foundation-model/* - that grants access to any model. Replace <MODEL_ID> with e.g. anthropic.claude-sonnet-4-6 or anthropic.claude-opus-4-6-v1.",
       "Effect": "Allow",
       "Action": [
         "bedrock:InvokeModel",
@@ -45,7 +45,7 @@
     },
     {
       "Sid": "GrantGlobalCrisInferenceProfileGlobalModelAccess",
-      "_comment": "Statement 3 of 3 required for Global cross-region inference. References the global foundation model ARN (no region, no account — this is intentional). Uses aws:RequestedRegion='unspecified' which is the value AWS sets when a request is globally routed. SCPs must explicitly allow 'unspecified' in their region whitelist or Global CRIS will be blocked.",
+      "_comment": "Statement 3 of 3 required for Global cross-region inference. References the global foundation model ARN (no region, no account - this is intentional). Uses aws:RequestedRegion='unspecified' which is the value AWS sets when a request is globally routed. SCPs must explicitly allow 'unspecified' in their region whitelist or Global CRIS will be blocked.",
       "Effect": "Allow",
       "Action": "bedrock:InvokeModel",
       "Resource": [

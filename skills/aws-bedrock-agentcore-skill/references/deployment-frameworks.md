@@ -1,6 +1,6 @@
-# Deploying Strands Agents — Lambda, Fargate/ECS, EKS
+# Deploying Strands Agents - Lambda, Fargate/ECS, EKS
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -9,12 +9,12 @@
 - [Best practices](#best-practices)
 - [Code](#code)
   - [Lambda handler (no streaming)](#lambda-handler-minimal-strands-agent-no-streaming)
-  - [CDK TypeScript — Lambda with layer and Bedrock permissions](#cdk-typescript--lambda-function-with-custom-layer-and-bedrock-permissions)
+  - [CDK TypeScript - Lambda with layer and Bedrock permissions](#cdk-typescript--lambda-function-with-custom-layer-and-bedrock-permissions)
   - [Lambda Layer ARN format and commands](#lambda-layer-arn-official-strands-format-and-commands)
-  - [MCP on Lambda — context manager (multi-tenant safe)](#mcp-on-lambda--per-invocation-context-manager-multi-tenant-safe-approach)
+  - [MCP on Lambda - context manager (multi-tenant safe)](#mcp-on-lambda--per-invocation-context-manager-multi-tenant-safe-approach)
   - [FastAPI app for Fargate/EKS with streaming](#fastapi-app-for-fargateeks-with-streaming-endpoint)
   - [Dockerfile for Fargate/EKS (Python 3.12, non-root)](#dockerfile-for-fargateeks--python-312-slim-with-non-root-user)
-  - [CDK TypeScript — Fargate HA service with circuit breaker and ALB](#cdk-typescript--fargate-service-with-ha-circuit-breaker-and-alb)
+  - [CDK TypeScript - Fargate HA service with circuit breaker and ALB](#cdk-typescript--fargate-service-with-ha-circuit-breaker-and-alb)
   - [AgentCore SDK Integration (HTTP and streaming)](#agentcore-runtime--sdk-integration-with-bedrockagentcoreapp-http-and-streaming)
   - [AgentCore WebSocket bidirectional (GA)](#agentcore-runtime--bidirectional-websocket-with-bedrockagentcoreapp-ga)
   - [AgentCore FastAPI custom (/invocations and /ping required)](#agentcore-runtime--fastapi-custom-with-invocations-and-ping-required)
@@ -38,10 +38,10 @@
 
 Strands Agents SDK (open source, AWS, **GA since May 2026**) supports four main AWS deployment targets:
 
-1. **AWS Lambda** — serverless, no native response streaming. Handler-based, with official Lambda Layers for easy packaging.
-2. **AWS Fargate / ECS** — container-based with HTTP streaming via `stream_async()`, FastAPI + Docker, CDK-managed.
-3. **Amazon EKS** — Kubernetes with EKS Auto Mode and Pod Identity for Bedrock access; Helm chart provided in the strands-agents/docs GitHub repo.
-4. **Amazon Bedrock AgentCore Runtime** — microVM-isolated sessions, GA in 16 regions (including GovCloud US-West), recommended production target in 2026. For full AgentCore Runtime coverage, see `agentcore-runtime.md`; for IaC details, see `deployment-iac.md`.
+1. **AWS Lambda** - serverless, no native response streaming. Handler-based, with official Lambda Layers for easy packaging.
+2. **AWS Fargate / ECS** - container-based with HTTP streaming via `stream_async()`, FastAPI + Docker, CDK-managed.
+3. **Amazon EKS** - Kubernetes with EKS Auto Mode and Pod Identity for Bedrock access; Helm chart provided in the strands-agents/docs GitHub repo.
+4. **Amazon Bedrock AgentCore Runtime** - microVM-isolated sessions, GA in 16 regions (including GovCloud US-West), recommended production target in 2026. For full AgentCore Runtime coverage, see `agentcore-runtime.md`; for IaC details, see `deployment-iac.md`.
 
 **Maturity:**
 - AgentCore Runtime: **GA** in 16 regions. Container and direct code deployment supported. WebSocket bidirectional: **GA**.
@@ -67,29 +67,29 @@ A Strands agent can be deployed as a monolith (agent loop + tool execution in th
 4. Multi-agent orchestration
 5. Managed AgentCore Runtime / Harness
 
-### BedrockModel — Converse API (not legacy InvokeModel)
+### BedrockModel - Converse API (not legacy InvokeModel)
 
 `BedrockModel` internally uses the Bedrock Converse API (`ConverseStream` for streaming, `Converse` for non-streaming). IAM actions required: `bedrock:InvokeModelWithResponseStream` (for streaming) and `bedrock:InvokeModel` (for non-streaming). Constructor parameters: `model_id`, `temperature`, `top_p`, `max_tokens`, `streaming` (default `True`), `guardrail_id`, `cache_config`, `boto_session`, `region_name`.
 
 ### BedrockAgentCoreApp (SDK Integration)
 
 Class from the `bedrock-agentcore` pip package that wraps a Strands agent as an HTTP service conforming to the AgentCore Runtime contract. Exposes `/invocations` (POST) and `/ping` (GET) on port 8080. Decorators:
-- `@app.entrypoint` — marks the handler function (sync or async generator for streaming)
-- `@app.websocket` — handles bidirectional WebSocket on `/ws`
-- `@app.ping` — custom health check handler
+- `@app.entrypoint` - marks the handler function (sync or async generator for streaming)
+- `@app.websocket` - handles bidirectional WebSocket on `/ws`
+- `@app.ping` - custom health check handler
 
 ### AgentCore Runtime Service Contract
 
 Every container on AgentCore Runtime must expose:
 - `POST /invocations` port 8080 (main handler)
-- `GET /ping` port 8080 (health check — must return `{status: 'Healthy'|'HealthyBusy', time_of_last_update: <unix_timestamp>}`)
+- `GET /ping` port 8080 (health check - must return `{status: 'Healthy'|'HealthyBusy', time_of_last_update: <unix_timestamp>}`)
 - Optional: `GET/WebSocket /ws` port 8080 for bidirectional streaming
 
 Required platform: **linux/arm64**. Supported protocols: HTTP (port 8080), MCP (port 8000), A2A (port 9000), AG-UI (port 8080), WebSocket (port 8080 path `/ws`). Images stored in ECR.
 
 ### Session isolation with microVM
 
-In AgentCore Runtime, each user session runs in a dedicated microVM with 2 vCPU / 8 GB memory and isolated filesystem. After termination the microVM is deallocated and memory sanitized. `runtimeSessionId`: if omitted on the first invoke, AgentCore generates it automatically; if provided by the client, must be at least 33 characters. AgentCore does **not** enforce user-to-session mapping — the client backend is responsible for managing this relationship.
+In AgentCore Runtime, each user session runs in a dedicated microVM with 2 vCPU / 8 GB memory and isolated filesystem. After termination the microVM is deallocated and memory sanitized. `runtimeSessionId`: if omitted on the first invoke, AgentCore generates it automatically; if provided by the client, must be at least 33 characters. AgentCore does **not** enforce user-to-session mapping - the client backend is responsible for managing this relationship.
 
 ### Session Lifecycle in AgentCore Runtime
 
@@ -99,7 +99,7 @@ Three states: **Active** (processing sync requests, commands, or background task
 
 For long tasks: `app.add_async_task(name, metadata)` returns a `task_id`. `app.complete_async_task(task_id)` marks it complete. The `/ping` returns `HealthyBusy` while tasks are active, preventing idle timeout. Alternative: `@app.ping` with custom logic returning `PingStatus.HEALTHY` or `PingStatus.HEALTHY_BUSY`. Sync request timeout: 15 minutes (not modifiable); async job max: 8 hours; streaming max: 60 minutes.
 
-### stream_async() — Async HTTP streaming
+### stream_async() - Async HTTP streaming
 
 Primary method for streaming on Fargate / EKS / AgentCore. Returns an async generator of events. For FastAPI: return `StreamingResponse(generate(), media_type='text/plain')`. **Not natively supported on Lambda**. Events include: `init_event_loop`, `start_event_loop`, `message`, `result`, `force_stop`, `current_tool_use`, `data`. On AgentCore Runtime, `@app.entrypoint async def` + `yield` enables HTTP streaming (max 60 minutes).
 
@@ -111,11 +111,11 @@ Primary method for streaming on Fargate / EKS / AgentCore. Returns an async gene
 
 Context manager that limits conversation history to a fixed number of messages (`window_size`). Essential in production to prevent context window overflow and reduce token costs. Usage: `Agent(conversation_manager=SlidingWindowConversationManager(window_size=10))`. Default Agent retry strategy: `max_attempts=6`, `initial_delay=4s`, `max_delay=240s` (configurable via `retry_strategy` or disabled with `None`).
 
-### SessionManager — Session persistence
+### SessionManager - Session persistence
 
 Strands abstraction for persisting state and conversation history. Built-in options:
-- `FileSessionManager` — local filesystem (development/testing)
-- `S3SessionManager` — S3 bucket (distributed production)
+- `FileSessionManager` - local filesystem (development/testing)
+- `S3SessionManager` - S3 bucket (distributed production)
 
 In multi-agent setups, **only the orchestrator** (Graph/Swarm) must have a session manager, never individual internal agents. Distinct from AgentCore Runtime session persistence (which manages the microVM filesystem, not conversation history).
 
@@ -149,7 +149,7 @@ Up to 5 total configurations per agent runtime. Mount path required: pattern `/m
 
 On EKS Auto Mode, access to Bedrock is configured via Amazon EKS Pod Identity, associating an IAM Role to a Kubernetes ServiceAccount. On EKS Auto Mode this is natively integrated (Pod Identity Agent add-on not required separately). The official strands-agents/docs repo on GitHub contains the ServiceAccount YAML and complete ClusterRoleBinding for the Helm deploy.
 
-### AgentCore Runtime — Versioning and Endpoints
+### AgentCore Runtime - Versioning and Endpoints
 
 Each AgentCore Runtime update creates a new immutable Version (complete config snapshot). The `DEFAULT` endpoint is updated automatically to the latest version. Custom endpoints can be created (e.g., dev, test, prod) pointing to specific versions. Rollback = update endpoint to a previous version. Limits: 10 endpoints per agent, 1000 versions per agent.
 
@@ -157,37 +157,37 @@ Each AgentCore Runtime update creates a new immutable Version (complete config s
 
 ## Best practices
 
-- **Use AgentCore Runtime for new production deployments** — Offers session isolation with microVM (2 vCPU / 8 GB dedicated), automatic scaling to thousands of sessions, consumption-based pricing, sync execution up to 15 min (not modifiable), streaming up to 60 min, async up to 8 hours, and native integration with Memory / Gateway / Identity. GA in 16 regions including GovCloud. Immutable versioning with rollback. Recommended AWS target for production agents in 2026. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html_
+- **Use AgentCore Runtime for new production deployments** - Offers session isolation with microVM (2 vCPU / 8 GB dedicated), automatic scaling to thousands of sessions, consumption-based pricing, sync execution up to 15 min (not modifiable), streaming up to 60 min, async up to 8 hours, and native integration with Memory / Gateway / Identity. GA in 16 regions including GovCloud. Immutable versioning with rollback. Recommended AWS target for production agents in 2026. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html_
 
-- **Prefer Fargate / EKS over Lambda when HTTP streaming is required** — The official Lambda guide explicitly warns: "This Lambda deployment example does not implement response streaming. If you need streaming capabilities, consider using the AWS Fargate deployment approach." Lambda does not support the `stream_async()` pattern natively without specific adapters. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md_
+- **Prefer Fargate / EKS over Lambda when HTTP streaming is required** - The official Lambda guide explicitly warns: "This Lambda deployment example does not implement response streaming. If you need streaming capabilities, consider using the AWS Fargate deployment approach." Lambda does not support the `stream_async()` pattern natively without specific adapters. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md_
 
-- **Explicitly configure the model in production with fixed parameters** — Do not rely on `BedrockModel` defaults. Specify `model_id`, `temperature`, `max_tokens`, `top_p` explicitly. `BedrockModel` internally uses the Converse API (`ConverseStream` / `Converse`). Using the cross-region inference prefix (e.g., `us.`) improves availability. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
+- **Explicitly configure the model in production with fixed parameters** - Do not rely on `BedrockModel` defaults. Specify `model_id`, `temperature`, `max_tokens`, `top_p` explicitly. `BedrockModel` internally uses the Converse API (`ConverseStream` / `Converse`). Using the cross-region inference prefix (e.g., `us.`) improves availability. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
 
-- **Always specify an explicit list of tools in production** — Do not use auto-loading of tools. List only the tools necessary for the use case. Reduces attack surface, improves predictability, and facilitates auditing. Principle of least privilege for tools, parallel to IAM permissions. _Source: https://strandsagents.com/docs/user-guide/deploy/operating-agents-in-production/index.md_
+- **Always specify an explicit list of tools in production** - Do not use auto-loading of tools. List only the tools necessary for the use case. Reduces attack surface, improves predictability, and facilitates auditing. Principle of least privilege for tools, parallel to IAM permissions. _Source: https://strandsagents.com/docs/user-guide/deploy/operating-agents-in-production/index.md_
 
-- **Use SlidingWindowConversationManager to control memory in production** — Without limiting history, long conversations cause context window overflow. `SlidingWindowConversationManager(window_size=10)` keeps only the last N messages. The default Agent retry strategy has `max_attempts=6`; disable it (`retry_strategy=None`) if retry logic is handled elsewhere. _Source: https://strandsagents.com/docs/user-guide/deploy/operating-agents-in-production/index.md_
+- **Use SlidingWindowConversationManager to control memory in production** - Without limiting history, long conversations cause context window overflow. `SlidingWindowConversationManager(window_size=10)` keeps only the last N messages. The default Agent retry strategy has `max_attempts=6`; disable it (`retry_strategy=None`) if retry logic is handled elsewhere. _Source: https://strandsagents.com/docs/user-guide/deploy/operating-agents-in-production/index.md_
 
-- **In multi-agent: session manager only on the orchestrator, never on individual agents** — Strands raises `ValueError` if an agent with `session_manager` is added to a `Graph` or `Swarm`. The orchestrator snapshots and restores the state of each node on each execution; an agent-level session manager would create conflicts. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md_
+- **In multi-agent: session manager only on the orchestrator, never on individual agents** - Strands raises `ValueError` if an agent with `session_manager` is added to a `Graph` or `Swarm`. The orchestrator snapshots and restores the state of each node on each execution; an agent-level session manager would create conflicts. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md_
 
-- **Install Lambda dependencies with the correct target architecture** — For Lambda ARM64 use `--platform manylinux2014_aarch64` in `pip install`. Dependencies for the wrong architecture cause runtime errors at execution. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md_
+- **Install Lambda dependencies with the correct target architecture** - For Lambda ARM64 use `--platform manylinux2014_aarch64` in `pip install`. Dependencies for the wrong architecture cause runtime errors at execution. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md_
 
-- **For MCP on Lambda: use context manager per invocation in multi-tenant environments** — The MCP connection must be opened and closed per invocation in multi-tenant setups. Reuse between invocations (module-level `mcp_client` with `mcp_client.start()`) is possible but risks state leakage between different users. Start with context manager and optimize only if necessary. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md_
+- **For MCP on Lambda: use context manager per invocation in multi-tenant environments** - The MCP connection must be opened and closed per invocation in multi-tenant setups. Reuse between invocations (module-level `mcp_client` with `mcp_client.start()`) is possible but risks state leakage between different users. Start with context manager and optimize only if necessary. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md_
 
-- **Do not perform blocking operations in the main thread in AgentCore Runtime** — The main thread also serves `/ping` health checks. If blocked, ping fails and the platform terminates the session even if work is ongoing. Use separate threading or async for long I/O-bound operations; register tasks with `app.add_async_task()`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html_
+- **Do not perform blocking operations in the main thread in AgentCore Runtime** - The main thread also serves `/ping` health checks. If blocked, ping fails and the platform terminates the session even if work is ongoing. Use separate threading or async for long I/O-bound operations; register tasks with `app.add_async_task()`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html_
 
-- **For production AgentCore deployments: create custom IAM policies instead of BedrockAgentCoreFullAccess** — Official documentation warns that IAM policies created by the AgentCore CLI are for development/testing. For production, create custom policies with least privilege. The execution role requires: ECR (`BatchGetImage`, `GetDownloadUrlForLayer`, `GetAuthorizationToken`), CloudWatch Logs, X-Ray, and `bedrock:InvokeModel` / `bedrock:InvokeModelWithResponseStream`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
+- **For production AgentCore deployments: create custom IAM policies instead of BedrockAgentCoreFullAccess** - Official documentation warns that IAM policies created by the AgentCore CLI are for development/testing. For production, create custom policies with least privilege. The execution role requires: ECR (`BatchGetImage`, `GetDownloadUrlForLayer`, `GetAuthorizationToken`), CloudWatch Logs, X-Ray, and `bedrock:InvokeModel` / `bedrock:InvokeModelWithResponseStream`. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html_
 
-- **Use S3SessionManager for Strands session persistence in distributed environments** — `FileSessionManager` only works on a single instance. In multi-replica Fargate or EKS environments, Strands sessions must be shared. `S3SessionManager` persists to an S3 bucket accessible from all replicas. Distinct from native AgentCore Runtime session persistence (which manages the microVM filesystem). _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md_
+- **Use S3SessionManager for Strands session persistence in distributed environments** - `FileSessionManager` only works on a single instance. In multi-replica Fargate or EKS environments, Strands sessions must be shared. `S3SessionManager` persists to an S3 bucket accessible from all replicas. Distinct from native AgentCore Runtime session persistence (which manages the microVM filesystem). _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md_
 
-- **Fargate: desiredCount >= 2 + circuit breaker rollback + private subnets with NAT** — The reference CDK uses `desiredCount: 2` for high availability, `circuitBreaker: {rollback: true}` for automatic rollback, `assignPublicIp: false` with private subnets. `minHealthyPercent: 100` and `maxHealthyPercent: 200` ensure zero-downtime deployment. `healthCheckGracePeriod`: at least 60 seconds. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/index.md_
+- **Fargate: desiredCount >= 2 + circuit breaker rollback + private subnets with NAT** - The reference CDK uses `desiredCount: 2` for high availability, `circuitBreaker: {rollback: true}` for automatic rollback, `assignPublicIp: false` with private subnets. `minHealthyPercent: 100` and `maxHealthyPercent: 200` ensure zero-downtime deployment. `healthCheckGracePeriod`: at least 60 seconds. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/index.md_
 
-- **Container ARM64 on Fargate / EKS / AgentCore — buildx with --platform linux/arm64** — All official examples use ARM64 for ~20% lower costs compared to x86_64 and better performance for I/O-bound workloads. `docker buildx build --platform linux/arm64`. For ECR push use the `--push` flag. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md_
+- **Container ARM64 on Fargate / EKS / AgentCore - buildx with --platform linux/arm64** - All official examples use ARM64 for ~20% lower costs compared to x86_64 and better performance for I/O-bound workloads. `docker buildx build --platform linux/arm64`. For ECR push use the `--push` flag. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md_
 
-- **Separate app code and dependencies in Lambda (separate layer)** — Keep dependencies in a Lambda Layer separate from application code. Keeps application code small, visible, and editable from the Lambda console, and reduces subsequent deployments when only the code changes. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md_
+- **Separate app code and dependencies in Lambda (separate layer)** - Keep dependencies in a Lambda Layer separate from application code. Keeps application code small, visible, and editable from the Lambda console, and reduces subsequent deployments when only the code changes. _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md_
 
-- **Configure LifecycleConfiguration to optimize cost and availability in AgentCore Runtime** — Default values (`idleTimeout=900s`, `maxLifetime=28800s`) can be adjusted via `LifecycleConfiguration` in `CreateAgentRuntime` / `UpdateAgentRuntime`. For real-time agents with short sessions, reduce `idleTimeout`. For long batch workloads, set `maxLifetime` higher. `idleRuntimeSessionTimeout` must be <= `maxLifetime`. Both in range 60-28800 seconds. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-lifecycle-settings.html_
+- **Configure LifecycleConfiguration to optimize cost and availability in AgentCore Runtime** - Default values (`idleTimeout=900s`, `maxLifetime=28800s`) can be adjusted via `LifecycleConfiguration` in `CreateAgentRuntime` / `UpdateAgentRuntime`. For real-time agents with short sessions, reduce `idleTimeout`. For long batch workloads, set `maxLifetime` higher. `idleRuntimeSessionTimeout` must be <= `maxLifetime`. Both in range 60-28800 seconds. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-lifecycle-settings.html_
 
-- **Use managed session storage for lightweight filesystem persistence on AgentCore Runtime** — Managed session storage (Preview) does not require a VPC and persists the filesystem across stop/resume. Ideal for agents that need to maintain work files, installed dependencies, or local history between sessions. Configure with `filesystemConfigurations: [{sessionStorage: {mountPath: '/mnt/workspace'}}]`. Data expires after 14 days of inactivity and is reset on every version update. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-filesystem-configurations.html_
+- **Use managed session storage for lightweight filesystem persistence on AgentCore Runtime** - Managed session storage (Preview) does not require a VPC and persists the filesystem across stop/resume. Ideal for agents that need to maintain work files, installed dependencies, or local history between sessions. Configure with `filesystemConfigurations: [{sessionStorage: {mountPath: '/mnt/workspace'}}]`. Data expires after 14 days of inactivity and is reset on every version update. _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-filesystem-configurations.html_
 
 ---
 
@@ -216,7 +216,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/i
 
 ---
 
-### CDK TypeScript — Lambda function with custom layer and Bedrock permissions
+### CDK TypeScript - Lambda function with custom layer and Bedrock permissions
 
 ```typescript
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -280,7 +280,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/i
 
 ---
 
-### MCP on Lambda — per-invocation context manager (multi-tenant safe approach)
+### MCP on Lambda - per-invocation context manager (multi-tenant safe approach)
 
 ```python
 from mcp.client.streamable_http import streamablehttp_client
@@ -339,7 +339,7 @@ async def invoke_agent(request: PromptRequest):
     response = agent(request.prompt)
     return PlainTextResponse(content=str(response))
 
-# Streaming endpoint — uses stream_async()
+# Streaming endpoint - uses stream_async()
 @app.post('/agent/stream')
 async def invoke_agent_streaming(request: PromptRequest):
     async def generate():
@@ -369,7 +369,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/
 
 ---
 
-### Dockerfile for Fargate/EKS — Python 3.12 slim with non-root user
+### Dockerfile for Fargate/EKS - Python 3.12 slim with non-root user
 
 ```dockerfile
 FROM public.ecr.aws/docker/library/python:3.12-slim
@@ -399,7 +399,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/
 
 ---
 
-### CDK TypeScript — Fargate service with HA, circuit breaker and ALB
+### CDK TypeScript - Fargate service with HA, circuit breaker and ALB
 
 ```typescript
 import * as ecs from 'aws-cdk-lib/aws-ecs';
@@ -455,7 +455,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/
 
 ---
 
-### AgentCore Runtime — SDK Integration with BedrockAgentCoreApp (HTTP and streaming)
+### AgentCore Runtime - SDK Integration with BedrockAgentCoreApp (HTTP and streaming)
 
 ```python
 from bedrock_agentcore import BedrockAgentCoreApp
@@ -482,7 +482,7 @@ def invoke(payload):
     result = agent(user_message)
     return {"result": result.message}
 
-# Streaming handler (async with yield) — max 60 minutes
+# Streaming handler (async with yield) - max 60 minutes
 @app.entrypoint
 async def invoke_streaming(payload):
     user_message = payload.get("prompt", "No prompt found")
@@ -502,7 +502,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 
 ---
 
-### AgentCore Runtime — Bidirectional WebSocket with BedrockAgentCoreApp (GA)
+### AgentCore Runtime - Bidirectional WebSocket with BedrockAgentCoreApp (GA)
 
 ```python
 from bedrock_agentcore import BedrockAgentCoreApp
@@ -549,7 +549,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-g
 
 ---
 
-### AgentCore Runtime — FastAPI custom with /invocations and /ping required
+### AgentCore Runtime - FastAPI custom with /invocations and /ping required
 
 ```python
 from fastapi import FastAPI, HTTPException
@@ -604,7 +604,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 
 ---
 
-### AgentCore Runtime — Dockerfile ARM64 with uv for fast builds
+### AgentCore Runtime - Dockerfile ARM64 with uv for fast builds
 
 ```dockerfile
 # IMPORTANT: AgentCore Runtime requires linux/arm64
@@ -630,7 +630,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 
 ---
 
-### AgentCore Runtime — Deploy with boto3 (CreateAgentRuntime) with LifecycleConfiguration
+### AgentCore Runtime - Deploy with boto3 (CreateAgentRuntime) with LifecycleConfiguration
 
 ```python
 import boto3
@@ -679,7 +679,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-l
 
 ---
 
-### AgentCore Runtime — Async task and custom ping for long workloads (> 15 min sync)
+### AgentCore Runtime - Async task and custom ping for long workloads (> 15 min sync)
 
 ```python
 import threading
@@ -693,7 +693,7 @@ app = BedrockAgentCoreApp()
 @tool
 def start_background_task(duration: int = 5) -> str:
     """Start a background task for the specified duration."""
-    # Register the task — ping will respond HealthyBusy until it completes
+    # Register the task - ping will respond HealthyBusy until it completes
     task_id = app.add_async_task("background_processing", {"duration": duration})
 
     def background_work():
@@ -725,7 +725,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-l
 
 ---
 
-### Session Management — S3SessionManager for distributed production
+### Session Management - S3SessionManager for distributed production
 
 ```python
 from strands import Agent
@@ -768,7 +768,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-manag
 
 ---
 
-### Session Management — FileSessionManager for local development and multi-agent Graph
+### Session Management - FileSessionManager for local development and multi-agent Graph
 
 ```python
 from strands import Agent
@@ -799,7 +799,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-manag
 
 ---
 
-### IAM Execution Role for AgentCore Runtime — trust policy and minimal permissions
+### IAM Execution Role for AgentCore Runtime - trust policy and minimal permissions
 
 ```json
 // Trust Policy for AgentCore Runtime execution role
@@ -859,7 +859,7 @@ _Source: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-p
 
 ---
 
-### AgentCore CLI — full workflow for scaffolding, local dev and deploy
+### AgentCore CLI - full workflow for scaffolding, local dev and deploy
 
 ```bash
 # Install AgentCore CLI (replaces bedrock-agentcore-starter-toolkit)
@@ -902,7 +902,7 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agen
 
 ---
 
-### AgentCore Runtime — Managed session storage for persistent filesystem (Preview)
+### AgentCore Runtime - Managed session storage for persistent filesystem (Preview)
 
 ```python
 import boto3
@@ -984,33 +984,33 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/
 |------|-------------|-------------------|
 | `bedrock-agentcore` (Python SDK) | PyPI package required for AgentCore SDK Integration. Provides `BedrockAgentCoreApp`, decorators `@app.entrypoint`, `@app.websocket`, `@app.ping`, `add_async_task()`, `complete_async_task()`, `PingStatus`, and `AgentCoreRuntimeClient` for WebSocket client. | `pip install bedrock-agentcore` |
 | `@aws/agentcore` (CLI npm) | AgentCore CLI for scaffolding, local development, and deployment. Supports container and direct code deploy. CDK supported; Terraform coming. Replaces `bedrock-agentcore-starter-toolkit`. Available in 14 regions. | `npm install -g @aws/agentcore` |
-| Lambda timeout | Lambda execution limit. For AI agents consider at least 30 seconds; absolute Lambda maximum is 15 minutes. Agents with complex reasoning may exceed this — prefer Fargate in that case. | `Duration.seconds(30)` — increase to 60-300 for more complex agents |
+| Lambda timeout | Lambda execution limit. For AI agents consider at least 30 seconds; absolute Lambda maximum is 15 minutes. Agents with complex reasoning may exceed this - prefer Fargate in that case. | `Duration.seconds(30)` - increase to 60-300 for more complex agents |
 | Lambda memorySize | Memory allocated to the Lambda function. More memory = proportionally more CPU. 128 MB for simple agents; 512 MB-1 GB for real agents with complex tools. | `128` (example), evaluate `512-1024` for real agents |
 | Lambda architecture | Lambda CPU architecture. ARM64 (Graviton2) has ~20% lower costs and better performance for I/O-bound workloads. Requires dependencies installed for `manylinux2014_aarch64`. | `lambda.Architecture.ARM_64` (recommended) |
 | Fargate task CPU/Memory | Resources allocated to the Fargate task. 256 CPU units (0.25 vCPU) and 512 MB for simple agents; increase for agents with more tools or high concurrency. | `cpu: 256, memoryLimitMiB: 512` |
 | Fargate desiredCount | Number of Fargate service replicas. Minimum 2 for high availability. | `desiredCount: 2` |
 | AgentCore Runtime platform | Required platform for AgentCore Runtime containers. Must be `linux/arm64`. Build with: `docker buildx build --platform linux/arm64` | `linux/arm64` (MANDATORY for container deployment) |
 | AgentCore Runtime port | Port on which the application must run in the AgentCore Runtime container for all HTTP/WebSocket/AG-UI protocols. | `8080` |
-| AgentCore Runtime required endpoints | AgentCore Runtime service contract: `POST /invocations` (main handler) and `GET /ping` on port 8080. `/ping` must return `{status: 'Healthy'|'HealthyBusy', time_of_last_update: <unix_timestamp>}`. WebSocket on `/ws` same port. MCP on port 8000, A2A on port 9000. | `POST /invocations`, `GET /ping` — both required. `/ws` for WebSocket. |
+| AgentCore Runtime required endpoints | AgentCore Runtime service contract: `POST /invocations` (main handler) and `GET /ping` on port 8080. `/ping` must return `{status: 'Healthy'|'HealthyBusy', time_of_last_update: <unix_timestamp>}`. WebSocket on `/ws` same port. MCP on port 8000, A2A on port 9000. | `POST /invocations`, `GET /ping` - both required. `/ws` for WebSocket. |
 | `runtimeSessionId` | Session ID for AgentCore Runtime. OPTIONAL: if omitted on first invoke, AgentCore generates it automatically. If provided by the client, must have at least 33 characters. Use the same ID for all invocations correlated to a conversation. | `str(uuid.uuid4())` or omit for auto-generation |
-| `LifecycleConfiguration.idleRuntimeSessionTimeout` | Timeout in seconds for idle sessions in AgentCore Runtime. Configurable via `LifecycleConfiguration` in `CreateAgentRuntime`/`UpdateAgentRuntime`. Range: 60-28800 seconds. Must be <= `maxLifetime`. | `900` (15 minutes) — increase for conversational workloads |
+| `LifecycleConfiguration.idleRuntimeSessionTimeout` | Timeout in seconds for idle sessions in AgentCore Runtime. Configurable via `LifecycleConfiguration` in `CreateAgentRuntime`/`UpdateAgentRuntime`. Range: 60-28800 seconds. Must be <= `maxLifetime`. | `900` (15 minutes) - increase for conversational workloads |
 | `LifecycleConfiguration.maxLifetime` | Maximum duration of the microVM in seconds. Configurable. Range: 60-28800 seconds. On reaching this limit, compute is terminated but the session remains valid and recreates a new microVM on the next invoke. | `28800` (8 hours) |
-| AgentCore Runtime sync request timeout | Fixed timeout (not modifiable) for synchronous requests on `InvokeAgentRuntime`. | `900` seconds (15 minutes) — fixed, not modifiable |
-| AgentCore Runtime streaming timeout | Maximum duration for streaming connections (HTTP response streaming and WebSocket). | `3600` seconds (60 minutes) — fixed, not modifiable |
+| AgentCore Runtime sync request timeout | Fixed timeout (not modifiable) for synchronous requests on `InvokeAgentRuntime`. | `900` seconds (15 minutes) - fixed, not modifiable |
+| AgentCore Runtime streaming timeout | Maximum duration for streaming connections (HTTP response streaming and WebSocket). | `3600` seconds (60 minutes) - fixed, not modifiable |
 | AgentCore Runtime active sessions quota | Concurrent active sessions per account. Region-specific default quota, increasable via Service Quotas. | `1000` in us-east-1/us-west-2; `500` in other regions |
 | AgentCore Runtime InvokeAgentRuntime TPS | Rate limit for `InvokeAgentRuntime` API. Increasable via Service Quotas. | `25 TPS` per agent per account |
 | AgentCore Runtime Docker image max size | Maximum Docker image size for AgentCore Runtime. Not increasable. | `2 GB` |
 | AgentCore Runtime direct code deploy max size | Maximum zip package size for direct code deployment. | `250 MB` compressed, `750 MB` uncompressed |
 | Session storage filesystem mount path | Mount path for session storage or BYO filesystem in AgentCore Runtime. Must follow pattern `/mnt/<subdir>`. | `/mnt/workspace`, `/mnt/data`, `/mnt/efs` |
-| Session storage idle expiry | Managed session storage data is deleted after this period of session inactivity. | `14 days` — then filesystem is reset |
+| Session storage idle expiry | Managed session storage data is deleted after this period of session inactivity. | `14 days` - then filesystem is reset |
 | AgentCore Runtime session header (HTTP/A2A/AG-UI) | HTTP header to include in subsequent requests for routing to the same microVM (session stickiness). | `X-Amzn-Bedrock-AgentCore-Runtime-Session-Id: <session-id>` |
 | AgentCore Runtime session header (MCP) | Header to include for session stickiness on MCP protocol. | `Mcp-Session-Id: <session-id>` |
 | S3SessionManager IAM permissions | IAM permissions for Strands `S3SessionManager`. The agent's role must have `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:ListBucket` on the sessions bucket. | `s3:GetObject, s3:PutObject, s3:DeleteObject, s3:ListBucket` on `arn:aws:s3:::my-agent-sessions/*` |
 | `SlidingWindowConversationManager` window_size | Maximum number of messages to keep in Strands conversation history. Too low loses context; too high exhausts the model's context window. | `window_size=10` (recommended in production) |
 | `BedrockModel` model_id | Amazon Bedrock model ID. Use the cross-region inference prefix (e.g., `us.`) for better availability. `BedrockModel` internally uses the Converse API (`ConverseStream`/`Converse`). | `us.amazon.nova-premier-v1:0`, `us.anthropic.claude-sonnet-4-20250514-v1:0` |
-| IAM managed policy `BedrockAgentCoreFullAccess` | AWS managed policy for full AgentCore access. DO NOT use in production — create custom policies with least privilege. | Development/testing only, NOT for production |
-| Lambda Layer — Strands Agents (Account ID) | Official Strands Agents layer published from AWS account `856699698935`. Layer version 2 = strands-agents v1.40.0. | `arn:aws:lambda:us-east-1:856699698935:layer:strands-agents-py3_12-x86_64:2` |
-| Agent `retry_strategy` | Retry strategy for model calls in case of throttling or transient errors. Default: `max_attempts=6`, `initial_delay=4s`, `max_delay=240s`. Pass `None` to disable retries. | `ModelRetryStrategy(max_attempts=6)` — pass `retry_strategy=None` to disable |
+| IAM managed policy `BedrockAgentCoreFullAccess` | AWS managed policy for full AgentCore access. DO NOT use in production - create custom policies with least privilege. | Development/testing only, NOT for production |
+| Lambda Layer - Strands Agents (Account ID) | Official Strands Agents layer published from AWS account `856699698935`. Layer version 2 = strands-agents v1.40.0. | `arn:aws:lambda:us-east-1:856699698935:layer:strands-agents-py3_12-x86_64:2` |
+| Agent `retry_strategy` | Retry strategy for model calls in case of throttling or transient errors. Default: `max_attempts=6`, `initial_delay=4s`, `max_delay=240s`. Pass `None` to disable retries. | `ModelRetryStrategy(max_attempts=6)` - pass `retry_strategy=None` to disable |
 
 ---
 
@@ -1056,32 +1056,32 @@ _Source: https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/
 
 ## Official sources
 
-- [Strands Agents — Deploy to AWS Lambda](https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md) — Complete Lambda guide: handler, official layers, packaging, CDK, MCP on Lambda
-- [Strands Agents — Deploy to AWS Fargate](https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/index.md) — FastAPI + Docker + CDK on Fargate with streaming via `stream_async()`
-- [Strands Agents — Deploy to Amazon EKS](https://strandsagents.com/docs/user-guide/deploy/deploy_to_amazon_eks/index.md) — EKS Auto Mode, eksctl, Helm chart, Pod Identity for Bedrock — complete config in the strands-agents/docs GitHub repo
-- [Strands Agents — Operating Agents in Production](https://strandsagents.com/docs/user-guide/deploy/operating-agents-in-production/index.md) — Production best practices: model config, tool management, `SlidingWindowConversationManager`, error handling, streaming
-- [Strands Agents — Deploy to Bedrock AgentCore Runtime (Python)](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md) — Complete guide: SDK Integration (`BedrockAgentCoreApp`), Custom Agent FastAPI, CLI agentcore, manual boto3, observability
-- [Strands Agents — Session Management](https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md) — `FileSessionManager`, `S3SessionManager`, storage structure, multi-agent sessions, custom `RepositorySessionManager`
-- [Strands Agents — Async Iterators for Streaming](https://strandsagents.com/docs/user-guide/concepts/streaming/async-iterators/index.md) — `stream_async()`, lifecycle events, FastAPI/Express.js integration
-- [Strands Agents — Amazon Bedrock Model Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md) — `BedrockModel` uses Converse API (`ConverseStream`/`Converse`). Parameters: `model_id`, `temperature`, `top_p`, `max_tokens`, `streaming`, `guardrail_id`, `cache_config`, `boto_session`, `region_name`
-- [Amazon Bedrock AgentCore — What is AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html) — Complete overview: Runtime, Harness, Memory, Gateway, Identity, Browser, Code Interpreter, Observability, Payments, Evaluations, Policy, Registry
-- [Amazon Bedrock AgentCore — Host agents with AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html) — Session isolation microVM, extensible up to 8 configurable hours, persistent filesystem, bidirectional streaming WebSocket, consumption-based pricing
-- [Amazon Bedrock AgentCore — How it works](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html) — Key components: AgentCore Runtime (container), Versions (immutable), Endpoints (alias), Sessions (isolated microVM). Versioning with rollback. DEFAULT endpoint updated automatically.
-- [Amazon Bedrock AgentCore — IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) — Complete policies: user, CLI, execution role, trust policy for AgentCore Runtime
-- [Amazon Bedrock AgentCore — Use isolated sessions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html) — Session lifecycle (Active/Idle/Stopped), session headers by protocol, microVM stickiness. `runtimeSessionId` optional: if omitted, Runtime generates it autonomously.
-- [Amazon Bedrock AgentCore — Configure lifecycle settings](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-lifecycle-settings.html) — `LifecycleConfiguration`: `idleRuntimeSessionTimeout` (default 900s, range 60-28800s) and `maxLifetime` (default 28800s, range 60-28800s), both configurable via `CreateAgentRuntime`/`UpdateAgentRuntime`.
-- [Amazon Bedrock AgentCore — Async and long-running agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html) — `add_async_task()`, `complete_async_task()`, custom ping handler, configurable idle timeout
-- [Amazon Bedrock AgentCore — Stream agent responses](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/response-streaming.html) — Streaming via async generator with `@app.entrypoint async def` + `yield`
-- [Amazon Bedrock AgentCore — Bidirectional streaming via WebSocket (GA)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-websocket.html) — WebSocket GA: `@app.websocket` decorator, endpoint `/ws` on port 8080, SigV4 headers/presigned URL/OAuth authentication. Bidirectional streaming for voice agents and real-time use cases.
-- [Amazon Bedrock AgentCore — Quotas (official limits)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) — 1000 active sessions in us-east-1/us-west-2, 500 in other regions. 25 TPS invoke per agent. 15 min sync timeout, 60 min streaming max, 8 hours async max. 2 GB max Docker image, 100 MB max payload.
-- [Amazon Bedrock AgentCore — File system configurations](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-filesystem-configurations.html) — Two categories: managed session storage (Preview, no VPC, per-session, 14-day idle expiry) and BYO (S3 Files or EFS, shared, VPC mandatory). Up to 5 total configurations per agent runtime.
-- [Amazon Bedrock AgentCore — Supported AWS Regions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html) — AgentCore Runtime GA in 16 regions (including GovCloud US-West). AgentCore Harness preview only in 4 regions (us-east-1, us-west-2, eu-central-1, ap-southeast-2).
-- [Amazon Bedrock AgentCore — Harness [Preview]](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html) — Managed agent loop powered by Strands Agents. Requires only model + system prompt + tools. Supports Bedrock, OpenAI, Gemini. Isolated microVM, persistent filesystem, integrated memory. Preview in 4 regions, no additional cost.
-- [Amazon Bedrock AgentCore — Direct code deployment (Python)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy-python.html) — Deploy via zip file without container. Max 250 MB compressed, 750 MB uncompressed. Same API contract (`@app.entrypoint` or `/invocations` + `/ping`). Rate: 25 TPS for new sessions.
-- [Strands Agents — Deploy to Terraform](https://strandsagents.com/docs/user-guide/deploy/deploy_to_terraform/index.md) — Terraform IaC for App Runner, Lambda (with Mangum), Google Cloud Run, Azure Container Instances
+- [Strands Agents - Deploy to AWS Lambda](https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_lambda/index.md) - Complete Lambda guide: handler, official layers, packaging, CDK, MCP on Lambda
+- [Strands Agents - Deploy to AWS Fargate](https://strandsagents.com/docs/user-guide/deploy/deploy_to_aws_fargate/index.md) - FastAPI + Docker + CDK on Fargate with streaming via `stream_async()`
+- [Strands Agents - Deploy to Amazon EKS](https://strandsagents.com/docs/user-guide/deploy/deploy_to_amazon_eks/index.md) - EKS Auto Mode, eksctl, Helm chart, Pod Identity for Bedrock - complete config in the strands-agents/docs GitHub repo
+- [Strands Agents - Operating Agents in Production](https://strandsagents.com/docs/user-guide/deploy/operating-agents-in-production/index.md) - Production best practices: model config, tool management, `SlidingWindowConversationManager`, error handling, streaming
+- [Strands Agents - Deploy to Bedrock AgentCore Runtime (Python)](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md) - Complete guide: SDK Integration (`BedrockAgentCoreApp`), Custom Agent FastAPI, CLI agentcore, manual boto3, observability
+- [Strands Agents - Session Management](https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md) - `FileSessionManager`, `S3SessionManager`, storage structure, multi-agent sessions, custom `RepositorySessionManager`
+- [Strands Agents - Async Iterators for Streaming](https://strandsagents.com/docs/user-guide/concepts/streaming/async-iterators/index.md) - `stream_async()`, lifecycle events, FastAPI/Express.js integration
+- [Strands Agents - Amazon Bedrock Model Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md) - `BedrockModel` uses Converse API (`ConverseStream`/`Converse`). Parameters: `model_id`, `temperature`, `top_p`, `max_tokens`, `streaming`, `guardrail_id`, `cache_config`, `boto_session`, `region_name`
+- [Amazon Bedrock AgentCore - What is AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html) - Complete overview: Runtime, Harness, Memory, Gateway, Identity, Browser, Code Interpreter, Observability, Payments, Evaluations, Policy, Registry
+- [Amazon Bedrock AgentCore - Host agents with AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html) - Session isolation microVM, extensible up to 8 configurable hours, persistent filesystem, bidirectional streaming WebSocket, consumption-based pricing
+- [Amazon Bedrock AgentCore - How it works](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html) - Key components: AgentCore Runtime (container), Versions (immutable), Endpoints (alias), Sessions (isolated microVM). Versioning with rollback. DEFAULT endpoint updated automatically.
+- [Amazon Bedrock AgentCore - IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) - Complete policies: user, CLI, execution role, trust policy for AgentCore Runtime
+- [Amazon Bedrock AgentCore - Use isolated sessions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html) - Session lifecycle (Active/Idle/Stopped), session headers by protocol, microVM stickiness. `runtimeSessionId` optional: if omitted, Runtime generates it autonomously.
+- [Amazon Bedrock AgentCore - Configure lifecycle settings](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-lifecycle-settings.html) - `LifecycleConfiguration`: `idleRuntimeSessionTimeout` (default 900s, range 60-28800s) and `maxLifetime` (default 28800s, range 60-28800s), both configurable via `CreateAgentRuntime`/`UpdateAgentRuntime`.
+- [Amazon Bedrock AgentCore - Async and long-running agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html) - `add_async_task()`, `complete_async_task()`, custom ping handler, configurable idle timeout
+- [Amazon Bedrock AgentCore - Stream agent responses](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/response-streaming.html) - Streaming via async generator with `@app.entrypoint async def` + `yield`
+- [Amazon Bedrock AgentCore - Bidirectional streaming via WebSocket (GA)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-websocket.html) - WebSocket GA: `@app.websocket` decorator, endpoint `/ws` on port 8080, SigV4 headers/presigned URL/OAuth authentication. Bidirectional streaming for voice agents and real-time use cases.
+- [Amazon Bedrock AgentCore - Quotas (official limits)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) - 1000 active sessions in us-east-1/us-west-2, 500 in other regions. 25 TPS invoke per agent. 15 min sync timeout, 60 min streaming max, 8 hours async max. 2 GB max Docker image, 100 MB max payload.
+- [Amazon Bedrock AgentCore - File system configurations](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-filesystem-configurations.html) - Two categories: managed session storage (Preview, no VPC, per-session, 14-day idle expiry) and BYO (S3 Files or EFS, shared, VPC mandatory). Up to 5 total configurations per agent runtime.
+- [Amazon Bedrock AgentCore - Supported AWS Regions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html) - AgentCore Runtime GA in 16 regions (including GovCloud US-West). AgentCore Harness preview only in 4 regions (us-east-1, us-west-2, eu-central-1, ap-southeast-2).
+- [Amazon Bedrock AgentCore - Harness [Preview]](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html) - Managed agent loop powered by Strands Agents. Requires only model + system prompt + tools. Supports Bedrock, OpenAI, Gemini. Isolated microVM, persistent filesystem, integrated memory. Preview in 4 regions, no additional cost.
+- [Amazon Bedrock AgentCore - Direct code deployment (Python)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy-python.html) - Deploy via zip file without container. Max 250 MB compressed, 750 MB uncompressed. Same API contract (`@app.entrypoint` or `/invocations` + `/ping`). Rate: 25 TPS for new sessions.
+- [Strands Agents - Deploy to Terraform](https://strandsagents.com/docs/user-guide/deploy/deploy_to_terraform/index.md) - Terraform IaC for App Runner, Lambda (with Mangum), Google Cloud Run, Azure Container Instances
 
 ---
 
 ## Verify live (open questions)
 
-- **EKS Pod Identity — complete YAML files** (ServiceAccount, Pod Identity association via eksctl or AWS CLI) are not included inline in the Strands guide but are in the GitHub repo **strands-agents/docs** at `github.com/strands-agents/docs/tree/main/docs/examples/deploy_to_eks`. Consult directly for the complete eksctl configuration.
+- **EKS Pod Identity - complete YAML files** (ServiceAccount, Pod Identity association via eksctl or AWS CLI) are not included inline in the Strands guide but are in the GitHub repo **strands-agents/docs** at `github.com/strands-agents/docs/tree/main/docs/examples/deploy_to_eks`. Consult directly for the complete eksctl configuration.

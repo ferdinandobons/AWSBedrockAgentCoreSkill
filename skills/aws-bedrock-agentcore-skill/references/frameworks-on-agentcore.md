@@ -1,6 +1,6 @@
 # Hosting Any Framework on Bedrock AgentCore Runtime (LangGraph, CrewAI, LlamaIndex, Google ADK, Strands)
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -43,7 +43,7 @@ Officially documented frameworks with integration samples (as of June 2026):
 
 Additional capabilities: supports any LLM (Bedrock, Anthropic, OpenAI, Gemini, Ollama, etc.), any protocol (HTTP, MCP, A2A, AG-UI), and runs sessions in dedicated microVMs with up to 8-hour extended execution.
 
-_Source: [agents-tools-runtime — Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html)_ — GA
+_Source: [agents-tools-runtime - Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html)_ - GA
 
 > For Bedrock-specific deployment alternatives (Lambda, Fargate, App Runner, EC2, EKS) see [deployment-best-practices.md](deployment-best-practices.md).
 > For IAM, security, and cost details see [security-iam-cost.md](security-iam-cost.md).
@@ -60,7 +60,7 @@ _Source: [agents-tools-runtime — Amazon Bedrock AgentCore](https://docs.aws.am
 |---|---|
 | **Session isolation** | Each user session runs in a dedicated microVM with isolated CPU, memory, and filesystem. Memory is sanitized after session completion. |
 | **Extended execution** | Sessions can run up to 8 hours, enabling long-running agent loops and async workloads. |
-| **Protocol support** | HTTP (REST/SSE/WebSocket), MCP, A2A, AG-UI — all routable to the same container. |
+| **Protocol support** | HTTP (REST/SSE/WebSocket), MCP, A2A, AG-UI - all routable to the same container. |
 | **Consumption pricing** | Charges only for actual CPU consumed; billing pauses during I/O wait (e.g., waiting for LLM token generation). |
 | **Model agnostic** | The runtime does not care which model the agent calls; any LLM reachable from inside the microVM works. |
 | **Persistent filesystem** | Filesystem state survives session stop/resume cycles without external storage. |
@@ -80,11 +80,11 @@ AgentCore Runtime imposes a minimal, framework-agnostic HTTP contract. You can s
 | Host | `0.0.0.0` |
 | Port | `8080` |
 | Container platform | `linux/arm64` |
-| Required endpoint | `POST /invocations` — receives JSON payload; returns JSON or SSE stream |
-| Required endpoint | `GET /ping` — returns `{"status": "Healthy", "time_of_last_update": <unix_ts>}` with HTTP 200 |
-| Optional endpoint | `GET /ws` (WebSocket, same port) — for bidirectional streaming |
+| Required endpoint | `POST /invocations` - receives JSON payload; returns JSON or SSE stream |
+| Required endpoint | `GET /ping` - returns `{"status": "Healthy", "time_of_last_update": <unix_ts>}` with HTTP 200 |
+| Optional endpoint | `GET /ws` (WebSocket, same port) - for bidirectional streaming |
 
-_Source: [HTTP protocol contract — Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html)_
+_Source: [HTTP protocol contract - Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html)_
 
 ### Additional protocol ports (non-HTTP)
 
@@ -94,7 +94,7 @@ _Source: [HTTP protocol contract — Amazon Bedrock AgentCore](https://docs.aws.
 | A2A | 9000 | `/` (root) |
 | AG-UI | 8080 | `/invocations` (SSE) or `/ws` |
 
-_Source: [Service contract — Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-service-contract.html)_
+_Source: [Service contract - Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-service-contract.html)_
 
 ### `BedrockAgentCoreApp` wrapper (Python SDK)
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
 For async agents or SSE streaming, the entrypoint can be `async def` and can `yield` chunks.
 
-_Source: [Python deployment — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
+_Source: [Python deployment - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
 ---
 
@@ -129,7 +129,7 @@ _Source: [Python deployment — Strands Agents Docs](https://strandsagents.com/d
 ```bash
 npm install -g @aws/agentcore      # requires Node.js 20+
 
-agentcore create                    # interactive wizard — picks framework, language, protocol
+agentcore create                    # interactive wizard - picks framework, language, protocol
 agentcore dev                       # local dev server on :8080, hot-reload
 agentcore dev "Hello"               # invoke local agent
 agentcore deploy                    # CDK-backed deploy to ECR + AgentCore Runtime
@@ -167,7 +167,7 @@ response = client.create_agent_runtime(
 )
 ```
 
-_Source: [Python deployment — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
+_Source: [Python deployment - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
 ### IAM: Execution role trust policy
 
@@ -223,9 +223,9 @@ app.run()
 For streaming, make the entrypoint `async def` and use `agent.stream_async(user_message)`.
 
 - `pip install strands-agents bedrock-agentcore`
-- Full sample: [awslabs/amazon-bedrock-agentcore-samples — strands-agents](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/03-integrations/agentic-frameworks/strands-agents)
+- Full sample: [awslabs/amazon-bedrock-agentcore-samples - strands-agents](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/03-integrations/agentic-frameworks/strands-agents)
 
-_Source: [Use any agent framework — AgentCore docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
+_Source: [Use any agent framework - AgentCore docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
 
 ### LangGraph
 
@@ -262,9 +262,9 @@ app.run()
 Key consideration: LangGraph state and checkpointers are entirely managed inside your container; AgentCore provides the durable session boundary via the microVM filesystem, not LangGraph's own store.
 
 - `pip install langgraph langchain-aws bedrock-agentcore`
-- Full sample: [awslabs/amazon-bedrock-agentcore-samples — langgraph](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/03-integrations/agentic-frameworks/langgraph)
+- Full sample: [awslabs/amazon-bedrock-agentcore-samples - langgraph](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/03-integrations/agentic-frameworks/langgraph)
 
-_Source: [Use any agent framework — AgentCore docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
+_Source: [Use any agent framework - AgentCore docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
 
 ### CrewAI
 
@@ -385,7 +385,7 @@ app.run()
 - `pip install google-adk bedrock-agentcore`
 - Full sample: [03-integrations/agentic-frameworks/adk](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/03-integrations/agentic-frameworks/adk)
 
-_Source: [Use any agent framework — AgentCore docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
+_Source: [Use any agent framework - AgentCore docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
 
 ### TypeScript agents (manual server)
 
@@ -407,7 +407,7 @@ app.get('/ping', (_, res) =>
   res.json({ status: 'Healthy', time_of_last_update: Math.floor(Date.now() / 1000) })
 )
 
-// REQUIRED invocation — AWS sends raw binary; use express.raw
+// REQUIRED invocation - AWS sends raw binary; use express.raw
 app.post('/invocations', express.raw({ type: '*/*' }), async (req, res) => {
   const prompt = new TextDecoder().decode(req.body as Buffer)
   const response = await agent.invoke(prompt)
@@ -419,37 +419,37 @@ app.listen(8080, '0.0.0.0')
 
 Dockerfile must use `--platform=linux/arm64`.
 
-_Source: [TypeScript deployment — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/typescript/index.md)_
+_Source: [TypeScript deployment - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/typescript/index.md)_
 
 ---
 
 ## Strands Python vs TypeScript SDK differences
 
-This section summarizes the key behavioral differences between the Strands Agents Python SDK (`strands-agents` v1.42.0, June 2026) and the TypeScript SDK (`@strands-agents/sdk` v1.4.0, June 2026; re-verify — changes frequently).
+This section summarizes the key behavioral differences between the Strands Agents Python SDK (`strands-agents` v1.42.0, June 2026) and the TypeScript SDK (`@strands-agents/sdk` v1.4.0, June 2026; re-verify - changes frequently).
 
 > The TypeScript SDK is the active codebase; the original `sdk-typescript` repository has been archived and development moved to the `strands-agents/harness-sdk` monorepo.
 
 ### Workflow primitive: Python only
 
-The `Workflow` orchestration primitive — a developer-defined task DAG that executes as a single non-conversational tool — exists **only in Python**. The `strands-agents-tools` Python package (v0.7.0) ships a `workflow` tool that handles task dependencies and parallel execution automatically.
+The `Workflow` orchestration primitive - a developer-defined task DAG that executes as a single non-conversational tool - exists **only in Python**. The `strands-agents-tools` Python package (v0.7.0) ships a `workflow` tool that handles task dependencies and parallel execution automatically.
 
 In TypeScript, only `Graph` and `Swarm` are available as built-in multi-agent orchestrators. To implement workflow-style pipelines in TypeScript, chain agents in code or use `Graph` with a linear topology.
 
-_Source: [Multi-agent Patterns — Strands Agents Docs](https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/index.md)_
+_Source: [Multi-agent Patterns - Strands Agents Docs](https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/index.md)_
 
 ### Graph: conditional-edge semantics differ
 
 | Behavior | Python SDK | TypeScript SDK |
 |---|---|---|
-| **Dependency resolution** | **OR semantics** — a node fires when *any single* incoming edge from the completed batch is satisfied | **AND semantics** — a node runs only when *all* incoming edge sources are completed |
+| **Dependency resolution** | **OR semantics** - a node fires when *any single* incoming edge from the completed batch is satisfied | **AND semantics** - a node runs only when *all* incoming edge sources are completed |
 | **Scheduling model** | Executes in discrete batches; waits for the entire batch before scheduling the next set | Launches nodes individually as they become ready (up to `maxConcurrency`) |
-| **Node state** | Accumulates agent state across executions unless `reset_on_revisit=True` is explicitly set | **Stateless by default** — snapshots and restores agent state on each execution; set `preserveContext: true` on an `AgentNode` to opt into accumulation |
+| **Node state** | Accumulates agent state across executions unless `reset_on_revisit=True` is explicitly set | **Stateless by default** - snapshots and restores agent state on each execution; set `preserveContext: true` on an `AgentNode` to opt into accumulation |
 | **Error handling** | Node failure throws exception (fail-fast); orchestrator limit violations return `FAILED` result | Node failure produces `FAILED` result (parallel paths continue); orchestrator `maxSteps` exceeded throws exception |
 | **Node cancellation** | Cancelled node results in `FAILED` status | Cancelled node produces `CANCELLED` status (distinguishable from failure) |
-| **Graph construction** | Mutable `GraphBuilder` — `add_node()`, `add_edge()`, `set_entry_point()`, `build()` | Declarative `Graph({ nodes, edges, sources, maxSteps, maxConcurrency, timeout })` constructor |
-| **Conditional edges with runtime context** | Supported (`invocation_state` dict passed to edge condition) | **Not supported** — edge handlers receive node state only |
+| **Graph construction** | Mutable `GraphBuilder` - `add_node()`, `add_edge()`, `set_entry_point()`, `build()` | Declarative `Graph({ nodes, edges, sources, maxSteps, maxConcurrency, timeout })` constructor |
+| **Conditional edges with runtime context** | Supported (`invocation_state` dict passed to edge condition) | **Not supported** - edge handlers receive node state only |
 
-_Source: [Graph — Strands Agents TypeScript API](https://strandsagents.com/docs/api/typescript/Graph/index.md) and [Graph pattern user guide](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)_
+_Source: [Graph - Strands Agents TypeScript API](https://strandsagents.com/docs/api/typescript/Graph/index.md) and [Graph pattern user guide](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)_
 
 ### Model and API surface parity
 
@@ -464,7 +464,7 @@ _Source: [Graph — Strands Agents TypeScript API](https://strandsagents.com/doc
 | Streaming | `agent.stream_async()` | `agent.stream()` (AsyncGenerator) |
 | AgentCore CLI scaffolding | `agentcore create --framework Strands` | `agentcore create … --language TypeScript --framework Strands` |
 
-_Sources: [Strands Python SDK — GitHub](https://github.com/strands-agents/sdk-python), [Strands TypeScript SDK — GitHub](https://github.com/strands-agents/sdk-typescript) (archived; active repo: [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk)), [AgentCore CLI get started (TypeScript)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli-typescript.html)_
+_Sources: [Strands Python SDK - GitHub](https://github.com/strands-agents/sdk-python), [Strands TypeScript SDK - GitHub](https://github.com/strands-agents/sdk-typescript) (archived; active repo: [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk)), [AgentCore CLI get started (TypeScript)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli-typescript.html)_
 
 ### Current SDK versions (June 2026)
 
@@ -484,31 +484,31 @@ _Sources: [Strands Python SDK — GitHub](https://github.com/strands-agents/sdk-
 
 - **Test locally before deploying.** Use `agentcore dev` to start a local server that mirrors the runtime environment; invoke it with `curl -X POST http://localhost:8080/invocations -d '{"prompt":"hello"}'` before running `agentcore deploy`. _Source: [Get started with the AgentCore CLI](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)_
 
-- **Always target `linux/arm64` in your Dockerfile.** The runtime environment is ARM64; an x86 image will fail at cold start. Use `FROM --platform=linux/arm64 ...` in every `Dockerfile`. _Source: [HTTP protocol contract — container requirements](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html)_
+- **Always target `linux/arm64` in your Dockerfile.** The runtime environment is ARM64; an x86 image will fail at cold start. Use `FROM --platform=linux/arm64 ...` in every `Dockerfile`. _Source: [HTTP protocol contract - container requirements](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html)_
 
-- **Use the `bedrock-agentcore` Python SDK to avoid boilerplate.** It auto-generates `/ping` with the correct JSON schema and wires `/invocations` to your entrypoint, including SSE streaming. _Source: [Python deployment — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
+- **Use the `bedrock-agentcore` Python SDK to avoid boilerplate.** It auto-generates `/ping` with the correct JSON schema and wires `/invocations` to your entrypoint, including SSE streaming. _Source: [Python deployment - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
-- **For TypeScript agents, use `express.raw({ type: '*/*' })` on `/invocations`.** The AWS SDK sends a binary-encoded payload; without the raw middleware, body-parsing middleware will corrupt the input. _Source: [TypeScript deployment — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/typescript/index.md)_
+- **For TypeScript agents, use `express.raw({ type: '*/*' })` on `/invocations`.** The AWS SDK sends a binary-encoded payload; without the raw middleware, body-parsing middleware will corrupt the input. _Source: [TypeScript deployment - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/typescript/index.md)_
 
-- **Implement meaningful `/ping` responses.** Return `{"status": "HealthyBusy", ...}` when your agent is processing async background tasks; the runtime uses this to keep the session alive. _Source: [HTTP protocol contract — /ping](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html)_
+- **Implement meaningful `/ping` responses.** Return `{"status": "HealthyBusy", ...}` when your agent is processing async background tasks; the runtime uses this to keep the session alive. _Source: [HTTP protocol contract - /ping](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html)_
 
 - **Use least-privilege IAM for the execution role.** The `BedrockAgentCoreFullAccess` managed policy is broad; for production, scope `bedrock:InvokeModel` to the specific model ARNs your agent uses and restrict ECR access to the specific repository. _Source: [IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html)_
 
-- **Prefer `CodeZip` build for pure-Python agents; use `Container` only when you need native dependencies or a custom OS layer.** `CodeZip` avoids the ECR push step during iteration. _Source: [Get started with the AgentCore CLI (advanced options — build types)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)_
+- **Prefer `CodeZip` build for pure-Python agents; use `Container` only when you need native dependencies or a custom OS layer.** `CodeZip` avoids the ECR push step during iteration. _Source: [Get started with the AgentCore CLI (advanced options - build types)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)_
 
-- **Enable CloudWatch Transaction Search for observability before your first production invocation.** Without it, AgentCore's built-in tracing (X-Ray spans for reasoning steps and tool calls) is not visible. _Source: [Get started with the AgentCore CLI — Step 4: Enable observability](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)_
+- **Enable CloudWatch Transaction Search for observability before your first production invocation.** Without it, AgentCore's built-in tracing (X-Ray spans for reasoning steps and tool calls) is not visible. _Source: [Get started with the AgentCore CLI - Step 4: Enable observability](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)_
 
-- **When using async Python frameworks (Google ADK, LlamaIndex async), call `asyncio.run()` inside a sync entrypoint, or make the entrypoint itself `async def`.** The `BedrockAgentCoreApp` ASGI server supports both. _Source: [Use any agent framework — AgentCore docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
+- **When using async Python frameworks (Google ADK, LlamaIndex async), call `asyncio.run()` inside a sync entrypoint, or make the entrypoint itself `async def`.** The `BedrockAgentCoreApp` ASGI server supports both. _Source: [Use any agent framework - AgentCore docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
 
-- **Pin the Strands Graph conditional-edge semantics.** If migrating a Python Graph to TypeScript or vice versa, audit every node with multiple incoming edges: Python fires on OR (any completed edge), TypeScript fires on AND (all incoming edges completed). A "join" node that correctly waits for all branches in TypeScript will fire prematurely in Python if any one branch finishes first. _Source: [Graph SDK Differences — Strands Agents Docs](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)_
+- **Pin the Strands Graph conditional-edge semantics.** If migrating a Python Graph to TypeScript or vice versa, audit every node with multiple incoming edges: Python fires on OR (any completed edge), TypeScript fires on AND (all incoming edges completed). A "join" node that correctly waits for all branches in TypeScript will fire prematurely in Python if any one branch finishes first. _Source: [Graph SDK Differences - Strands Agents Docs](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)_
 
 ---
 
 ## Code
 
-### Minimal custom HTTP server (any framework — Python FastAPI)
+### Minimal custom HTTP server (any framework - Python FastAPI)
 
-_Source: [Python deployment Option B: Custom Agent — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
+_Source: [Python deployment Option B: Custom Agent - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
 ```python
 from fastapi import FastAPI
@@ -536,7 +536,7 @@ Run with: `uvicorn agent:app --host 0.0.0.0 --port 8080`
 
 ### Invoking a deployed agent with boto3
 
-_Source: [Python deployment — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
+_Source: [Python deployment - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
 ```python
 import boto3
@@ -552,9 +552,9 @@ response = client.invoke_agent_runtime(
 print(response["response"].read().decode())
 ```
 
-### ARM64 Dockerfile (Python — uv)
+### ARM64 Dockerfile (Python - uv)
 
-_Source: [Python deployment — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
+_Source: [Python deployment - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
 ```dockerfile
 FROM --platform=linux/arm64 ghcr.io/astral-sh/uv:python3.11-bookworm-slim
@@ -569,9 +569,9 @@ EXPOSE 8080
 CMD ["uv", "run", "python", "agent.py"]
 ```
 
-### ARM64 Dockerfile (TypeScript — Node.js)
+### ARM64 Dockerfile (TypeScript - Node.js)
 
-_Source: [TypeScript deployment — Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/typescript/index.md)_
+_Source: [TypeScript deployment - Strands Agents Docs](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/typescript/index.md)_
 
 ```dockerfile
 FROM --platform=linux/arm64 public.ecr.aws/docker/library/node:22-slim
@@ -585,9 +585,9 @@ EXPOSE 8080
 CMD ["node", "dist/index.js"]
 ```
 
-### Strands Graph (Python) — OR semantics join example
+### Strands Graph (Python) - OR semantics join example
 
-_Source: [Graph user guide — Strands Agents Docs](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)_
+_Source: [Graph user guide - Strands Agents Docs](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)_
 
 ```python
 from strands import Agent
@@ -610,9 +610,9 @@ graph = builder.build()
 result = graph.invoke("Analyse Q1 sales trends")
 ```
 
-### Strands Graph (TypeScript) — AND semantics join example
+### Strands Graph (TypeScript) - AND semantics join example
 
-_Source: [Graph TypeScript API — Strands Agents Docs](https://strandsagents.com/docs/api/typescript/Graph/index.md)_
+_Source: [Graph TypeScript API - Strands Agents Docs](https://strandsagents.com/docs/api/typescript/Graph/index.md)_
 
 ```typescript
 import { Agent } from '@strands-agents/sdk'
@@ -638,7 +638,7 @@ const result = await graph.invoke('Analyse Q1 sales trends')
 
 ## Configuration reference
 
-### AgentCore CLI — `agentcore.json` agent keys
+### AgentCore CLI - `agentcore.json` agent keys
 
 | Key | Values | Notes |
 |---|---|---|
@@ -657,11 +657,11 @@ _Source: [Get started with the AgentCore CLI](https://docs.aws.amazon.com/bedroc
 |---|---|
 | Container platform | `linux/arm64` |
 | Listening address | `0.0.0.0:8080` |
-| Invocation endpoint | `POST /invocations` — `Content-Type: application/json` |
-| Health endpoint | `GET /ping` — returns `{"status":"Healthy","time_of_last_update":<ts>}` |
+| Invocation endpoint | `POST /invocations` - `Content-Type: application/json` |
+| Health endpoint | `GET /ping` - returns `{"status":"Healthy","time_of_last_update":<ts>}` |
 | Streaming response | `Content-Type: text/event-stream` (SSE) |
 | WebSocket endpoint | `GET /ws` (optional, same port) |
-| Max payload | 100 MB (supports multimodal — text, images, audio, video) |
+| Max payload | 100 MB (supports multimodal - text, images, audio, video) |
 | Max session duration | 8 hours |
 
 _Source: [HTTP protocol contract](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html) and [agents-tools-runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html)_
@@ -678,7 +678,7 @@ _Source: [HTTP protocol contract](https://docs.aws.amazon.com/bedrock-agentcore/
 | Concurrency | Not configurable per-graph | `maxConcurrency: N` |
 | Node state | Accumulates (set `reset_on_revisit=True` to clear) | Stateless by default (set `preserveContext: true` to accumulate) |
 
-_Source: [Graph user guide — SDK Differences section](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)_
+_Source: [Graph user guide - SDK Differences section](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)_
 
 ---
 
@@ -714,17 +714,17 @@ _Source: [Graph user guide — SDK Differences section](https://strandsagents.co
 - [Get started with the AgentCore CLI (TypeScript)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli-typescript.html)
 - [IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html)
 - [What is Amazon Bedrock AgentCore?](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html)
-- [AgentCore CLI — GitHub](https://github.com/aws/agentcore-cli)
-- [bedrock-agentcore-starter-toolkit — GitHub (legacy)](https://github.com/aws/bedrock-agentcore-starter-toolkit)
-- [awslabs/amazon-bedrock-agentcore-samples — GitHub](https://github.com/awslabs/amazon-bedrock-agentcore-samples)
-- [03-integrations/agentic-frameworks — all framework samples](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/03-integrations/agentic-frameworks)
-- [Strands Agents — Deploy to Bedrock AgentCore (Python)](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)
-- [Strands Agents — Deploy to Bedrock AgentCore (TypeScript)](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/typescript/index.md)
-- [Strands Agents — Graph user guide (Python + TypeScript)](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)
-- [Strands Agents — Multi-agent patterns](https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/index.md)
-- [Strands Agents — TypeScript Graph API reference](https://strandsagents.com/docs/api/typescript/Graph/index.md)
-- [strands-agents — PyPI](https://pypi.org/project/strands-agents/)
-- [strands-agents-tools — PyPI](https://pypi.org/project/strands-agents-tools/)
-- [bedrock-agentcore — PyPI](https://pypi.org/project/bedrock-agentcore/)
-- [strands-agents/sdk-python — GitHub](https://github.com/strands-agents/sdk-python)
-- [strands-agents/sdk-typescript — GitHub](https://github.com/strands-agents/sdk-typescript) _(archived; development moved to [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk) monorepo, `strands-ts/` directory)_
+- [AgentCore CLI - GitHub](https://github.com/aws/agentcore-cli)
+- [bedrock-agentcore-starter-toolkit - GitHub (legacy)](https://github.com/aws/bedrock-agentcore-starter-toolkit)
+- [awslabs/amazon-bedrock-agentcore-samples - GitHub](https://github.com/awslabs/amazon-bedrock-agentcore-samples)
+- [03-integrations/agentic-frameworks - all framework samples](https://github.com/awslabs/amazon-bedrock-agentcore-samples/tree/main/03-integrations/agentic-frameworks)
+- [Strands Agents - Deploy to Bedrock AgentCore (Python)](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)
+- [Strands Agents - Deploy to Bedrock AgentCore (TypeScript)](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/typescript/index.md)
+- [Strands Agents - Graph user guide (Python + TypeScript)](https://strandsagents.com/docs/user-guide/concepts/multi-agent/graph/index.md)
+- [Strands Agents - Multi-agent patterns](https://strandsagents.com/docs/user-guide/concepts/multi-agent/multi-agent-patterns/index.md)
+- [Strands Agents - TypeScript Graph API reference](https://strandsagents.com/docs/api/typescript/Graph/index.md)
+- [strands-agents - PyPI](https://pypi.org/project/strands-agents/)
+- [strands-agents-tools - PyPI](https://pypi.org/project/strands-agents-tools/)
+- [bedrock-agentcore - PyPI](https://pypi.org/project/bedrock-agentcore/)
+- [strands-agents/sdk-python - GitHub](https://github.com/strands-agents/sdk-python)
+- [strands-agents/sdk-typescript - GitHub](https://github.com/strands-agents/sdk-typescript) _(archived; development moved to [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk) monorepo, `strands-ts/` directory)_

@@ -1,6 +1,6 @@
-# Amazon Bedrock AgentCore Runtime — Serverless Agent Hosting
+# Amazon Bedrock AgentCore Runtime - Serverless Agent Hosting
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -37,8 +37,8 @@
   - [Custom FastAPI agent (no SDK)](#custom-fastapi-agent-no-sdk)
   - [ARM64 Dockerfile](#arm64-dockerfile)
   - [Build and push ARM64 image to ECR](#build-and-push-arm64-image-to-ecr)
-  - [Create AgentCore Runtime — container deployment](#create-agentcore-runtime--container-deployment)
-  - [Create AgentCore Runtime — direct code (ZIP) deployment](#create-agentcore-runtime--direct-code-zip-deployment)
+  - [Create AgentCore Runtime - container deployment](#create-agentcore-runtime--container-deployment)
+  - [Create AgentCore Runtime - direct code (ZIP) deployment](#create-agentcore-runtime--direct-code-zip-deployment)
   - [Build ARM64-compatible ZIP package for direct code deploy](#build-arm64-compatible-zip-package-for-direct-code-deploy)
   - [Invoke a deployed agent (data plane)](#invoke-a-deployed-agent-data-plane)
   - [Stop a runtime session explicitly](#stop-a-runtime-session-explicitly)
@@ -46,7 +46,7 @@
   - [Execution role trust policy with confused-deputy prevention](#execution-role-trust-policy-with-confused-deputy-prevention)
   - [Minimal direct-deploy execution role policy](#minimal-direct-deploy-execution-role-policy)
   - [AgentCore CLI quickstart commands](#agentcore-cli-quickstart-commands)
-  - [AgentCore Harness — invoke via boto3 (Preview)](#agentcore-harness--invoke-via-boto3-preview)
+  - [AgentCore Harness - invoke via boto3 (Preview)](#agentcore-harness--invoke-via-boto3-preview)
   - [Configure persistent session storage (filesystemConfigurations)](#configure-persistent-session-storage-filesystemconfigurations)
 - [Configuration reference](#configuration-reference)
 - [Gotchas](#gotchas)
@@ -58,7 +58,7 @@
 
 Amazon Bedrock AgentCore Runtime is a **GA** serverless, framework-agnostic hosting environment for deploying and running AI agents and tools at production scale. It provisions dedicated microVMs per session for complete isolation, supports extended runtimes up to 8 hours, accepts container images (ARM64) or direct code ZIP uploads (Python/Node.js), and exposes a well-defined HTTP service contract (`/invocations` POST, `/ping` GET on port 8080). The primary deployment path is the AgentCore CLI (`@aws/agentcore` npm package), backed by CDK. The runtime integrates natively with Strands Agents, LangGraph, Google ADK, OpenAI Agents SDK, and custom frameworks via the `bedrock-agentcore` Python SDK (`BedrockAgentCoreApp`). Consumption-based pricing charges only for active processing time, not idle wait.
 
-**Maturity note:** GA as of late 2025. Initial preview July 2025. Direct code deployment (Python) GA November 2025; Node.js GA April 2026. Bidirectional WebSocket streaming GA December 2025. Stateful MCP server features GA March 2026. AG-UI protocol support GA March 2026. Shell command execution (`InvokeAgentRuntimeCommand`) GA March 2026. **Managed Harness (config-based agent loop) is in PUBLIC PREVIEW as of June 2026** — available only in `us-east-1`, `us-west-2`, `eu-central-1`, `ap-southeast-2`. Persistent filesystem session storage is in Preview; BYO S3 Files and EFS are GA. Available in 16 AWS regions. _Source: [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html)_
+**Maturity note:** GA as of late 2025. Initial preview July 2025. Direct code deployment (Python) GA November 2025; Node.js GA April 2026. Bidirectional WebSocket streaming GA December 2025. Stateful MCP server features GA March 2026. AG-UI protocol support GA March 2026. Shell command execution (`InvokeAgentRuntimeCommand`) GA March 2026. **Managed Harness (config-based agent loop) is in PUBLIC PREVIEW as of June 2026** - available only in `us-east-1`, `us-west-2`, `eu-central-1`, `ap-southeast-2`. Persistent filesystem session storage is in Preview; BYO S3 Files and EFS are GA. Available in 16 AWS regions. _Source: [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html)_
 
 > For framework-specific deployment patterns (Lambda, Fargate, EKS) and Terraform/CDK IaC, see `deployment-iac.md` in this references directory.
 
@@ -72,7 +72,7 @@ The core serverless resource that hosts your agent or tool. Created via the `Cre
 
 ### MicroVM session isolation
 
-Every unique `runtimeSessionId` gets its own dedicated microVM with isolated CPU (up to 2 vCPU), memory (up to 8 GB), and filesystem. After session termination the entire microVM is destroyed and memory is sanitized — cross-session data contamination is architecturally impossible.
+Every unique `runtimeSessionId` gets its own dedicated microVM with isolated CPU (up to 2 vCPU), memory (up to 8 GB), and filesystem. After session termination the entire microVM is destroyed and memory is sanitized - cross-session data contamination is architecturally impossible.
 
 - **Idle timeout:** 15 minutes (default, configurable via `idleRuntimeSessionTimeout`)
 - **Max session lifetime:** 8 hours (configurable via `maxLifetime`)
@@ -114,8 +114,8 @@ GET health check polled by AgentCore to manage session lifecycle. Must return HT
 {"status": "Healthy" | "HealthyBusy", "time_of_last_update": <unix_seconds>}
 ```
 
-- `Healthy` — agent is idle; session terminates after the configured idle timeout (default 15 min)
-- `HealthyBusy` — keeps the session alive for background async work
+- `Healthy` - agent is idle; session terminates after the configured idle timeout (default 15 min)
+- `HealthyBusy` - keeps the session alive for background async work
 - **Both fields are required.** Omitting `time_of_last_update` causes premature session termination even when `HealthyBusy` is set.
 
 _Source: [Handle asynchronous and long-running agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html)_
@@ -124,7 +124,7 @@ _Source: [Handle asynchronous and long-running agents](https://docs.aws.amazon.c
 
 Main class from the `bedrock-agentcore` Python SDK (`pip install bedrock-agentcore`). Wraps your agent logic and handles the service contract automatically.
 
-- Use `@app.entrypoint` on your handler — receives `(payload: dict, context)` where `context.session_id` exposes the current `runtimeSessionId`
+- Use `@app.entrypoint` on your handler - receives `(payload: dict, context)` where `context.session_id` exposes the current `runtimeSessionId`
 - Use `@app.websocket` for WebSocket handlers (registered at `/ws` automatically)
 - Use `@app.ping` to override the default ping handler
 - Call `app.run()` at the bottom to start the HTTP server on port 8080
@@ -136,7 +136,7 @@ _Source: [Use any agent framework](https://docs.aws.amazon.com/bedrock-agentcore
 Each update to a runtime's configuration (container image, protocol, network) creates a new **immutable version**. Endpoints are named references to specific versions.
 
 - The **DEFAULT** endpoint always points to the latest version automatically
-- Custom endpoints (e.g., `production`, `staging`) can be pinned to specific versions via `update_agent_runtime_endpoint()` and remain stable during updates — enabling blue/green and canary deployments
+- Custom endpoints (e.g., `production`, `staging`) can be pinned to specific versions via `update_agent_runtime_endpoint()` and remain stable during updates - enabling blue/green and canary deployments
 - Maximum 10 endpoints per agent (adjustable via Service Quotas)
 
 _Source: [AgentCore Runtime versioning and endpoints](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html)_
@@ -145,9 +145,9 @@ _Source: [AgentCore Runtime versioning and endpoints](https://docs.aws.amazon.co
 
 Three deployment paths exist:
 
-1. **AgentCore CLI (recommended, GA)** — `npm install -g @aws/agentcore`, then `agentcore create/dev/deploy`. Uses CDK under the hood; supports both CodeZip and Container build types. Hot-reload dev server included.
-2. **Direct code deploy (ZIP)** — ZIP artifact with Python or Node.js code. Max 250 MB compressed / 750 MB uncompressed, uploaded to S3. **25 new sessions/sec cold start rate.**
-3. **Container image** — Docker ARM64 image pushed to ECR. Up to 2 GB. **100 new sessions/min cold start rate.**
+1. **AgentCore CLI (recommended, GA)** - `npm install -g @aws/agentcore`, then `agentcore create/dev/deploy`. Uses CDK under the hood; supports both CodeZip and Container build types. Hot-reload dev server included.
+2. **Direct code deploy (ZIP)** - ZIP artifact with Python or Node.js code. Max 250 MB compressed / 750 MB uncompressed, uploaded to S3. **25 new sessions/sec cold start rate.**
+3. **Container image** - Docker ARM64 image pushed to ECR. Up to 2 GB. **100 new sessions/min cold start rate.**
 
 _Source: [Direct code deployment overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy.html)_
 
@@ -155,9 +155,9 @@ _Source: [Direct code deployment overview](https://docs.aws.amazon.com/bedrock-a
 
 By default all microVM state is **ephemeral** and lost when the session stops. Persistent options:
 
-- **Managed session storage (Preview):** `filesystemConfigurations.sessionStorage` — survives stop/resume cycles, 1 GB limit, 14-day idle expiry, resets on version update, no VPC required
-- **BYO S3 Files (GA):** `s3FilesAccessPoint` — shared across sessions, VPC required
-- **BYO EFS (GA):** `efsAccessPoint` — shared across sessions, full POSIX semantics, VPC required
+- **Managed session storage (Preview):** `filesystemConfigurations.sessionStorage` - survives stop/resume cycles, 1 GB limit, 14-day idle expiry, resets on version update, no VPC required
+- **BYO S3 Files (GA):** `s3FilesAccessPoint` - shared across sessions, VPC required
+- **BYO EFS (GA):** `efsAccessPoint` - shared across sessions, full POSIX semantics, VPC required
 - **AgentCore Memory:** For structured data persistence across sessions (separate service)
 - Session IDs must be **at least 33 characters**
 
@@ -165,7 +165,7 @@ _Source: [Use isolated sessions for agents](https://docs.aws.amazon.com/bedrock-
 
 ### Supported frameworks
 
-Officially supported and tested: Strands Agents, LangChain/LangGraph, Google Agent Development Kit (ADK), OpenAI Agents SDK. Any other Python or Node.js framework works as long as it respects the `/invocations` and `/ping` contract — either via `BedrockAgentCoreApp` SDK or a custom HTTP server (e.g., FastAPI/uvicorn).
+Officially supported and tested: Strands Agents, LangChain/LangGraph, Google Agent Development Kit (ADK), OpenAI Agents SDK. Any other Python or Node.js framework works as long as it respects the `/invocations` and `/ping` contract - either via `BedrockAgentCoreApp` SDK or a custom HTTP server (e.g., FastAPI/uvicorn).
 
 _Source: [Use any agent framework](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html)_
 
@@ -189,8 +189,8 @@ _Source: [Understand the AgentCore Runtime service contract](https://docs.aws.am
 
 Agents can start background work that outlives the HTTP response:
 
-- Use `app.add_async_task(name)` to register a task — the SDK automatically sets `/ping` to `HealthyBusy` while tasks are running
-- Use `app.complete_async_task(task_id)` to mark it done — SDK reverts `/ping` to `Healthy`
+- Use `app.add_async_task(name)` to register a task - the SDK automatically sets `/ping` to `HealthyBusy` while tasks are running
+- Use `app.complete_async_task(task_id)` to mark it done - SDK reverts `/ping` to `Healthy`
 - Alternatively, implement a custom `@app.ping` handler returning `PingStatus.HEALTHY_BUSY`
 - Max session lifetime: 8 hours. Streaming connections have a separate 60-minute maximum duration.
 
@@ -198,7 +198,7 @@ _Source: [Handle asynchronous and long-running agents](https://docs.aws.amazon.c
 
 ### Streaming responses (SSE and WebSocket)
 
-- **SSE (unidirectional):** Implement `@app.entrypoint` as an `async generator` and `yield` events — the runtime streams these as Server-Sent Events. SDK automatically sets `Content-Type: text/event-stream`.
+- **SSE (unidirectional):** Implement `@app.entrypoint` as an `async generator` and `yield` events - the runtime streams these as Server-Sent Events. SDK automatically sets `Content-Type: text/event-stream`.
 - **Bidirectional WebSocket:** Use `@app.websocket` decorator; endpoint registered at `/ws` on port 8080. Clients use `AgentCoreRuntimeClient` from `bedrock_agentcore.runtime` with `generate_ws_connection()` or `generate_presigned_url()` methods, or supply an OAuth bearer token.
 - IAM action required for WebSocket: `bedrock-agentcore:InvokeAgentRuntimeWithWebSocketStream`
 
@@ -206,14 +206,14 @@ _Source: [Stream agent responses (SSE)](https://docs.aws.amazon.com/bedrock-agen
 
 ### AgentCore Harness (Preview)
 
-> **WARNING: PUBLIC PREVIEW** — Only available in `us-east-1`, `us-west-2`, `eu-central-1`, `ap-southeast-2`. Do not use in production outside these regions.
+> **WARNING: PUBLIC PREVIEW** - Only available in `us-east-1`, `us-west-2`, `eu-central-1`, `ap-southeast-2`. Do not use in production outside these regions.
 
 A managed, config-based agent loop that requires no custom agent code. Declare model, tools, system prompt, and memory; AgentCore provides the orchestration. Backed by Strands Agents.
 
 - **Default model:** Anthropic Claude Sonnet 4.6 on Bedrock
 - Supports Bedrock, OpenAI, and Google Gemini model providers, with mid-session model switching
 - Invoked via `invoke_harness()` (boto3 data plane) or `agentcore invoke --harness`
-- No separate harness charge — pay for underlying AgentCore resources
+- No separate harness charge - pay for underlying AgentCore resources
 
 _Source: [AgentCore Harness overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html)_
 
@@ -254,7 +254,7 @@ How a server-side web backend (Node.js, Python, etc.) authenticates to AgentCore
 
 #### 1. Authenticating to AgentCore Runtime
 
-**IAM SigV4 (service-to-service, default):** The default and recommended approach for trusted backends. The caller must have `bedrock-agentcore:InvokeAgentRuntime` on the runtime ARN. Use any AWS SDK — boto3 signs the request automatically.
+**IAM SigV4 (service-to-service, default):** The default and recommended approach for trusted backends. The caller must have `bedrock-agentcore:InvokeAgentRuntime` on the runtime ARN. Use any AWS SDK - boto3 signs the request automatically.
 
 ```python
 # boto3 signs with SigV4 automatically; no extra auth setup required
@@ -272,7 +272,7 @@ If you also pass the `X-Amzn-Bedrock-AgentCore-Runtime-User-Id` header, the call
 
 _Source: [InvokeAgentRuntime API Reference](https://docs.aws.amazon.com/bedrock-agentcore/latest/APIReference/API_InvokeAgentRuntime.html)_
 
-**JWT bearer token (end-user-facing agents):** When the runtime is configured with `authorizerConfiguration.customJWTAuthorizer` (OIDC discovery URL + allowed clients/audiences), callers authenticate with a JWT issued by an IdP (e.g., Cognito). The AWS SDK cannot sign OAuth-authenticated requests — use a plain HTTPS client:
+**JWT bearer token (end-user-facing agents):** When the runtime is configured with `authorizerConfiguration.customJWTAuthorizer` (OIDC discovery URL + allowed clients/audiences), callers authenticate with a JWT issued by an IdP (e.g., Cognito). The AWS SDK cannot sign OAuth-authenticated requests - use a plain HTTPS client:
 
 ```python
 import requests, urllib.parse, json, os
@@ -292,7 +292,7 @@ response = requests.post(
 )
 ```
 
-**A runtime supports either IAM SigV4 or JWT inbound auth — not both simultaneously.** Create separate runtime versions for different auth types. For the full JWT inbound auth setup (Cognito user pool, authorizer configuration, invoke example), see [gateway-identity.md](gateway-identity.md).
+**A runtime supports either IAM SigV4 or JWT inbound auth - not both simultaneously.** Create separate runtime versions for different auth types. For the full JWT inbound auth setup (Cognito user pool, authorizer configuration, invoke example), see [gateway-identity.md](gateway-identity.md).
 
 _Source: [Authenticate and authorize with Inbound Auth and Outbound Auth](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-oauth.html)_
 
@@ -302,14 +302,14 @@ _Source: [Authenticate and authorize with Inbound Auth and Outbound Auth](https:
 
 **AgentCore does not enforce user-to-session mapping.** Your backend must own that relationship:
 - Generate a new session ID at the start of each user conversation; store the mapping server-side.
-- Reuse the same session ID for all turns of that conversation — this routes all follow-up requests to the same microVM, preserving in-memory state.
+- Reuse the same session ID for all turns of that conversation - this routes all follow-up requests to the same microVM, preserving in-memory state.
 - Never share a session ID across different authenticated users; doing so exposes their conversation context to each other.
 
 ```python
 import uuid
 
 # One session per conversation; regenerate for a new conversation
-session_id = str(uuid.uuid4())   # 36 chars — satisfies >=33 requirement
+session_id = str(uuid.uuid4())   # 36 chars - satisfies >=33 requirement
 ```
 
 _Source: [Use isolated sessions for agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html)_
@@ -319,7 +319,7 @@ _Source: [Use isolated sessions for agents](https://docs.aws.amazon.com/bedrock-
 When the agent's `@app.entrypoint` is an `async generator`, the runtime returns `Content-Type: text/event-stream`. The backend should stream the response body directly to the browser rather than buffering it:
 
 ```python
-# Flask example — stream SSE from AgentCore Runtime to browser
+# Flask example - stream SSE from AgentCore Runtime to browser
 from flask import Response, stream_with_context
 import boto3, json
 
@@ -354,35 +354,35 @@ _Source: [Stream agent responses (SSE)](https://docs.aws.amazon.com/bedrock-agen
 
 ## Best practices
 
-- **Use the AgentCore CLI (`@aws/agentcore`) for new projects** — The CLI scaffolds CDK infrastructure, handles ARM64 packaging, supports CodeZip and Container builds, provides local hot-reload dev server (`agentcore dev`), and wraps all SDK calls. Install with `npm install -g @aws/agentcore`. Use `npm install -g @aws/agentcore@preview` for Harness and other preview features. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html>_
+- **Use the AgentCore CLI (`@aws/agentcore`) for new projects** - The CLI scaffolds CDK infrastructure, handles ARM64 packaging, supports CodeZip and Container builds, provides local hot-reload dev server (`agentcore dev`), and wraps all SDK calls. Install with `npm install -g @aws/agentcore`. Use `npm install -g @aws/agentcore@preview` for Harness and other preview features. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html>_
 
-- **Use CodeZip (direct code deploy) for rapid prototyping; switch to Container for production complexity** — CodeZip allows 25 new sessions/second vs 100/minute for containers, enables faster redeployment, and auto-patches the language runtime. Use containers when package size exceeds 250 MB compressed (750 MB uncompressed), you have existing container CI/CD pipelines, or need specialized system dependencies. A hybrid approach is common: CodeZip for prototyping, container for production. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy.html>_
+- **Use CodeZip (direct code deploy) for rapid prototyping; switch to Container for production complexity** - CodeZip allows 25 new sessions/second vs 100/minute for containers, enables faster redeployment, and auto-patches the language runtime. Use containers when package size exceeds 250 MB compressed (750 MB uncompressed), you have existing container CI/CD pipelines, or need specialized system dependencies. A hybrid approach is common: CodeZip for prototyping, container for production. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy.html>_
 
-- **Always build container images as `linux/arm64`** — AgentCore Runtime requires ARM64 architecture. Building on x86 without `buildx` will produce `exec /bin/sh: exec format error` at runtime. Use `docker buildx build --platform linux/arm64` or build in CodeBuild. The AgentCore CLI handles this automatically for both CodeZip and Container build types. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-troubleshooting.html>_
+- **Always build container images as `linux/arm64`** - AgentCore Runtime requires ARM64 architecture. Building on x86 without `buildx` will produce `exec /bin/sh: exec format error` at runtime. Use `docker buildx build --platform linux/arm64` or build in CodeBuild. The AgentCore CLI handles this automatically for both CodeZip and Container build types. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-troubleshooting.html>_
 
-- **Implement `/ping` with BOTH `status` and `time_of_last_update` fields** — The platform uses `time_of_last_update` to determine whether a `HealthyBusy` session is still actively working. Omitting this field causes the idle timeout to fire even when status is `HealthyBusy`, terminating sessions prematurely after 15 minutes of background work. The SDK task tracking handles this automatically via `add_async_task`/`complete_async_task`. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html>_
+- **Implement `/ping` with BOTH `status` and `time_of_last_update` fields** - The platform uses `time_of_last_update` to determine whether a `HealthyBusy` session is still actively working. Omitting this field causes the idle timeout to fire even when status is `HealthyBusy`, terminating sessions prematurely after 15 minutes of background work. The SDK task tracking handles this automatically via `add_async_task`/`complete_async_task`. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html>_
 
-- **Never perform blocking calls in the `@app.entrypoint` if using async background tasks** — The entrypoint and `/ping` health check share threads in single-threaded setups. A blocking invocation path stalls `/ping` health checks, causing the platform to deem the session unhealthy and terminate it. Use `threading.Thread` or `asyncio` for background work. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html>_
+- **Never perform blocking calls in the `@app.entrypoint` if using async background tasks** - The entrypoint and `/ping` health check share threads in single-threaded setups. A blocking invocation path stalls `/ping` health checks, causing the platform to deem the session unhealthy and terminate it. Use `threading.Thread` or `asyncio` for background work. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html>_
 
-- **Generate session IDs of at least 33 characters — one per user conversation** — AgentCore uses the `runtimeSessionId` for microVM sticky routing. IDs shorter than 33 characters are rejected. `uuid.uuid4()` produces 36 characters and satisfies the minimum. Using the same ID across different users is a security boundary violation — enforce user-to-session mapping in your backend. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html>_
+- **Generate session IDs of at least 33 characters - one per user conversation** - AgentCore uses the `runtimeSessionId` for microVM sticky routing. IDs shorter than 33 characters are rejected. `uuid.uuid4()` produces 36 characters and satisfies the minimum. Using the same ID across different users is a security boundary violation - enforce user-to-session mapping in your backend. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html>_
 
-- **Always include the session header in follow-up requests** — Without the correct session header (`X-Amzn-Bedrock-AgentCore-Runtime-Session-Id` for HTTP/A2A/AG-UI; `Mcp-Session-Id` for MCP), requests may be routed to a new microVM, causing a cold start and losing all in-memory session context. Capture the session ID from the first response and propagate it. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html>_
+- **Always include the session header in follow-up requests** - Without the correct session header (`X-Amzn-Bedrock-AgentCore-Runtime-Session-Id` for HTTP/A2A/AG-UI; `Mcp-Session-Id` for MCP), requests may be routed to a new microVM, causing a cold start and losing all in-memory session context. Capture the session ID from the first response and propagate it. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html>_
 
-- **Scope IAM execution role to minimum required permissions; do not use CLI-generated policies in production** — The CLI creates broad development-friendly policies. In production, scope `Resource` fields to specific runtime ARNs and restrict `bedrock:InvokeModel` to specific model ARNs. MMDS provides execution role credentials to any code in the microVM, so over-permissioned roles are a lateral escalation risk. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html>_
+- **Scope IAM execution role to minimum required permissions; do not use CLI-generated policies in production** - The CLI creates broad development-friendly policies. In production, scope `Resource` fields to specific runtime ARNs and restrict `bedrock:InvokeModel` to specific model ARNs. MMDS provides execution role credentials to any code in the microVM, so over-permissioned roles are a lateral escalation risk. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html>_
 
-- **Add `aws:SourceArn` and `aws:SourceAccount` to execution role trust policies (confused deputy prevention)** — Without these conditions, any AgentCore principal could assume your execution role. The Condition block limits which specific AgentCore resources can assume the role, preventing cross-account or cross-resource privilege escalation. Use the full runtime ARN in `aws:SourceArn` when possible instead of wildcards. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html>_
+- **Add `aws:SourceArn` and `aws:SourceAccount` to execution role trust policies (confused deputy prevention)** - Without these conditions, any AgentCore principal could assume your execution role. The Condition block limits which specific AgentCore resources can assume the role, preventing cross-account or cross-resource privilege escalation. Use the full runtime ARN in `aws:SourceArn` when possible instead of wildcards. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html>_
 
-- **Use JWT bearer token authentication for end-user-facing agents; use IAM SigV4 for service-to-service** — JWT path (`GetWorkloadAccessTokenForJWT`) validates issuer, signature, and expiry against the IdP. The UserId path (`GetWorkloadAccessTokenForUserId` / `X-Amzn-Bedrock-AgentCore-Runtime-User-Id` header) treats the user ID as an opaque string with no cryptographic verification — only safe for dev or architectures that resolve identity upstream. Explicitly deny `GetWorkloadAccessTokenForUserId` in production where JWTs are available. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html>_
+- **Use JWT bearer token authentication for end-user-facing agents; use IAM SigV4 for service-to-service** - JWT path (`GetWorkloadAccessTokenForJWT`) validates issuer, signature, and expiry against the IdP. The UserId path (`GetWorkloadAccessTokenForUserId` / `X-Amzn-Bedrock-AgentCore-Runtime-User-Id` header) treats the user ID as an opaque string with no cryptographic verification - only safe for dev or architectures that resolve identity upstream. Explicitly deny `GetWorkloadAccessTokenForUserId` in production where JWTs are available. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html>_
 
-- **Deploy runtimes in VPC with private subnets + NAT for accessing private resources** — Public network mode does not provide access to private VPCs. For agents that call internal databases or APIs, configure VPC connectivity. Required interface VPC endpoints: ECR (`dkr` + `api`), CloudWatch Logs. Required S3 gateway endpoint eliminates NAT gateway data charges for image layer pulls. S3 Files and EFS file system mounts also require VPC mode. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html>_
+- **Deploy runtimes in VPC with private subnets + NAT for accessing private resources** - Public network mode does not provide access to private VPCs. For agents that call internal databases or APIs, configure VPC connectivity. Required interface VPC endpoints: ECR (`dkr` + `api`), CloudWatch Logs. Required S3 gateway endpoint eliminates NAT gateway data charges for image layer pulls. S3 Files and EFS file system mounts also require VPC mode. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html>_
 
-- **Stop idle sessions explicitly with `stop_runtime_session()` to control costs** — Sessions remain alive (and billable) for up to 15 minutes of idle time by default. Calling `stop_runtime_session()` immediately after workflow completion avoids unnecessary charges from long `idleRuntimeSessionTimeout` values. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html>_
+- **Stop idle sessions explicitly with `stop_runtime_session()` to control costs** - Sessions remain alive (and billable) for up to 15 minutes of idle time by default. Calling `stop_runtime_session()` immediately after workflow completion avoids unnecessary charges from long `idleRuntimeSessionTimeout` values. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html>_
 
-- **Use custom endpoints to manage dev/staging/prod rollouts** — Create separate named endpoints (`dev`, `staging`, `prod`) pointing to specific versions. Update the prod endpoint only after validating in staging. The DEFAULT endpoint auto-tracks the latest version on every create/update, which can break production if not handled carefully. Max 10 endpoints per agent (adjustable via Service Quotas). _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html>_
+- **Use custom endpoints to manage dev/staging/prod rollouts** - Create separate named endpoints (`dev`, `staging`, `prod`) pointing to specific versions. Update the prod endpoint only after validating in staging. The DEFAULT endpoint auto-tracks the latest version on every create/update, which can break production if not handled carefully. Max 10 endpoints per agent (adjustable via Service Quotas). _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html>_
 
-- **Install minimum boto3 1.39.8+ / botocore 1.33.8+ before using AgentCore APIs** — Older boto3 versions raise `Unknown service: bedrock-agent-core-runtime` because the service model did not exist. This is the most common gotcha when first integrating via Python SDK. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-troubleshooting.html>_
+- **Install minimum boto3 1.39.8+ / botocore 1.33.8+ before using AgentCore APIs** - Older boto3 versions raise `Unknown service: bedrock-agent-core-runtime` because the service model did not exist. This is the most common gotcha when first integrating via Python SDK. _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-troubleshooting.html>_
 
-- **Use `PYTHON_3_13` as the direct code deploy runtime identifier (recommended)** — `PYTHON_3_13` on Amazon Linux 2023 is the currently recommended runtime. `PYTHON_3_10` and `PYTHON_3_11` are both deprecating on 6/30/2026 and should be migrated. `PYTHON_3_14` is also available for forward compatibility. Always use the `SNAKE_CASE` identifier format (e.g., `PYTHON_3_13`, not `PYTHON3_12`). _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-code-deploy-supported-runtimes.html>_
+- **Use `PYTHON_3_13` as the direct code deploy runtime identifier (recommended)** - `PYTHON_3_13` on Amazon Linux 2023 is the currently recommended runtime. `PYTHON_3_10` and `PYTHON_3_11` are both deprecating on 6/30/2026 and should be migrated. `PYTHON_3_14` is also available for forward compatibility. Always use the `SNAKE_CASE` identifier format (e.g., `PYTHON_3_13`, not `PYTHON3_12`). _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-code-deploy-supported-runtimes.html>_
 
 ---
 
@@ -506,7 +506,7 @@ app = BedrockAgentCoreApp()
 
 @app.entrypoint
 def agent_invocation(payload, context):
-    # context.session_id is the runtimeSessionId — reuse for ADK session continuity
+    # context.session_id is the runtimeSessionId - reuse for ADK session continuity
     return asyncio.run(
         call_agent_async(
             payload.get("prompt", "what is Bedrock AgentCore Runtime?"),
@@ -564,7 +564,7 @@ app = BedrockAgentCoreApp()
 @tool
 def start_background_task(duration: int = 5) -> str:
     """Start a task that runs in the background while ping reports HealthyBusy."""
-    # Register task — SDK sets /ping to HealthyBusy automatically
+    # Register task - SDK sets /ping to HealthyBusy automatically
     task_id = app.add_async_task("background_processing", {"duration": duration})
 
     def background_work():
@@ -578,7 +578,7 @@ agent = Agent(tools=[start_background_task])
 
 @app.entrypoint
 def main(payload):
-    """Main entrypoint — handles user messages."""
+    """Main entrypoint - handles user messages."""
     user_message = payload.get("prompt", "Try: start_background_task(3)")
     return {"message": agent(user_message).message}
 
@@ -831,7 +831,7 @@ _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-
 
 ---
 
-### Create AgentCore Runtime — container deployment
+### Create AgentCore Runtime - container deployment
 
 ```python
 import boto3
@@ -867,7 +867,7 @@ _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-
 
 ---
 
-### Create AgentCore Runtime — direct code (ZIP) deployment
+### Create AgentCore Runtime - direct code (ZIP) deployment
 
 ```python
 import boto3
@@ -955,7 +955,7 @@ agent_core_client = boto3.client('bedrock-agentcore', region_name='us-west-2')
 
 agent_arn = 'arn:aws:bedrock-agentcore:us-west-2:account-id:runtime/myAgent-suffix'
 # Session ID must be >= 33 characters; reuse across turns for same conversation
-session_id = str(uuid.uuid4())  # uuid4 gives 36 chars — satisfies the minimum
+session_id = str(uuid.uuid4())  # uuid4 gives 36 chars - satisfies the minimum
 
 # First invocation
 response = agent_core_client.invoke_agent_runtime(
@@ -1007,7 +1007,7 @@ _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-
 ```python
 import boto3
 
-# Control-plane client required — update_agent_runtime_endpoint is a control-plane operation
+# Control-plane client required - update_agent_runtime_endpoint is a control-plane operation
 client = boto3.client('bedrock-agentcore-control', region_name='us-west-2')
 
 # Point a named endpoint to a specific version
@@ -1181,9 +1181,9 @@ _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-
 
 ---
 
-### AgentCore Harness — invoke via boto3 (Preview)
+### AgentCore Harness - invoke via boto3 (Preview)
 
-> **WARNING: PUBLIC PREVIEW** — Available only in `us-east-1`, `us-west-2`, `eu-central-1`, `ap-southeast-2`.
+> **WARNING: PUBLIC PREVIEW** - Available only in `us-east-1`, `us-west-2`, `eu-central-1`, `ap-southeast-2`.
 
 ```python
 # pip install boto3>=1.39.8
@@ -1229,7 +1229,7 @@ import boto3
 
 client = boto3.client('bedrock-agentcore-control', region_name='us-west-2')
 
-# Option 1: Managed session storage (Preview) — no VPC required, per-session isolated
+# Option 1: Managed session storage (Preview) - no VPC required, per-session isolated
 # 1 GB max, survives stop/resume, resets after 14 days idle or version update
 response = client.create_agent_runtime(
     agentRuntimeName='agent-with-session-storage',
@@ -1278,10 +1278,10 @@ _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-
 | `maxLifetime` | Maximum duration in seconds a microVM session can run before forced termination, regardless of activity. | `28800` (8 hours) maximum; configurable lower in `lifecycleConfiguration.maxLifetime` |
 | `networkMode` | Network mode for the runtime. `PUBLIC` means internet-accessible. `VPC` requires subnet and security group IDs in the network configuration. VPC is required for EFS and S3 Files filesystem configurations. | `PUBLIC` or `VPC` |
 | `qualifier` | Endpoint name used when invoking. Defaults to `DEFAULT` which tracks the latest version. Can point to named endpoints like `production` or `staging`. Max 10 endpoints per agent. | `DEFAULT` |
-| `runtimeSessionId` | Session identifier, minimum 33 characters. Provided by the caller or auto-generated by runtime on first invocation if omitted. Reuse across turns for conversation continuity. | `str(uuid.uuid4())` — 36 chars, satisfies the 33-char minimum |
+| `runtimeSessionId` | Session identifier, minimum 33 characters. Provided by the caller or auto-generated by runtime on first invocation if omitted. Reuse across turns for conversation continuity. | `str(uuid.uuid4())` - 36 chars, satisfies the 33-char minimum |
 | `codeConfiguration.runtime` | Runtime identifier for direct code deploy. Must use `SCREAMING_SNAKE_CASE` format. Supported values: `PYTHON_3_14`, `PYTHON_3_13` (recommended), `PYTHON_3_12`, `PYTHON_3_11` (deprecating 6/30/2026), `PYTHON_3_10` (deprecating 6/30/2026), `NODE_22`. All run on Amazon Linux 2023. | `PYTHON_3_13` |
 | `codeConfiguration.entryPoint` | Array of strings forming the command to start the agent. For plain Python: `['main.py']`. For OpenTelemetry-instrumented agents: `['opentelemetry-instrument', 'main.py']`. | `["main.py"]` |
-| `codeConfiguration.code.s3.bucket` / `.prefix` | S3 location of the ZIP deployment package. `bucket` is the bucket name (not ARN); `prefix` is the full S3 key (path + filename). Use the nested `s3` object structure — NOT `s3Location.uri`. | `{"bucket": "bedrock-agentcore-code-<account>-<region>", "prefix": "<agent_name>/deployment_package.zip"}` |
+| `codeConfiguration.code.s3.bucket` / `.prefix` | S3 location of the ZIP deployment package. `bucket` is the bucket name (not ARN); `prefix` is the full S3 key (path + filename). Use the nested `s3` object structure - NOT `s3Location.uri`. | `{"bucket": "bedrock-agentcore-code-<account>-<region>", "prefix": "<agent_name>/deployment_package.zip"}` |
 | `X-Amzn-Bedrock-AgentCore-Runtime-Session-Id` (header) | HTTP header carrying the session ID for HTTP, A2A, and AG-UI protocols. Must be included in all follow-up requests for session affinity routing. Also readable inside the container via `context.session_id` in the SDK. | `X-Amzn-Bedrock-AgentCore-Runtime-Session-Id: <uuid>` |
 | `Mcp-Session-Id` (header) | MCP protocol equivalent of the session header. Required for MCP stateful sessions. | `Mcp-Session-Id: <session-id>` |
 | `bedrock-agentcore:InvokeAgentRuntime` (IAM action) | Required IAM permission to call `InvokeAgentRuntime` (HTTP/SSE). When using `X-Amzn-Bedrock-AgentCore-Runtime-User-Id` header, also requires `bedrock-agentcore:InvokeAgentRuntimeForUser`. | `bedrock-agentcore:InvokeAgentRuntime` |
@@ -1321,11 +1321,11 @@ _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-
 
 - Docker 403 Forbidden when pulling from `public.ecr.aws` is caused by an expired ECR Public token. Fix: `docker logout public.ecr.aws` or re-login. Alternatively use Docker Hub base images.
 
-- The `bedrock-agentcore-starter-toolkit` (`pip install bedrock-agentcore-starter-toolkit`) is LEGACY — superseded by the AgentCore CLI. The core SDK (`pip install bedrock-agentcore`) is NOT deprecated and is required for `BedrockAgentCoreApp`.
+- The `bedrock-agentcore-starter-toolkit` (`pip install bedrock-agentcore-starter-toolkit`) is LEGACY - superseded by the AgentCore CLI. The core SDK (`pip install bedrock-agentcore`) is NOT deprecated and is required for `BedrockAgentCoreApp`.
 
 - MicroVM execution role credentials are accessible to ALL code in the VM via MMDS (similar to EC2 IMDS). Any library or tool loaded by the agent can call the metadata endpoint. Scope execution roles to minimum required permissions.
 
-- The `codeConfiguration.code` field uses a nested `s3` object with `bucket` and `prefix` keys — NOT `s3Location.uri`. Using the wrong schema causes a validation error at `create_agent_runtime` time.
+- The `codeConfiguration.code` field uses a nested `s3` object with `bucket` and `prefix` keys - NOT `s3Location.uri`. Using the wrong schema causes a validation error at `create_agent_runtime` time.
 
 - `PYTHON_3_10` and `PYTHON_3_11` runtimes for direct code deploy are both scheduled for deprecation on **6/30/2026**. Migrate to `PYTHON_3_13` before that date to avoid disruption.
 
@@ -1335,37 +1335,37 @@ _Source: <https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-
 
 - Sessions do NOT resume with the same microVM after stopping. A subsequent invocation with the same `runtimeSessionId` creates a NEW microVM. Ephemeral in-memory state is lost unless you use AgentCore Memory or managed session storage.
 
-- The `invoke_agent_runtime` response body is a `StreamingBody` object. Read it with `response['response'].read()` — not by iterating `response.get('response', [])` as a list, which is incorrect.
+- The `invoke_agent_runtime` response body is a `StreamingBody` object. Read it with `response['response'].read()` - not by iterating `response.get('response', [])` as a list, which is incorrect.
 
 ---
 
 ## Official sources
 
-- [What is Amazon Bedrock AgentCore? (Overview)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html) — Service overview with all component descriptions and integration table
-- [Host agent or tools with AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html) — Runtime feature overview and links to all sub-topics
-- [How it works (Runtime key concepts)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html) — Architecture: runtimes, versions, endpoints, sessions, auth
-- [Understand the AgentCore Runtime service contract](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-service-contract.html) — Supported protocols (HTTP, MCP, A2A, AG-UI), port/path table, and links to each protocol spec
-- [HTTP protocol contract (/invocations, /ping, /ws)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html) — Detailed spec: port 8080, ARM64, /invocations POST, /ping GET, /ws WebSocket, SSE streaming, OAuth 401 behavior
-- [Get started with the AgentCore CLI (full tutorial)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html) — Step-by-step with all CLI flags, project structure, and invoke_agent.py code
-- [Get started without the AgentCore CLI (custom agent / FastAPI)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html) — Manual path: FastAPI, Dockerfile ARM64, ECR push, boto3 create_agent_runtime, invoke, stop
-- [Direct code deployment overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy.html) — ZIP-based deployment vs container: session creation rates, size limits, shared responsibility
-- [Direct code deployment for Python](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy-python.html) — boto3 codeConfiguration schema, S3 upload, create_agent_runtime with codeConfiguration, entryPoint array, runtime identifiers
-- [Supported language runtimes and deprecation policy](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-code-deploy-supported-runtimes.html) — Full table of runtime identifiers: PYTHON_3_10 through PYTHON_3_14, NODE_22, with deprecation dates
-- [Use any agent framework (Strands, LangGraph, Google ADK, OpenAI)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html) — Copy-pasteable code for each framework using BedrockAgentCoreApp
-- [Use isolated sessions for agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html) — MicroVM lifecycle, session states, headers by protocol, ephemeral vs persistent storage
-- [Handle asynchronous and long-running agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html) — /ping contract details (Healthy / HealthyBusy), add_async_task / complete_async_task SDK methods
-- [Stream agent responses (SSE)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/response-streaming.html) — Async generator entrypoint pattern for SSE streaming
-- [Get started with bidirectional streaming using WebSocket](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-websocket.html) — @app.websocket decorator, AgentCoreRuntimeClient, generate_ws_connection(), generate_presigned_url(), InvokeAgentRuntimeWithWebSocketStream IAM action
-- [AgentCore Runtime versioning and endpoints](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html) — Immutable versions, DEFAULT endpoint, update_agent_runtime_endpoint API
-- [File system configurations for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-filesystem-configurations.html) — filesystemConfigurations parameter; session storage (Preview), S3 Files, EFS; up to 5 mounts; 1 GB session storage limit; 14-day idle expiry
-- [IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) — Full IAM policies for CLI user, console user, execution role (container and direct deploy)
-- [Security best practices for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html) — 12 security domains: session isolation, IAM least privilege, confused deputy, network, encryption, auditing
-- [Troubleshoot AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-troubleshooting.html) — 504 timeouts, ARM64 build errors, boto3 version, 403 errors, CloudWatch log patterns, HTTP error codes
-- [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) — Full quota table: 1000 active sessions (us-east-1/us-west-2), 1000 agents/account, 25 TPS InvokeAgentRuntime, 100 TPM new sessions (container), 25 TPS new sessions (direct deploy), session storage 1 GB
-- [AgentCore CLI (GitHub)](https://github.com/aws/agentcore-cli) — Source and issues for the @aws/agentcore npm CLI
-- [Amazon Bedrock AgentCore Samples (GitHub)](https://github.com/awslabs/amazon-bedrock-agentcore-samples) — End-to-end examples per framework, including framework-specific subdirectories
-- [Strands Agents — Deploy to Bedrock AgentCore Runtime](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/) — Strands-specific deployment guide including Python and TypeScript paths
-- [bedrock-agentcore Python SDK (GitHub)](https://github.com/aws/bedrock-agentcore-sdk-python) — Source for bedrock-agentcore PyPI package, BedrockAgentCoreApp class, memory integrations
-- [AgentCore Harness overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html) — Managed agent harness (Preview): config-based agent loop, no custom code needed, powered by Strands Agents
-- [AgentCore Harness — Get started](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-get-started.html) — CLI and boto3 paths; create-harness API, invoke_harness streaming response format, session ID requirements
-- [AgentCore Harness — Configure agents and models](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-config-and-models.html) — Default model claude-sonnet-4-6, override per invocation, multi-provider mid-session model switching
+- [What is Amazon Bedrock AgentCore? (Overview)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/what-is-bedrock-agentcore.html) - Service overview with all component descriptions and integration table
+- [Host agent or tools with AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agents-tools-runtime.html) - Runtime feature overview and links to all sub-topics
+- [How it works (Runtime key concepts)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html) - Architecture: runtimes, versions, endpoints, sessions, auth
+- [Understand the AgentCore Runtime service contract](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-service-contract.html) - Supported protocols (HTTP, MCP, A2A, AG-UI), port/path table, and links to each protocol spec
+- [HTTP protocol contract (/invocations, /ping, /ws)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-http-protocol-contract.html) - Detailed spec: port 8080, ARM64, /invocations POST, /ping GET, /ws WebSocket, SSE streaming, OAuth 401 behavior
+- [Get started with the AgentCore CLI (full tutorial)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html) - Step-by-step with all CLI flags, project structure, and invoke_agent.py code
+- [Get started without the AgentCore CLI (custom agent / FastAPI)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-custom.html) - Manual path: FastAPI, Dockerfile ARM64, ECR push, boto3 create_agent_runtime, invoke, stop
+- [Direct code deployment overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy.html) - ZIP-based deployment vs container: session creation rates, size limits, shared responsibility
+- [Direct code deployment for Python](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-code-deploy-python.html) - boto3 codeConfiguration schema, S3 upload, create_agent_runtime with codeConfiguration, entryPoint array, runtime identifiers
+- [Supported language runtimes and deprecation policy](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-code-deploy-supported-runtimes.html) - Full table of runtime identifiers: PYTHON_3_10 through PYTHON_3_14, NODE_22, with deprecation dates
+- [Use any agent framework (Strands, LangGraph, Google ADK, OpenAI)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/using-any-agent-framework.html) - Copy-pasteable code for each framework using BedrockAgentCoreApp
+- [Use isolated sessions for agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-sessions.html) - MicroVM lifecycle, session states, headers by protocol, ephemeral vs persistent storage
+- [Handle asynchronous and long-running agents](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-long-run.html) - /ping contract details (Healthy / HealthyBusy), add_async_task / complete_async_task SDK methods
+- [Stream agent responses (SSE)](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/response-streaming.html) - Async generator entrypoint pattern for SSE streaming
+- [Get started with bidirectional streaming using WebSocket](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-websocket.html) - @app.websocket decorator, AgentCoreRuntimeClient, generate_ws_connection(), generate_presigned_url(), InvokeAgentRuntimeWithWebSocketStream IAM action
+- [AgentCore Runtime versioning and endpoints](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html) - Immutable versions, DEFAULT endpoint, update_agent_runtime_endpoint API
+- [File system configurations for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-filesystem-configurations.html) - filesystemConfigurations parameter; session storage (Preview), S3 Files, EFS; up to 5 mounts; 1 GB session storage limit; 14-day idle expiry
+- [IAM Permissions for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html) - Full IAM policies for CLI user, console user, execution role (container and direct deploy)
+- [Security best practices for AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-security-best-practices.html) - 12 security domains: session isolation, IAM least privilege, confused deputy, network, encryption, auditing
+- [Troubleshoot AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-troubleshooting.html) - 504 timeouts, ARM64 build errors, boto3 version, 403 errors, CloudWatch log patterns, HTTP error codes
+- [Quotas for Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/bedrock-agentcore-limits.html) - Full quota table: 1000 active sessions (us-east-1/us-west-2), 1000 agents/account, 25 TPS InvokeAgentRuntime, 100 TPM new sessions (container), 25 TPS new sessions (direct deploy), session storage 1 GB
+- [AgentCore CLI (GitHub)](https://github.com/aws/agentcore-cli) - Source and issues for the @aws/agentcore npm CLI
+- [Amazon Bedrock AgentCore Samples (GitHub)](https://github.com/awslabs/amazon-bedrock-agentcore-samples) - End-to-end examples per framework, including framework-specific subdirectories
+- [Strands Agents - Deploy to Bedrock AgentCore Runtime](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/) - Strands-specific deployment guide including Python and TypeScript paths
+- [bedrock-agentcore Python SDK (GitHub)](https://github.com/aws/bedrock-agentcore-sdk-python) - Source for bedrock-agentcore PyPI package, BedrockAgentCoreApp class, memory integrations
+- [AgentCore Harness overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html) - Managed agent harness (Preview): config-based agent loop, no custom code needed, powered by Strands Agents
+- [AgentCore Harness - Get started](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-get-started.html) - CLI and boto3 paths; create-harness API, invoke_harness streaming response format, session ID requirements
+- [AgentCore Harness - Configure agents and models](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness-config-and-models.html) - Default model claude-sonnet-4-6, override per invocation, multi-provider mid-session model switching

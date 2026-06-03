@@ -1,6 +1,6 @@
-# Strands Agents SDK — Fundamentals
+# Strands Agents SDK - Fundamentals
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -18,27 +18,27 @@
   - [Snapshots (take_snapshot / load_snapshot)](#snapshots-take_snapshot--load_snapshot)
   - [Streaming (Async Iterator and Callback Handler)](#streaming-async-iterator-and-callback-handler)
   - [ContextOffloader Plugin](#contextoffloader-plugin)
-  - [BedrockModel — Converse API and Service Tiers](#bedrockmodel--converse-api-and-service-tiers)
+  - [BedrockModel - Converse API and Service Tiers](#bedrockmodel--converse-api-and-service-tiers)
 - [Best practices](#best-practices)
 - [Code](#code)
   - [Installation with available extras](#installation-with-available-extras)
-  - [Minimal agent with BedrockModel (default) — uses Converse API](#minimal-agent-with-bedrockmodel-default--uses-converse-api)
+  - [Minimal agent with BedrockModel (default) - uses Converse API](#minimal-agent-with-bedrockmodel-default--uses-converse-api)
   - [Agent constructor with all main parameters](#agent-constructor-with-all-main-parameters)
-  - [BedrockModel — full configuration with cache, guardrails, service tier and reasoning](#bedrockmodel--full-configuration-with-cache-guardrails-service-tier-and-reasoning)
-  - [AnthropicModel — direct Anthropic API (not via Bedrock)](#anthropicmodel--direct-anthropic-api-not-via-bedrock)
-  - [OpenAIModel — GPT and OpenAI-compatible endpoints](#openaimodel--gpt-and-openai-compatible-endpoints)
-  - [LiteLLMModel — unified gateway for 100+ providers](#litellmmodel--unified-gateway-for-100-providers)
-  - [OllamaModel — local models (Python-only)](#ollamamodel--local-models-python-only)
-  - [LlamaCppModel — local models via llama.cpp server (Python-only, official provider)](#llamacppmodel--local-models-via-llamacpp-server-python-only-official-provider)
-  - [Limits — per-invocation budget caps](#limits--per-invocation-budget-caps)
+  - [BedrockModel - full configuration with cache, guardrails, service tier and reasoning](#bedrockmodel--full-configuration-with-cache-guardrails-service-tier-and-reasoning)
+  - [AnthropicModel - direct Anthropic API (not via Bedrock)](#anthropicmodel--direct-anthropic-api-not-via-bedrock)
+  - [OpenAIModel - GPT and OpenAI-compatible endpoints](#openaimodel--gpt-and-openai-compatible-endpoints)
+  - [LiteLLMModel - unified gateway for 100+ providers](#litellmmodel--unified-gateway-for-100-providers)
+  - [OllamaModel - local models (Python-only)](#ollamamodel--local-models-python-only)
+  - [LlamaCppModel - local models via llama.cpp server (Python-only, official provider)](#llamacppmodel--local-models-via-llamacpp-server-python-only-official-provider)
+  - [Limits - per-invocation budget caps](#limits--per-invocation-budget-caps)
   - [Async streaming with async iterator (ideal for FastAPI)](#async-streaming-with-async-iterator-ideal-for-fastapi)
   - [Synchronous callback handler for non-async apps (Python-only)](#synchronous-callback-handler-for-non-async-apps-python-only)
   - [Structured output with Pydantic BaseModel](#structured-output-with-pydantic-basemodel)
-  - [Hooks — registration with type hints, Plugin pattern and HookProvider](#hooks--registration-with-type-hints-plugin-pattern-and-hookprovider)
-  - [Snapshots — manual save/restore of state](#snapshots--manual-saverestore-of-state)
+  - [Hooks - registration with type hints, Plugin pattern and HookProvider](#hooks--registration-with-type-hints-plugin-pattern-and-hookprovider)
+  - [Snapshots - manual save/restore of state](#snapshots--manual-saverestore-of-state)
   - [Session Management with FileSessionManager (dev) and S3SessionManager (prod)](#session-management-with-filesessionmanager-dev-and-s3sessionmanager-prod)
-  - [Agent State — persistable key-value store with ToolContext](#agent-state--persistable-key-value-store-with-toolcontext)
-  - [ContextOffloader plugin — preventing context window overflow](#contextoffloader-plugin--preventing-context-window-overflow)
+  - [Agent State - persistable key-value store with ToolContext](#agent-state--persistable-key-value-store-with-toolcontext)
+  - [ContextOffloader plugin - preventing context window overflow](#contextoffloader-plugin--preventing-context-window-overflow)
   - [Cancellation with async watchdog timeout](#cancellation-with-async-watchdog-timeout)
 - [Configuration reference](#configuration-reference)
 - [Gotchas](#gotchas)
@@ -48,9 +48,9 @@
 
 ## Overview
 
-Strands Agents SDK is an open-source AWS framework (Python and TypeScript) for building AI agents with minimal code. The core is the **agent loop**: a recursive cycle of LLM inference → tool selection → tool execution → re-inference, which terminates when the model produces a final response. The `Agent` class encapsulates this loop with support for multiple model providers (`BedrockModel` default — uses Bedrock's Converse API, not the legacy InvokeModel — `AnthropicModel`, `OpenAIModel`, `OpenAIResponsesModel`, `LiteLLMModel`, `OllamaModel`, `LlamaCppModel`, and others), conversation management (`SlidingWindowConversationManager` default), structured output via Pydantic, async/callback streaming, a typed hooks system, manual snapshots (`take_snapshot`/`load_snapshot`), and persistent session management (`FileSessionManager`, `S3SessionManager`).
+Strands Agents SDK is an open-source AWS framework (Python and TypeScript) for building AI agents with minimal code. The core is the **agent loop**: a recursive cycle of LLM inference → tool selection → tool execution → re-inference, which terminates when the model produces a final response. The `Agent` class encapsulates this loop with support for multiple model providers (`BedrockModel` default - uses Bedrock's Converse API, not the legacy InvokeModel - `AnthropicModel`, `OpenAIModel`, `OpenAIResponsesModel`, `LiteLLMModel`, `OllamaModel`, `LlamaCppModel`, and others), conversation management (`SlidingWindowConversationManager` default), structured output via Pydantic, async/callback streaming, a typed hooks system, manual snapshots (`take_snapshot`/`load_snapshot`), and persistent session management (`FileSessionManager`, `S3SessionManager`).
 
-**Maturity:** GA (Generally Available). Released as open-source preview in May 2025; reached v1.0 GA with session management, structured output, async, and multi-agent support. Current version: **1.42.0** (PyPI, 1 June 2026). Requires Python ≥ 3.10. TypeScript SDK (`@strands-agents/sdk`) available at v1.4.0 (1 June 2026). **Experimental features:** `BidiAgent` / bidirectional streaming (`strands.experimental.bidi`) — explicitly experimental for all three providers (Nova Sonic, OpenAI Realtime, Google Gemini Live). Community providers (CLOVA Studio, Cohere, Fireworks AI, MLX, NVIDIA NIM, vLLM, xAI, SGLang, Nebius, OVHcloud) are not maintained by AWS. `LlamaCppModel` is an official provider (not community). Notable features introduced after v1.0 GA: `service_tier` (v1.35+), `ContextOffloader` plugin, `Snapshots` API, native token counting for multiple providers, Tool Result Offloading.
+**Maturity:** GA (Generally Available). Released as open-source preview in May 2025; reached v1.0 GA with session management, structured output, async, and multi-agent support. Current version: **1.42.0** (PyPI, 1 June 2026). Requires Python ≥ 3.10. TypeScript SDK (`@strands-agents/sdk`) available at v1.4.0 (1 June 2026). **Experimental features:** `BidiAgent` / bidirectional streaming (`strands.experimental.bidi`) - explicitly experimental for all three providers (Nova Sonic, OpenAI Realtime, Google Gemini Live). Community providers (CLOVA Studio, Cohere, Fireworks AI, MLX, NVIDIA NIM, vLLM, xAI, SGLang, Nebius, OVHcloud) are not maintained by AWS. `LlamaCppModel` is an official provider (not community). Notable features introduced after v1.0 GA: `service_tier` (v1.35+), `ContextOffloader` plugin, `Snapshots` API, native token counting for multiple providers, Tool Result Offloading.
 
 ---
 
@@ -69,7 +69,7 @@ The loop ends with a `stop_reason`:
 | `end_turn` | Normal completion |
 | `tool_use` | Executes tools and continues |
 | `cancelled` | `agent.cancel()` was called |
-| `max_tokens` | Response truncated — not recoverable, loop ends immediately |
+| `max_tokens` | Response truncated - not recoverable, loop ends immediately |
 | `stop_sequence` | Configured stop sequence encountered |
 | `content_filtered` | Safety filter triggered |
 | `guardrail_intervention` | Bedrock guardrail triggered |
@@ -87,12 +87,12 @@ The main class in `strands.agent`. Constructor with ~20 key parameters. Two invo
 
 All providers implement the `Model` interface and are interchangeable. **Default:** `BedrockModel` with Claude Sonnet 4.6 (`anthropic.claude-sonnet-4-6`), uses the Bedrock Converse API (not legacy InvokeModel).
 
-**Official GA providers — Python:**
+**Official GA providers - Python:**
 - `BedrockModel`, `AnthropicModel`, `OpenAIModel`, `OpenAIResponsesModel`
 - `LiteLLMModel`, `OllamaModel`, `LlamaCppModel`, `LlamaAPIModel`
 - `GoogleModel`, `MistralAIModel`, `SageMakerModel`, `WriterModel`, `AmazonNovaModel`
 
-**Official providers — TypeScript:**
+**Official providers - TypeScript:**
 - `BedrockModel`, `AnthropicModel`, `OpenAIModel`, `GoogleModel`, Vercel AI SDK
 
 **Community providers (not maintained by AWS):** CLOVA Studio, Cohere, Fireworks AI, MLX, Nebius, NVIDIA NIM, OVHcloud, SGLang, vLLM, xAI.
@@ -103,19 +103,19 @@ All non-Bedrock providers require a separate `pip install` extra.
 
 System to manage context within context window limits. Three built-in managers:
 
-- **`NullConversationManager`** — no modifications; history grows unbounded
-- **`SlidingWindowConversationManager`** (default) — keeps N most recent messages; automatic tool result truncation to 200 chars head/tail; `per_turn` controls when to apply
-- **`SummarizingConversationManager`** — summarises old messages via a secondary agent; parameters: `summary_ratio` (0.1–0.8), `preserve_recent_messages`, `summarization_system_prompt`
+- **`NullConversationManager`** - no modifications; history grows unbounded
+- **`SlidingWindowConversationManager`** (default) - keeps N most recent messages; automatic tool result truncation to 200 chars head/tail; `per_turn` controls when to apply
+- **`SummarizingConversationManager`** - summarises old messages via a secondary agent; parameters: `summary_ratio` (0.1–0.8), `preserve_recent_messages`, `summarization_system_prompt`
 
-Both `SlidingWindow` and `Summarizing` support **`proactive_compression`** — activates compression before a call when projected tokens exceed a threshold. `S3SessionManager` now also requires `s3:ListBucket` in addition to `GetObject`/`PutObject`/`DeleteObject`.
+Both `SlidingWindow` and `Summarizing` support **`proactive_compression`** - activates compression before a call when projected tokens exceed a threshold. `S3SessionManager` now also requires `s3:ListBucket` in addition to `GetObject`/`PutObject`/`DeleteObject`.
 
 ### Agent State vs Conversation History vs Invocation State
 
 Three distinct forms of state:
 
-1. **Conversation History** — the user/assistant message sequence, passed to the model on each inference; accessible via `agent.messages`; direct tool calls can be excluded with `record_direct_tool_call=False`
-2. **Agent State** (`appState` in TypeScript) — JSON-serialisable key-value store (`agent.state.get/set/delete`); NOT passed to the model; persistable with `SessionManager`; accessible from tools via `ToolContext`; non-serialisable values raise `ValueError`
-3. **Invocation State** — temporary dictionary for a single invocation, shared by reference between hooks and tools; not included in model context; accessible also via `result.state`
+1. **Conversation History** - the user/assistant message sequence, passed to the model on each inference; accessible via `agent.messages`; direct tool calls can be excluded with `record_direct_tool_call=False`
+2. **Agent State** (`appState` in TypeScript) - JSON-serialisable key-value store (`agent.state.get/set/delete`); NOT passed to the model; persistable with `SessionManager`; accessible from tools via `ToolContext`; non-serialisable values raise `ValueError`
+3. **Invocation State** - temporary dictionary for a single invocation, shared by reference between hooks and tools; not included in model context; accessible also via `result.state`
 
 ### Hooks System
 
@@ -130,23 +130,23 @@ Converts Pydantic (Python) or Zod (TypeScript) schemas into tool specifications,
 Automatic persistence of the complete state (conversation history + agent state + conversation manager state) via the `session_manager` parameter.
 
 **Built-in:**
-- `FileSessionManager` — local filesystem; for development
-- `S3SessionManager` — S3; for production; requires `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:ListBucket`
+- `FileSessionManager` - local filesystem; for development
+- `S3SessionManager` - S3; for production; requires `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:ListBucket`
 
-**Third-party:** `AgentCoreMemorySessionManager` (Amazon Bedrock AgentCore — advanced memory with intelligent short-term + long-term retrieval).
+**Third-party:** `AgentCoreMemorySessionManager` (Amazon Bedrock AgentCore - advanced memory with intelligent short-term + long-term retrieval).
 
 **Critical rule for Graph/Swarm:** `session_manager` only on the orchestrator, never on inner agents (`ValueError` in Python).
 
 ### Snapshots (take_snapshot / load_snapshot)
 
-API for manual in-memory state control, distinct from session management. `take_snapshot(preset, include, exclude, app_data)`: preset `'session'` captures `messages`, `state`, `conversation_manager_state`, `interrupt_state`. Note: `system_prompt` is NOT included by default in Python — add it explicitly with `include=["system_prompt"]` if needed. `load_snapshot(snapshot)` restores only the fields present in the snapshot. `app_data` lets you attach transparent application metadata (labels, workflow steps, user preferences — Strands passes it through verbatim without reading it). Useful for explicit save-points, undo/redo, and state inspection. Distinct from session management which is automatic.
+API for manual in-memory state control, distinct from session management. `take_snapshot(preset, include, exclude, app_data)`: preset `'session'` captures `messages`, `state`, `conversation_manager_state`, `interrupt_state`. Note: `system_prompt` is NOT included by default in Python - add it explicitly with `include=["system_prompt"]` if needed. `load_snapshot(snapshot)` restores only the fields present in the snapshot. `app_data` lets you attach transparent application metadata (labels, workflow steps, user preferences - Strands passes it through verbatim without reading it). Useful for explicit save-points, undo/redo, and state inspection. Distinct from session management which is automatic.
 
 ### Streaming (Async Iterator and Callback Handler)
 
 Two patterns for accessing streaming events in Python:
 
-1. **Async Iterator** via `agent.stream_async()` — ideal for FastAPI/aiohttp; requires `callback_handler=None`
-2. **Callback Handler** via `callback_handler` parameter — synchronous; Python-only (TypeScript uses async iterator exclusively with `agent.stream()`)
+1. **Async Iterator** via `agent.stream_async()` - ideal for FastAPI/aiohttp; requires `callback_handler=None`
+2. **Callback Handler** via `callback_handler` parameter - synchronous; Python-only (TypeScript uses async iterator exclusively with `agent.stream()`)
 
 **Python event types:** `init_event_loop`, `start_event_loop`, `data` (text), `current_tool_use`, `message`, `result`, `force_stop`, `force_stop_reason`, `delta`, `reasoning`, `reasoningText`, `tool_stream_event`, `multiagent_node_*` events. TypeScript has a hook-based streaming system with more granular events. `PrintingCallbackHandler` is the default (prints to stdout).
 
@@ -154,7 +154,7 @@ Two patterns for accessing streaming events in Python:
 
 Built-in plugin (`strands.vended_plugins.context_offloader`) that prevents context window overflow by intercepting large tool results. When a result exceeds `max_result_tokens` tokens, each content block is persisted to external storage (`InMemoryStorage`, `FileStorage`) and the content in context is replaced with a preview (`preview_tokens`) + reference. With `include_retrieval_tool=True`, automatically adds a tool to the agent for on-demand retrieval of offloaded blocks. A proactive alternative to the reactive truncation of `SlidingWindowConversationManager`.
 
-### BedrockModel — Converse API and Service Tiers
+### BedrockModel - Converse API and Service Tiers
 
 `BedrockModel` uses exclusively the Bedrock Converse API (not the legacy InvokeModel API) for all invocations. From v1.35+ supports `service_tier`: `'default'` (standard), `'priority'` (faster, premium), `'flex'` (cheaper, slower). The field is omitted if not specified and Bedrock uses default behaviour. If the tier is not supported by the model/region, Bedrock returns `ValidationException`. Reasoning/thinking enabled via `additional_request_fields` with `{'thinking': {'type': 'enabled', 'budget_tokens': N}}` (minimum 1024). Interleaved thinking (Claude 4) also requires `anthropic_beta: ['interleaved-thinking-2025-05-14']`.
 
@@ -162,39 +162,39 @@ Built-in plugin (`strands.vended_plugins.context_offloader`) that prevents conte
 
 ## Best practices
 
-- **Use `BedrockModel` as the default provider on AWS; specify `model_id` as a string in the `Agent` constructor for simplicity** — Does not require extra imports; credential resolution happens automatically via boto3 (IAM role > env var > AWS profile). Works on ECS/Lambda/EC2 without explicit configuration. `Agent(model='anthropic.claude-sonnet-4-6')` is equivalent to `Agent(model=BedrockModel(model_id='...'))`. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
+- **Use `BedrockModel` as the default provider on AWS; specify `model_id` as a string in the `Agent` constructor for simplicity** - Does not require extra imports; credential resolution happens automatically via boto3 (IAM role > env var > AWS profile). Works on ECS/Lambda/EC2 without explicit configuration. `Agent(model='anthropic.claude-sonnet-4-6')` is equivalent to `Agent(model=BedrockModel(model_id='...'))`. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
 
-- **Always set `region_name` on `BedrockModel` or `AWS_DEFAULT_REGION` explicitly; do not rely on `AWS_REGION`** — boto3 has a non-obvious priority order: `BedrockModel(region_name=...)` > boto3 session region (AWS_DEFAULT_REGION or profile) > `AWS_REGION` > default (us-west-2). `AWS_REGION` is the lowest-priority fallback (just above the hardcoded default) and can cause surprises in production; prefer `AWS_DEFAULT_REGION` or `BedrockModel(region_name=...)`. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
+- **Always set `region_name` on `BedrockModel` or `AWS_DEFAULT_REGION` explicitly; do not rely on `AWS_REGION`** - boto3 has a non-obvious priority order: `BedrockModel(region_name=...)` > boto3 session region (AWS_DEFAULT_REGION or profile) > `AWS_REGION` > default (us-west-2). `AWS_REGION` is the lowest-priority fallback (just above the hardcoded default) and can cause surprises in production; prefer `AWS_DEFAULT_REGION` or `BedrockModel(region_name=...)`. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
 
-- **Use the Bedrock Converse API (BedrockModel default) — do not configure legacy InvokeModel** — `BedrockModel` already uses the Converse API internally for all invocations. No extra configuration needed. InvokeModel is the legacy API and is not exposed directly by Strands. Converse supports tool use, multimodal, caching, and reasoning in a unified way. _Source: https://strandsagents.com/docs/api/python/strands.models.bedrock/_
+- **Use the Bedrock Converse API (BedrockModel default) - do not configure legacy InvokeModel** - `BedrockModel` already uses the Converse API internally for all invocations. No extra configuration needed. InvokeModel is the legacy API and is not exposed directly by Strands. Converse supports tool use, multimodal, caching, and reasoning in a unified way. _Source: https://strandsagents.com/docs/api/python/strands.models.bedrock/_
 
-- **For streaming on async servers use `agent.stream_async()` with `callback_handler=None`; not the synchronous callback handler** — The synchronous callback handler blocks the thread. For FastAPI/aiohttp/Django Channels you need the async iterator pattern to avoid blocking the event loop. TypeScript does not support callback handlers — always use `agent.stream()` async. _Source: https://strandsagents.com/docs/user-guide/concepts/streaming/async-iterators/index.md_
+- **For streaming on async servers use `agent.stream_async()` with `callback_handler=None`; not the synchronous callback handler** - The synchronous callback handler blocks the thread. For FastAPI/aiohttp/Django Channels you need the async iterator pattern to avoid blocking the event loop. TypeScript does not support callback handlers - always use `agent.stream()` async. _Source: https://strandsagents.com/docs/user-guide/concepts/streaming/async-iterators/index.md_
 
-- **Disable the default callback handler (`callback_handler=None`) when using `stream_async()`** — If not disabled, `PrintingCallbackHandler` prints to stdout AND data also arrives from the stream: double output and potential race conditions. _Source: https://strandsagents.com/docs/user-guide/concepts/streaming/async-iterators/index.md_
+- **Disable the default callback handler (`callback_handler=None`) when using `stream_async()`** - If not disabled, `PrintingCallbackHandler` prints to stdout AND data also arrives from the stream: double output and potential race conditions. _Source: https://strandsagents.com/docs/user-guide/concepts/streaming/async-iterators/index.md_
 
-- **Use `SlidingWindowConversationManager` with `per_turn=True` for agent loops with many tool calls** — The default (`per_turn=False`) applies window management only at the end of the full loop. With many tool calls the context can explode before then. `per_turn=True` applies truncation before each model call. Alternatively use the `ContextOffloader` plugin for a proactive approach that preserves offloaded data instead of truncating it. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/conversation-management/index.md_
+- **Use `SlidingWindowConversationManager` with `per_turn=True` for agent loops with many tool calls** - The default (`per_turn=False`) applies window management only at the end of the full loop. With many tool calls the context can explode before then. `per_turn=True` applies truncation before each model call. Alternatively use the `ContextOffloader` plugin for a proactive approach that preserves offloaded data instead of truncating it. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/conversation-management/index.md_
 
-- **Use `ContextOffloader` plugin for tools that return large data (file readers, APIs, DB queries)** — `SlidingWindowConversationManager` truncates reactively (200 chars head/tail) after a failed API call. `ContextOffloader` is proactive: offloads before sending to the model, preserving complete data retrievable on demand. Configure `max_result_tokens` and `include_retrieval_tool=True` for maximum control. _Source: https://strandsagents.com/docs/user-guide/concepts/plugins/context-offloader/index.md_
+- **Use `ContextOffloader` plugin for tools that return large data (file readers, APIs, DB queries)** - `SlidingWindowConversationManager` truncates reactively (200 chars head/tail) after a failed API call. `ContextOffloader` is proactive: offloads before sending to the model, preserving complete data retrievable on demand. Configure `max_result_tokens` and `include_retrieval_tool=True` for maximum control. _Source: https://strandsagents.com/docs/user-guide/concepts/plugins/context-offloader/index.md_
 
-- **Implement cancellation with `agent.cancel()` from a separate thread/task for timeouts or disconnects** — `cancel()` is thread-safe and idempotent. The result returns `stop_reason='cancelled'`. The signal resets automatically, so the agent is immediately reusable. Without `cancel()`, a pending request blocks the lock (`ConcurrencyException`). In TypeScript also supports external `AbortSignal`. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/agent-loop/index.md_
+- **Implement cancellation with `agent.cancel()` from a separate thread/task for timeouts or disconnects** - `cancel()` is thread-safe and idempotent. The result returns `stop_reason='cancelled'`. The signal resets automatically, so the agent is immediately reusable. Without `cancel()`, a pending request blocks the lock (`ConcurrencyException`). In TypeScript also supports external `AbortSignal`. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/agent-loop/index.md_
 
-- **Use the `structured_output_model` parameter in `__call__` / `invoke_async` as the primary approach for structured output** — This is the current recommended API. Returns the result in `AgentResult.structured_output`. Works in combination with streaming. `agent.structured_output()` and `agent.structured_output_async()` are DEPRECATED in Python; use the `structured_output_model` parameter in `__call__` / `invoke_async` for new code. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/structured-output/index.md_
+- **Use the `structured_output_model` parameter in `__call__` / `invoke_async` as the primary approach for structured output** - This is the current recommended API. Returns the result in `AgentResult.structured_output`. Works in combination with streaming. `agent.structured_output()` and `agent.structured_output_async()` are DEPRECATED in Python; use the `structured_output_model` parameter in `__call__` / `invoke_async` for new code. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/structured-output/index.md_
 
-- **Use `S3SessionManager` for persistence in production; `FileSessionManager` only for local development** — `S3SessionManager` uses S3 operations for safe writes in distributed environments. Requires: `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:ListBucket`. `FileSessionManager` is designed for local dev and testing (default: tmpdir). _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md_
+- **Use `S3SessionManager` for persistence in production; `FileSessionManager` only for local development** - `S3SessionManager` uses S3 operations for safe writes in distributed environments. Requires: `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`, `s3:ListBucket`. `FileSessionManager` is designed for local dev and testing (default: tmpdir). _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md_
 
-- **Do not assign `session_manager` to agents inside a Graph/Swarm: assign it only to the orchestrator** — Python raises `ValueError` if an agent with `session_manager` is added to a Graph or Swarm. The orchestrator manages snapshot/restore for all nodes; a manager at agent level creates state conflicts. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md_
+- **Do not assign `session_manager` to agents inside a Graph/Swarm: assign it only to the orchestrator** - Python raises `ValueError` if an agent with `session_manager` is added to a Graph or Swarm. The orchestrator manages snapshot/restore for all nodes; a manager at agent level creates state conflicts. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md_
 
-- **Use typed hooks with type hints for concise, refactoring-safe registration** — `agent.add_hook(callback)` automatically infers the type from the parameter annotation. Also works with Union types to register the same callback on multiple events. In TypeScript use `HookOrder` to position callbacks relative to internal SDK hooks. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/hooks/index.md_
+- **Use typed hooks with type hints for concise, refactoring-safe registration** - `agent.add_hook(callback)` automatically infers the type from the parameter annotation. Also works with Union types to register the same callback on multiple events. In TypeScript use `HookOrder` to position callbacks relative to internal SDK hooks. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/hooks/index.md_
 
-- **Use `service_tier='flex'` for non-time-sensitive batch workloads, `'priority'` for latency-sensitive interactive agents** — `service_tier` is a `BedrockModel` parameter (introduced ~v1.35) that controls the latency/cost trade-off at request level. If the tier is not supported by the model/region, Bedrock returns `ValidationException` — verify AWS documentation on supported service tiers. _Source: https://strandsagents.com/docs/api/python/strands.models.bedrock/_
+- **Use `service_tier='flex'` for non-time-sensitive batch workloads, `'priority'` for latency-sensitive interactive agents** - `service_tier` is a `BedrockModel` parameter (introduced ~v1.35) that controls the latency/cost trade-off at request level. If the tier is not supported by the model/region, Bedrock returns `ValidationException` - verify AWS documentation on supported service tiers. _Source: https://strandsagents.com/docs/api/python/strands.models.bedrock/_
 
-- **Enable reasoning with `additional_request_fields` rather than looking for a dedicated parameter** — `BedrockModel` exposes `additional_request_fields` as an escape hatch for model-specific parameters not normalised in the common interface. For Claude 4 with interleaved thinking: `{'anthropic_beta': ['interleaved-thinking-2025-05-14'], 'thinking': {'type': 'enabled', 'budget_tokens': 8000}}`. _Source: https://strandsagents.com/blog/interleaved-thinking-claude-4/index.md_
+- **Enable reasoning with `additional_request_fields` rather than looking for a dedicated parameter** - `BedrockModel` exposes `additional_request_fields` as an escape hatch for model-specific parameters not normalised in the common interface. For Claude 4 with interleaved thinking: `{'anthropic_beta': ['interleaved-thinking-2025-05-14'], 'thinking': {'type': 'enabled', 'budget_tokens': 8000}}`. _Source: https://strandsagents.com/blog/interleaved-thinking-claude-4/index.md_
 
-- **Keep tool descriptions unambiguous and non-overlapping across different tools** — Tool selection depends on the description. Tools with overlapping descriptions cause erratic selections. Review descriptions from the model's perspective, not the developer's. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/agent-loop/index.md_
+- **Keep tool descriptions unambiguous and non-overlapping across different tools** - Tool selection depends on the description. Tools with overlapping descriptions cause erratic selections. Review descriptions from the model's perspective, not the developer's. _Source: https://strandsagents.com/docs/user-guide/concepts/agents/agent-loop/index.md_
 
-- **Call `agent.cleanup()` explicitly when the agent uses MCP tool providers or external resources** — `cleanup()` frees MCP clients and other resources. The finalizer (`__del__`) works as a fallback but is not guaranteed. Critical in long-lived or server contexts to avoid leaks. _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
+- **Call `agent.cleanup()` explicitly when the agent uses MCP tool providers or external resources** - `cleanup()` frees MCP clients and other resources. The finalizer (`__del__`) works as a fallback but is not guaranteed. Critical in long-lived or server contexts to avoid leaks. _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 
-- **Do not use `BidiAgent` (`strands.experimental.bidi`) in production without a migration plan** — The documentation explicitly states: "This feature is experimental and may change in future versions. Use with caution in production environments." Supported providers are Nova Sonic, OpenAI Realtime, Google Gemini Live — but the API may change before GA. _Source: https://strandsagents.com/docs/user-guide/concepts/bidirectional-streaming/agent/_
+- **Do not use `BidiAgent` (`strands.experimental.bidi`) in production without a migration plan** - The documentation explicitly states: "This feature is experimental and may change in future versions. Use with caution in production environments." Supported providers are Nova Sonic, OpenAI Realtime, Google Gemini Live - but the API may change before GA. _Source: https://strandsagents.com/docs/user-guide/concepts/bidirectional-streaming/agent/_
 
 ---
 
@@ -231,7 +231,7 @@ _Source: https://pypi.org/project/strands-agents/_
 
 ---
 
-### Minimal agent with BedrockModel (default) — uses Converse API
+### Minimal agent with BedrockModel (default) - uses Converse API
 
 ```python
 from strands import Agent
@@ -276,7 +276,7 @@ model = BedrockModel(
     region_name="us-east-1",
     temperature=0.3,
     max_tokens=4096,
-    streaming=True,         # default True — uses Converse streaming
+    streaming=True,         # default True - uses Converse streaming
     service_tier="default", # 'default' | 'priority' | 'flex'
 )
 
@@ -308,7 +308,7 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 
 ---
 
-### BedrockModel — full configuration with cache, guardrails, service tier and reasoning
+### BedrockModel - full configuration with cache, guardrails, service tier and reasoning
 
 ```python
 import boto3
@@ -362,7 +362,7 @@ model_reasoning = BedrockModel(
     },
 )
 
-# Interleaved thinking (Claude Sonnet 4.6) — also requires anthropic_beta
+# Interleaved thinking (Claude Sonnet 4.6) - also requires anthropic_beta
 model_interleaved = BedrockModel(
     model_id="us.anthropic.claude-sonnet-4-6",
     additional_request_fields={
@@ -386,7 +386,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amaz
 
 ---
 
-### AnthropicModel — direct Anthropic API (not via Bedrock)
+### AnthropicModel - direct Anthropic API (not via Bedrock)
 
 ```python
 import os
@@ -416,7 +416,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/anth
 
 ---
 
-### OpenAIModel — GPT and OpenAI-compatible endpoints
+### OpenAIModel - GPT and OpenAI-compatible endpoints
 
 ```python
 import os
@@ -460,7 +460,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/open
 
 ---
 
-### LiteLLMModel — unified gateway for 100+ providers
+### LiteLLMModel - unified gateway for 100+ providers
 
 ```python
 from strands import Agent
@@ -491,7 +491,7 @@ model_proxy2 = LiteLLMModel(
 )
 
 # Note on caching: works via SystemContentBlock but the behaviour
-# depends on the underlying provider — not all LiteLLM providers actually
+# depends on the underlying provider - not all LiteLLM providers actually
 # support caching in production. Verify the specific provider's documentation.
 
 agent = Agent(model=model)
@@ -502,7 +502,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/lite
 
 ---
 
-### OllamaModel — local models (Python-only)
+### OllamaModel - local models (Python-only)
 
 ```python
 from strands import Agent
@@ -535,7 +535,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/olla
 
 ---
 
-### LlamaCppModel — local models via llama.cpp server (Python-only, official provider)
+### LlamaCppModel - local models via llama.cpp server (Python-only, official provider)
 
 ```python
 from strands import Agent
@@ -571,7 +571,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/llam
 
 ---
 
-### Limits — per-invocation budget caps
+### Limits - per-invocation budget caps
 
 ```python
 import asyncio
@@ -581,7 +581,7 @@ from strands_tools import calculator
 
 agent = Agent(tools=[calculator])
 
-# Limits is a TypedDict — all fields are optional (positive int)
+# Limits is a TypedDict - all fields are optional (positive int)
 # When a cap is reached, the loop terminates gracefully without exception
 # Check occurs at the start of each iteration (turn boundary)
 # Token caps are 'soft': a single oversized response can exceed the cap by one turn
@@ -683,7 +683,7 @@ from strands_tools import calculator
 # TypeScript uses exclusively the async iterator pattern (agent.stream())
 
 def my_callback(**kwargs):
-    """Synchronous callback — kwargs contains all events."""
+    """Synchronous callback - kwargs contains all events."""
     if "data" in kwargs:
         print(kwargs["data"], end="", flush=True)
     elif "current_tool_use" in kwargs and kwargs["current_tool_use"].get("name"):
@@ -757,7 +757,7 @@ async def stream_structured():
         elif "result" in event:
             product = event["result"].structured_output
             if product:
-                print(f"\nParsed: {product.name} — ${product.price}")
+                print(f"\nParsed: {product.name} - ${product.price}")
 
 asyncio.run(stream_structured())
 ```
@@ -766,7 +766,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/agents/structured-ou
 
 ---
 
-### Hooks — registration with type hints, Plugin pattern and HookProvider
+### Hooks - registration with type hints, Plugin pattern and HookProvider
 
 ```python
 from strands import Agent
@@ -852,7 +852,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/agents/hooks/index.m
 
 ---
 
-### Snapshots — manual save/restore of state
+### Snapshots - manual save/restore of state
 
 ```python
 from strands import Agent
@@ -873,7 +873,7 @@ agent("Remember that my name is Alice")
 # To include it: agent.take_snapshot(preset="session", include=["system_prompt"])
 snapshot = agent.take_snapshot(preset="session")
 
-# With custom app_data — Strands does not read it, passes through verbatim
+# With custom app_data - Strands does not read it, passes through verbatim
 snapshot_with_meta = agent.take_snapshot(
     preset="session",
     app_data={"checkpoint_label": "after_greeting", "workflow_step": 1},
@@ -949,7 +949,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/agents/session-manag
 
 ---
 
-### Agent State — persistable key-value store with ToolContext
+### Agent State - persistable key-value store with ToolContext
 
 ```python
 from strands import Agent, tool, ToolContext
@@ -995,7 +995,7 @@ _Source: https://strandsagents.com/docs/user-guide/concepts/agents/state/index.m
 
 ---
 
-### ContextOffloader plugin — preventing context window overflow
+### ContextOffloader plugin - preventing context window overflow
 
 ```python
 from strands import Agent
@@ -1092,7 +1092,7 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 | `AWS_SECRET_ACCESS_KEY` | AWS secret for authentication. Use together with `AWS_ACCESS_KEY_ID`. | `export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
 | `AWS_SESSION_TOKEN` | Temporary session token (STS assume-role). Optional; required only for temporary credentials. | `export AWS_SESSION_TOKEN=AQoXnyc4lcK4w...` |
 | `AWS_DEFAULT_REGION` | Preferred AWS region. HIGH priority in boto3 resolution, more reliable than `AWS_REGION`. Use this, not `AWS_REGION`. | `export AWS_DEFAULT_REGION=us-east-1` |
-| `AWS_REGION` | AWS region. Lowest-priority fallback in boto3 resolution chain for BedrockModel (priority 3 of 4, just above the hardcoded default us-west-2). Do not rely on it as the sole region mechanism. | Lowest priority — prefer `AWS_DEFAULT_REGION` or `BedrockModel(region_name=...)` |
+| `AWS_REGION` | AWS region. Lowest-priority fallback in boto3 resolution chain for BedrockModel (priority 3 of 4, just above the hardcoded default us-west-2). Do not rely on it as the sole region mechanism. | Lowest priority - prefer `AWS_DEFAULT_REGION` or `BedrockModel(region_name=...)` |
 | `AWS_BEARER_TOKEN_BEDROCK` | Bearer token for alternative authentication to Bedrock (not SigV4). Alternative to IAM keys. | `export AWS_BEARER_TOKEN_BEDROCK=<token>` |
 | `ANTHROPIC_API_KEY` | API key for `AnthropicModel` (direct access, not via Bedrock). Required when using `strands.models.anthropic`. | `export ANTHROPIC_API_KEY=sk-ant-...` |
 | `OPENAI_API_KEY` | API key for `OpenAIModel`. Can also be passed via `client_args={'api_key': ...}`. | `export OPENAI_API_KEY=sk-...` |
@@ -1100,7 +1100,7 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 | `BedrockModel.region_name` | Bedrock region. Highest priority in resolution after BedrockModel constructor. Default: `us-west-2`. | `us-east-1` |
 | `BedrockModel.temperature` | Model output randomness (0.0–1.0). Lower values = more deterministic. | `0.3` |
 | `BedrockModel.max_tokens` | Maximum number of tokens to generate in the response. | `4096` |
-| `BedrockModel.cache_config` | Enables prompt caching for Claude models. `strategy='auto'` for automatic cache point management (Claude-only). Amazon Nova supports caching but does not accept checkpoints in the `tools` field. | `CacheConfig(strategy='auto')` — only Claude on Bedrock |
+| `BedrockModel.cache_config` | Enables prompt caching for Claude models. `strategy='auto'` for automatic cache point management (Claude-only). Amazon Nova supports caching but does not accept checkpoints in the `tools` field. | `CacheConfig(strategy='auto')` - only Claude on Bedrock |
 | `BedrockModel.cache_tools` | Enables caching of tool definitions. Accepts string `'default'` (TTL 5 min) or `CacheToolsConfig(type=..., ttl='1h')`. | `cache_tools='default'` |
 | `BedrockModel.service_tier` | Service tier to balance latency vs cost (introduced v1.35+). `ValidationException` if model/region does not support the tier. | `'default'` \| `'priority'` \| `'flex'` |
 | `BedrockModel.additional_request_fields` | Model-specific parameters not normalised in the common interface. Used for reasoning/thinking and beta features. | `{'thinking': {'type': 'enabled', 'budget_tokens': 4096}}` |
@@ -1113,7 +1113,7 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 | `SlidingWindowConversationManager.window_size` | Maximum number of messages in the conversation window. Older messages are removed. | `40` |
 | `SlidingWindowConversationManager.per_turn` | `False` (default): applies management only after the loop. `True`: before each model call. `int N`: every N model calls. | `False` \| `True` \| `3` |
 | `SlidingWindowConversationManager.should_truncate_results` | Truncates large tool results keeping head/tail (200 chars default). Proactive alternative: `ContextOffloader` plugin. | `True` (default) |
-| `S3SessionManager` — required IAM permissions | S3 permissions needed for session persistence. `s3:ListBucket` is required in addition to the three CRUD operations. | `s3:GetObject, s3:PutObject, s3:DeleteObject, s3:ListBucket` on the sessions bucket |
+| `S3SessionManager` - required IAM permissions | S3 permissions needed for session persistence. `s3:ListBucket` is required in addition to the three CRUD operations. | `s3:GetObject, s3:PutObject, s3:DeleteObject, s3:ListBucket` on the sessions bucket |
 | `bedrock:InvokeModelWithResponseStream` (IAM) | IAM permission for `BedrockModel` in streaming mode (default). Mandatory. `BedrockModel` uses Converse API streaming. | `{"Effect": "Allow", "Action": ["bedrock:InvokeModelWithResponseStream"], "Resource": "*"}` |
 | `bedrock:InvokeModel` (IAM) | IAM permission for `BedrockModel` in non-streaming mode (`streaming=False`). | `{"Effect": "Allow", "Action": ["bedrock:InvokeModel"], "Resource": "*"}` |
 
@@ -1123,13 +1123,13 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 
 - `AWS_REGION` is the lowest-priority fallback in the boto3 resolution chain for `BedrockModel`. The full chain is: `BedrockModel(region_name=...)` > boto3 session region (AWS_DEFAULT_REGION or profile) > `AWS_REGION` > default `us-west-2`. If your agent uses an unexpected region, check the profile first and then use `BedrockModel(region_name=...)` or `AWS_DEFAULT_REGION`. _Source: https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md_
 
-- `BedrockModel` uses the Bedrock Converse API internally, NOT the legacy InvokeModel API. Do not try to configure `InvokeModel` — use `BedrockModel` parameters that map onto Converse (`model_id`, `max_tokens`, `temperature`, `stop_sequences`, `guardrail_*`, `cache_config`, `additional_request_fields`).
+- `BedrockModel` uses the Bedrock Converse API internally, NOT the legacy InvokeModel API. Do not try to configure `InvokeModel` - use `BedrockModel` parameters that map onto Converse (`model_id`, `max_tokens`, `temperature`, `stop_sequences`, `guardrail_*`, `cache_config`, `additional_request_fields`).
 
 - Do not use the callback handler (default `PrintingCallbackHandler`) together with `stream_async()`: it will cause double output. Set `callback_handler=None` when using the async iterator pattern. The callback handler is Python-only: TypeScript uses exclusively the async iterator pattern.
 
 - Cancellation via `agent.cancel()` is **cooperative** for tools: if a tool is already executing, it continues until completion. Only tools can respect cancellation internally. TypeScript also supports external `AbortSignal` for framework-driven cancellation.
 
-- Agents inside a Graph or Swarm must NOT have their own `session_manager` — Python raises `ValueError`. Only the orchestrator (Graph/Swarm) should have the `session_manager`.
+- Agents inside a Graph or Swarm must NOT have their own `session_manager` - Python raises `ValueError`. Only the orchestrator (Graph/Swarm) should have the `session_manager`.
 
 - `MaxTokensReachedException` / `stop_reason='max_tokens'` is NOT recoverable within the current loop. The loop ends immediately. `Limits` (`limit_turns`, `limit_total_tokens`, `limit_output_tokens`) are different: they terminate gracefully and leave `agent.messages` in a reinvocable state.
 
@@ -1145,11 +1145,11 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 
 - `cleanup()` must be called explicitly when using tools with MCP clients or external resources. The `__del__` finalizer is only a fallback and is not guaranteed in all runtimes.
 
-- `cache_config` with `strategy='auto'` is ONLY for Claude models on Bedrock. Amazon Nova supports caching but does not accept cache checkpoints in the `tools` field — use cache points in `messages` instead. Minimum tokens: Claude Sonnet 1024, Claude Haiku 4096. Expiry: 5 minutes of inactivity.
+- `cache_config` with `strategy='auto'` is ONLY for Claude models on Bedrock. Amazon Nova supports caching but does not accept cache checkpoints in the `tools` field - use cache points in `messages` instead. Minimum tokens: Claude Sonnet 1024, Claude Haiku 4096. Expiry: 5 minutes of inactivity.
 
 - `service_tier` is available from approximately v1.35. If the model or region does not support the specified tier, Bedrock returns `ValidationException`. Verify https://docs.aws.amazon.com/bedrock/latest/userguide/service-tiers-inference.html for the support matrix.
 
-- Snapshots (`take_snapshot`/`load_snapshot`) are in-memory and manual — they are NOT automatic persistence. For automatic persistence use `session_manager`. The two mechanisms are complementary: snapshots for precise save-points in the same process, `session_manager` for cross-session persistence.
+- Snapshots (`take_snapshot`/`load_snapshot`) are in-memory and manual - they are NOT automatic persistence. For automatic persistence use `session_manager`. The two mechanisms are complementary: snapshots for precise save-points in the same process, `session_manager` for cross-session persistence.
 
 - `S3SessionManager` requires `s3:ListBucket` IN ADDITION TO `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`. Previous versions of the documentation omitted this permission.
 
@@ -1161,30 +1161,30 @@ _Source: https://strandsagents.com/docs/api/python/strands.agent.agent/_
 
 ## Official sources
 
-- [Strands Agents SDK — User Guide: Agent Loop](https://strandsagents.com/docs/user-guide/concepts/agents/agent-loop/index.md) — Complete agent cycle: stop reasons, cooperative cancellation, context window management, lifecycle
-- [Strands Agents SDK — API Reference: Agent class (Python)](https://strandsagents.com/docs/api/python/strands.agent.agent/) — All Agent constructor parameters, `__call__`, `invoke_async`, `stream_async`, `structured_output`, `add_hook`, `as_tool`, `take_snapshot`, `load_snapshot`, `cleanup`, `cancel`
-- [Strands Agents SDK — Python Quickstart](https://strandsagents.com/docs/user-guide/quickstart/python/index.md) — Installation, credentials, `AgentResult.metrics`, model providers, streaming with async iterator and callback handler, debug logging
-- [Strands Agents SDK — Model Providers Overview](https://strandsagents.com/docs/user-guide/concepts/model-providers/index.md) — Complete table of supported Python/TypeScript providers, pip install commands, community vs official providers
-- [Strands Agents SDK — Amazon Bedrock Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md) — IAM permissions, boto3 credentials, all `BedrockModel` parameters, caching (`cache_config`/`cache_tools`), `service_tier`, reasoning via `additional_request_fields`, guardrails, Converse API
-- [Strands Agents SDK — API Reference: BedrockModel (Python)](https://strandsagents.com/docs/api/python/strands.models.bedrock/) — Complete `BedrockConfig`: `service_tier`, `cache_tools`, `cache_config`, `guardrail_*` parameters with all possible values
-- [Strands Agents SDK — Anthropic Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/anthropic/index.md) — `AnthropicModel` with `client_args`, `model_id`, `max_tokens`, `params`, `use_native_token_count`
-- [Strands Agents SDK — OpenAI Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/openai/index.md) — `OpenAIModel` and OpenAI Responses API, `client_args`/`params` parameters, stop token for GPT-OSS
-- [Strands Agents SDK — LiteLLM Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/litellm/index.md) — `LiteLLMModel` with proxy support, caching via `SystemContentBlock` (behaviour depends on underlying provider)
-- [Strands Agents SDK — Ollama Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/ollama/index.md) — `OllamaModel`, Python-only, complete parameters including `keep_alive` and `update_config` at runtime
-- [Strands Agents SDK — llama.cpp Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/llamacpp/) — `LlamaCppModel`, official provider (not community), Python-only, multimodal, GBNF grammar, native token counting
-- [Strands Agents SDK — Streaming Events](https://strandsagents.com/docs/user-guide/concepts/streaming/index.md) — All Python and TypeScript event types: lifecycle, model stream, tool, multi-agent; differences between the two SDKs
-- [Strands Agents SDK — Async Iterators](https://strandsagents.com/docs/user-guide/concepts/streaming/async-iterators/index.md) — `stream_async()` with FastAPI `StreamingResponse`, mandatory `callback_handler=None`, event inspection
-- [Strands Agents SDK — Callback Handlers (Python)](https://strandsagents.com/docs/user-guide/concepts/streaming/callback-handlers/index.md) — Synchronous Python-only callback, `PrintingCallbackHandler`, events: `init_event_loop`, `start_event_loop`, `data`, `current_tool_use`, `message`, `result`, `force_stop`
-- [Strands Agents SDK — Hooks](https://strandsagents.com/docs/user-guide/concepts/agents/hooks/index.md) — All hook events (Python and TypeScript), modifiable properties, Plugin pattern, `HookProvider` protocol, `HookOrder` for TypeScript
-- [Strands Agents SDK — Structured Output](https://strandsagents.com/docs/user-guide/concepts/agents/structured-output/index.md) — Pydantic `BaseModel` via `structured_output_model`, `StructuredOutputException`, streaming + SO, all supported providers
-- [Strands Agents SDK — Conversation Management](https://strandsagents.com/docs/user-guide/concepts/agents/conversation-management/index.md) — `NullConversationManager`, `SlidingWindowConversationManager` (`window_size`, `per_turn`, `proactiveCompression`, `shouldTruncateResults`), `SummarizingConversationManager`
-- [Strands Agents SDK — Agent State & Session](https://strandsagents.com/docs/user-guide/concepts/agents/state/index.md) — Conversation history, `AgentState` (`get`/`set`/`delete`), `invocation_state`, `ToolContext`, `record_direct_tool_call`
-- [Strands Agents SDK — Session Management](https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md) — `FileSessionManager`, `S3SessionManager`, directory structure, IAM permissions (includes `s3:ListBucket`), third parties (`AgentCoreMemorySessionManager`), Graph/Swarm rule
-- [Strands Agents SDK — Snapshots](https://strandsagents.com/docs/user-guide/concepts/agents/snapshots/index.md) — `take_snapshot`/`load_snapshot`, preset `'session'`, `include`/`exclude` fields, `app_data`, difference from session management
-- [Strands Agents SDK — API Reference: Limits TypedDict](https://strandsagents.com/docs/api/python/strands.types.agent/index.md) — `Limits` TypedDict: `turns`, `output_tokens`, `total_tokens`; `ConcurrentInvocationMode` enum; `stop_reason` values for each limit
-- [Strands Agents SDK — Context Offloader Plugin](https://strandsagents.com/docs/user-guide/concepts/plugins/context-offloader/index.md) — `ContextOffloader` plugin for managing large tool results; `InMemoryStorage`, `FileStorage`, `max_result_tokens` and `preview_tokens` parameters
-- [Strands Agents SDK — BidiAgent (Experimental)](https://strandsagents.com/docs/user-guide/concepts/bidirectional-streaming/agent/) — Namespace `strands.experimental.bidi`, experimental status, providers: Nova Sonic, OpenAI Realtime, Google Gemini Live
-- [AWS Open Source Blog — Introducing Strands Agents 1.0](https://aws.amazon.com/blogs/opensource/introducing-strands-agents-1-0-production-ready-multi-agent-orchestration-made-simple/) — 1.0 GA announcement with session management, structured output, async, multi-agent primitives
-- [strands-agents — PyPI](https://pypi.org/project/strands-agents/) — Current version 1.42.0 (1 June 2026), extras: `a2a`, `all`, `anthropic`, `bidi`, `bidi-all`, `bidi-gemini`, `bidi-io`, `bidi-openai`, `dev`, `docs`, `gemini`, `litellm`, `llamaapi`, `mistral`, `ollama`, `openai`, `otel`, `sagemaker`, `writer`; Python >=3.10
-- [strands-agents/sdk-python — GitHub](https://github.com/strands-agents/sdk-python) — Source code, release changelog (v1.42.0 latest)
-- [Strands Agents SDK — Blog: Interleaved Thinking with Claude 4](https://strandsagents.com/blog/interleaved-thinking-claude-4/index.md) — Interleaved thinking configuration via `additional_request_fields` for `BedrockModel` and `AnthropicModel`
+- [Strands Agents SDK - User Guide: Agent Loop](https://strandsagents.com/docs/user-guide/concepts/agents/agent-loop/index.md) - Complete agent cycle: stop reasons, cooperative cancellation, context window management, lifecycle
+- [Strands Agents SDK - API Reference: Agent class (Python)](https://strandsagents.com/docs/api/python/strands.agent.agent/) - All Agent constructor parameters, `__call__`, `invoke_async`, `stream_async`, `structured_output`, `add_hook`, `as_tool`, `take_snapshot`, `load_snapshot`, `cleanup`, `cancel`
+- [Strands Agents SDK - Python Quickstart](https://strandsagents.com/docs/user-guide/quickstart/python/index.md) - Installation, credentials, `AgentResult.metrics`, model providers, streaming with async iterator and callback handler, debug logging
+- [Strands Agents SDK - Model Providers Overview](https://strandsagents.com/docs/user-guide/concepts/model-providers/index.md) - Complete table of supported Python/TypeScript providers, pip install commands, community vs official providers
+- [Strands Agents SDK - Amazon Bedrock Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/amazon-bedrock/index.md) - IAM permissions, boto3 credentials, all `BedrockModel` parameters, caching (`cache_config`/`cache_tools`), `service_tier`, reasoning via `additional_request_fields`, guardrails, Converse API
+- [Strands Agents SDK - API Reference: BedrockModel (Python)](https://strandsagents.com/docs/api/python/strands.models.bedrock/) - Complete `BedrockConfig`: `service_tier`, `cache_tools`, `cache_config`, `guardrail_*` parameters with all possible values
+- [Strands Agents SDK - Anthropic Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/anthropic/index.md) - `AnthropicModel` with `client_args`, `model_id`, `max_tokens`, `params`, `use_native_token_count`
+- [Strands Agents SDK - OpenAI Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/openai/index.md) - `OpenAIModel` and OpenAI Responses API, `client_args`/`params` parameters, stop token for GPT-OSS
+- [Strands Agents SDK - LiteLLM Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/litellm/index.md) - `LiteLLMModel` with proxy support, caching via `SystemContentBlock` (behaviour depends on underlying provider)
+- [Strands Agents SDK - Ollama Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/ollama/index.md) - `OllamaModel`, Python-only, complete parameters including `keep_alive` and `update_config` at runtime
+- [Strands Agents SDK - llama.cpp Provider](https://strandsagents.com/docs/user-guide/concepts/model-providers/llamacpp/) - `LlamaCppModel`, official provider (not community), Python-only, multimodal, GBNF grammar, native token counting
+- [Strands Agents SDK - Streaming Events](https://strandsagents.com/docs/user-guide/concepts/streaming/index.md) - All Python and TypeScript event types: lifecycle, model stream, tool, multi-agent; differences between the two SDKs
+- [Strands Agents SDK - Async Iterators](https://strandsagents.com/docs/user-guide/concepts/streaming/async-iterators/index.md) - `stream_async()` with FastAPI `StreamingResponse`, mandatory `callback_handler=None`, event inspection
+- [Strands Agents SDK - Callback Handlers (Python)](https://strandsagents.com/docs/user-guide/concepts/streaming/callback-handlers/index.md) - Synchronous Python-only callback, `PrintingCallbackHandler`, events: `init_event_loop`, `start_event_loop`, `data`, `current_tool_use`, `message`, `result`, `force_stop`
+- [Strands Agents SDK - Hooks](https://strandsagents.com/docs/user-guide/concepts/agents/hooks/index.md) - All hook events (Python and TypeScript), modifiable properties, Plugin pattern, `HookProvider` protocol, `HookOrder` for TypeScript
+- [Strands Agents SDK - Structured Output](https://strandsagents.com/docs/user-guide/concepts/agents/structured-output/index.md) - Pydantic `BaseModel` via `structured_output_model`, `StructuredOutputException`, streaming + SO, all supported providers
+- [Strands Agents SDK - Conversation Management](https://strandsagents.com/docs/user-guide/concepts/agents/conversation-management/index.md) - `NullConversationManager`, `SlidingWindowConversationManager` (`window_size`, `per_turn`, `proactiveCompression`, `shouldTruncateResults`), `SummarizingConversationManager`
+- [Strands Agents SDK - Agent State & Session](https://strandsagents.com/docs/user-guide/concepts/agents/state/index.md) - Conversation history, `AgentState` (`get`/`set`/`delete`), `invocation_state`, `ToolContext`, `record_direct_tool_call`
+- [Strands Agents SDK - Session Management](https://strandsagents.com/docs/user-guide/concepts/agents/session-management/index.md) - `FileSessionManager`, `S3SessionManager`, directory structure, IAM permissions (includes `s3:ListBucket`), third parties (`AgentCoreMemorySessionManager`), Graph/Swarm rule
+- [Strands Agents SDK - Snapshots](https://strandsagents.com/docs/user-guide/concepts/agents/snapshots/index.md) - `take_snapshot`/`load_snapshot`, preset `'session'`, `include`/`exclude` fields, `app_data`, difference from session management
+- [Strands Agents SDK - API Reference: Limits TypedDict](https://strandsagents.com/docs/api/python/strands.types.agent/index.md) - `Limits` TypedDict: `turns`, `output_tokens`, `total_tokens`; `ConcurrentInvocationMode` enum; `stop_reason` values for each limit
+- [Strands Agents SDK - Context Offloader Plugin](https://strandsagents.com/docs/user-guide/concepts/plugins/context-offloader/index.md) - `ContextOffloader` plugin for managing large tool results; `InMemoryStorage`, `FileStorage`, `max_result_tokens` and `preview_tokens` parameters
+- [Strands Agents SDK - BidiAgent (Experimental)](https://strandsagents.com/docs/user-guide/concepts/bidirectional-streaming/agent/) - Namespace `strands.experimental.bidi`, experimental status, providers: Nova Sonic, OpenAI Realtime, Google Gemini Live
+- [AWS Open Source Blog - Introducing Strands Agents 1.0](https://aws.amazon.com/blogs/opensource/introducing-strands-agents-1-0-production-ready-multi-agent-orchestration-made-simple/) - 1.0 GA announcement with session management, structured output, async, multi-agent primitives
+- [strands-agents - PyPI](https://pypi.org/project/strands-agents/) - Current version 1.42.0 (1 June 2026), extras: `a2a`, `all`, `anthropic`, `bidi`, `bidi-all`, `bidi-gemini`, `bidi-io`, `bidi-openai`, `dev`, `docs`, `gemini`, `litellm`, `llamaapi`, `mistral`, `ollama`, `openai`, `otel`, `sagemaker`, `writer`; Python >=3.10
+- [strands-agents/sdk-python - GitHub](https://github.com/strands-agents/sdk-python) - Source code, release changelog (v1.42.0 latest)
+- [Strands Agents SDK - Blog: Interleaved Thinking with Claude 4](https://strandsagents.com/blog/interleaved-thinking-claude-4/index.md) - Interleaved thinking configuration via `additional_request_fields` for `BedrockModel` and `AnthropicModel`

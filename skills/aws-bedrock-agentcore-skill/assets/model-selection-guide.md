@@ -2,7 +2,7 @@
 
 # Model & inference selection guide
 
-> **Verify live** — exact model IDs, per-token prices, TPM/TPD quota defaults, and regional availability change frequently. Always cross-check against the [Bedrock model catalog / model cards](https://docs.aws.amazon.com/bedrock/latest/userguide/model-cards.html), the [Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/), and the [Service Quotas console](https://console.aws.amazon.com/servicequotas/) before hard-coding anything.
+> **Verify live** - exact model IDs, per-token prices, TPM/TPD quota defaults, and regional availability change frequently. Always cross-check against the [Bedrock model catalog / model cards](https://docs.aws.amazon.com/bedrock/latest/userguide/model-cards.html), the [Bedrock pricing page](https://aws.amazon.com/bedrock/pricing/), and the [Service Quotas console](https://console.aws.amazon.com/servicequotas/) before hard-coding anything.
 
 ---
 
@@ -10,10 +10,10 @@
 
 | Profile type | `modelId` prefix | Use when |
 |---|---|---|
-| **Geo cross-region** | `us.` / `eu.` / `au.` / `jp.` | Data-residency requirements — traffic stays within the named geography |
+| **Geo cross-region** | `us.` / `eu.` / `au.` / `jp.` | Data-residency requirements - traffic stays within the named geography |
 | **Global cross-region** | `global.` | Max throughput + ~10 % cost saving vs geo; no residency constraint |
 | **Application inference profile** | `arn:aws:bedrock:…:inference-profile/…` | Cost attribution per team / env / project via AWS Cost Allocation Tags |
-| **Base model ID** | `anthropic.…` | Dev/test only — no burst buffering, no cross-region failover |
+| **Base model ID** | `anthropic.…` | Dev/test only - no burst buffering, no cross-region failover |
 
 **Decision tree:**
 
@@ -36,7 +36,7 @@ Need cost split by team/env/experiment?
 
 ---
 
-## 2. Prompt caching — when and how
+## 2. Prompt caching - when and how
 
 ### Enable caching when
 
@@ -70,7 +70,7 @@ Max 4 checkpoints per request on all supported models.
 | 5 min (default) | All cache-capable models |
 | 1 hour | Claude Opus 4.5, Haiku 4.5, Sonnet 4.5 |
 
-If 1h TTL is specified on an unsupported model it is **silently ignored** — verify via the model card.
+If 1h TTL is specified on an unsupported model it is **silently ignored** - verify via the model card.
 
 ### Billing & quota impact
 
@@ -96,7 +96,7 @@ Simplified Cache Management: place **one** `cachePoint` after the static block; 
 
 **Notes:**
 - On-demand quota is **shared** across Standard, Priority, and Flex; Reserved has its own capacity pool.
-- Reserved tier sizing: include `InputTokenCount + CacheWriteInputTokens` — not just input tokens — or you'll overflow to Standard.
+- Reserved tier sizing: include `InputTokenCount + CacheWriteInputTokens` - not just input tokens - or you'll overflow to Standard.
 - Flex is incompatible with batch inference (use batch inference instead for ~50 % off on true async jobs).
 
 ---
@@ -113,16 +113,16 @@ Simplified Cache Management: place **one** `cachePoint` after the static block; 
 | **Claude Opus 4.7** | `type: "adaptive"` **only** | `"enabled"` returns HTTP 400 |
 | Claude Mythos (Gated Preview) | `type: "adaptive"` **only** | Gated research preview; us-east-1 only |
 
-`effort` levels (adaptive): `max` (Opus 4.6 only) / `high` (default) / `medium` / `low` — pass in `output_config`, not inside `thinking`.
+`effort` levels (adaptive): `max` (Opus 4.6 only) / `high` (default) / `medium` / `low` - pass in `output_config`, not inside `thinking`.
 
 Claude 4 models return **summarized** thinking content, not the full chain-of-thought.
 
 ### Incompatibilities
 
-- `temperature`, `topP`, `top_k` — **not compatible** with any thinking mode; omit them.
-- `toolChoice: any` or `toolChoice: tool` (forced tool use) — not compatible; only `auto` is allowed.
+- `temperature`, `topP`, `top_k` - **not compatible** with any thinking mode; omit them.
+- `toolChoice: any` or `toolChoice: tool` (forced tool use) - not compatible; only `auto` is allowed.
 - Streaming is **required** if `max_tokens > 21 333`.
-- Batch inference — thinking modes not supported.
+- Batch inference - thinking modes not supported.
 
 ---
 
@@ -143,7 +143,7 @@ Quota consumed = inputTokens + cacheWriteInputTokens + (max_tokens × 5)
 **How to size `max_tokens`:**
 1. Run a representative sample; inspect `outputTokens` in `usage`.
 2. Set `max_tokens` ≈ p95 of observed output + 20 % headroom.
-3. Monitor `stopReason = "max_tokens"` (output truncated) in CloudWatch — raise only if it fires.
+3. Monitor `stopReason = "max_tokens"` (output truncated) in CloudWatch - raise only if it fires.
 4. Use `requestMetadata` tags (`team`, `env`) to segment CloudWatch metrics per workload.
 
 **For models with 1:1 burndown** (all non-Claude-3.7+ models): quota consumed = input + output; `max_tokens` is not deducted upfront.

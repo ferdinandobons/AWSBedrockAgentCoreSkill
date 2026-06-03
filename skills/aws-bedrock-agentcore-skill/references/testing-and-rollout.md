@@ -1,27 +1,27 @@
 # Testing & Safe Rollout for AWS AI Agents
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
 1. [Overview](#overview)
 2. [Key concepts](#key-concepts)
 3. [Best practices](#best-practices)
-4. [Phase 1 — Local development and testing](#phase-1--local-development-and-testing)
+4. [Phase 1 - Local development and testing](#phase-1--local-development-and-testing)
    - [AgentCore CLI `dev` server](#agentcore-cli-dev-server)
    - [BedrockAgentCoreApp SDK wrapper (manual)](#bedrockagentcoreapp-sdk-wrapper-manual)
-5. [Phase 2 — Unit testing Strands tools and agents](#phase-2--unit-testing-strands-tools-and-agents)
+5. [Phase 2 - Unit testing Strands tools and agents](#phase-2--unit-testing-strands-tools-and-agents)
    - [Testing `@tool` functions directly](#testing-tool-functions-directly)
-   - [Strands Evals SDK — deterministic evaluators](#strands-evals-sdk--deterministic-evaluators)
-   - [Strands Evals SDK — LLM-based evaluators](#strands-evals-sdk--llm-based-evaluators)
+   - [Strands Evals SDK - deterministic evaluators](#strands-evals-sdk--deterministic-evaluators)
+   - [Strands Evals SDK - LLM-based evaluators](#strands-evals-sdk--llm-based-evaluators)
    - [ToolSimulator for safe tool mocking](#toolsimulator-for-safe-tool-mocking)
-6. [Phase 3 — Pre-production evaluation with AgentCore Evaluations](#phase-3--pre-production-evaluation-with-agentcore-evaluations)
+6. [Phase 3 - Pre-production evaluation with AgentCore Evaluations](#phase-3--pre-production-evaluation-with-agentcore-evaluations)
    - [On-demand evaluation](#on-demand-evaluation)
    - [Dataset / batch evaluation for CI regression](#dataset--batch-evaluation-for-ci-regression)
-7. [Phase 4 — Safe rollout with AgentCore Runtime versioning](#phase-4--safe-rollout-with-agentcore-runtime-versioning)
+7. [Phase 4 - Safe rollout with AgentCore Runtime versioning](#phase-4--safe-rollout-with-agentcore-runtime-versioning)
    - [How versions and endpoints work](#how-versions-and-endpoints-work)
    - [Multi-environment endpoint pattern](#multi-environment-endpoint-pattern)
-8. [Phase 5 — Production traffic management and A/B testing](#phase-5--production-traffic-management-and-ab-testing)
+8. [Phase 5 - Production traffic management and A/B testing](#phase-5--production-traffic-management-and-ab-testing)
    - [Online evaluation for continuous monitoring](#online-evaluation-for-continuous-monitoring)
    - [A/B testing via AgentCore Gateway](#ab-testing-via-agentcore-gateway)
    - [Configuration bundles for rollback](#configuration-bundles-for-rollback)
@@ -61,7 +61,7 @@ Cross-links to companion reference files:
 
 | Term | Meaning |
 |---|---|
-| **AgentCore CLI** | `npm install -g @aws/agentcore` — scaffolds, runs locally, deploys via CDK, invokes. Supersedes the old `bedrock-agentcore-starter-toolkit`. |
+| **AgentCore CLI** | `npm install -g @aws/agentcore` - scaffolds, runs locally, deploys via CDK, invokes. Supersedes the old `bedrock-agentcore-starter-toolkit`. |
 | **`agentcore dev`** | Local development server on `http://localhost:8080` that mimics the AgentCore Runtime environment; hot-reload included. |
 | **`BedrockAgentCoreApp`** | Python SDK wrapper (`pip install bedrock-agentcore`) that auto-exposes `/invocations` and `/ping` so any callable becomes AgentCore-compatible. |
 | **Version** | Immutable snapshot of an AgentCore Runtime created automatically on every update. Numbered V1, V2, …. |
@@ -78,7 +78,7 @@ Cross-links to companion reference files:
 
 - **Never skip local testing.** Run `agentcore dev` and invoke the `/invocations` and `/ping` endpoints before building a container image. Catching HTTP contract errors locally costs seconds; catching them post-deploy costs hours. _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)_
 
-- **Use deterministic evaluators as a first CI gate.** `Equals`, `Contains`, `ToolCalled`, `StateEquals` from `strands-agents-evals` require no LLM calls, are fast, and produce the same score for the same input — ideal for a blocking PR check. _Source: [strandsagents.com/docs/user-guide/evals-sdk/evaluators/deterministic_evaluators/](https://strandsagents.com/docs/user-guide/evals-sdk/evaluators/deterministic_evaluators/index.md)_
+- **Use deterministic evaluators as a first CI gate.** `Equals`, `Contains`, `ToolCalled`, `StateEquals` from `strands-agents-evals` require no LLM calls, are fast, and produce the same score for the same input - ideal for a blocking PR check. _Source: [strandsagents.com/docs/user-guide/evals-sdk/evaluators/deterministic_evaluators/](https://strandsagents.com/docs/user-guide/evals-sdk/evaluators/deterministic_evaluators/index.md)_
 
 - **Add LLM-as-a-judge evaluators (`OutputEvaluator`, `TrajectoryEvaluator`, `HelpfulnessEvaluator`) for nuanced quality gates.** Run them in a parallel CI job to avoid blocking the pipeline while the judge model responds. _Source: [strandsagents.com/blog/evaluating-ai-agents-practical-guide-strands-evals/](https://strandsagents.com/blog/evaluating-ai-agents-practical-guide-strands-evals/index.md)_
 
@@ -96,7 +96,7 @@ Cross-links to companion reference files:
 
 ---
 
-## Phase 1 — Local development and testing
+## Phase 1 - Local development and testing
 
 ### AgentCore CLI dev server
 
@@ -135,7 +135,7 @@ _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-star
 
 The `agentcore dev` command:
 - Auto-creates a Python venv and installs dependencies.
-- Starts a local HTTP server on `http://localhost:8080` that exposes `/invocations` (POST) and `/ping` (GET) — the exact contract required by AgentCore Runtime.
+- Starts a local HTTP server on `http://localhost:8080` that exposes `/invocations` (POST) and `/ping` (GET) - the exact contract required by AgentCore Runtime.
 - Supports hot-reload. Use `--logs` to tail server logs in non-interactive mode.
 
 > The `bedrock-agentcore-starter-toolkit` package's deployment and scaffolding path is **replaced** by the AgentCore CLI. Its `Evaluation` class remains a valid on-demand evaluation interface. Uninstall it only if you encounter import conflicts with the new `bedrock-agentcore` SDK: `pip uninstall bedrock-agentcore-starter-toolkit`. _Source: [strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
@@ -196,7 +196,7 @@ _Source: [strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/p
 
 ---
 
-## Phase 2 — Unit testing Strands tools and agents
+## Phase 2 - Unit testing Strands tools and agents
 
 ### Testing `@tool` functions directly
 
@@ -228,7 +228,7 @@ from unittest.mock import patch
 from tools import get_exchange_rate
 
 def test_get_exchange_rate_returns_rate():
-    # Call the tool function directly — no Agent or Bedrock needed
+    # Call the tool function directly - no Agent or Bedrock needed
     result = get_exchange_rate(base_currency="USD", target_currency="EUR")
     assert result["status"] == "success"
     assert "EUR" in result["content"][0]["text"]
@@ -242,9 +242,9 @@ def test_get_exchange_rate_with_mocked_api():
 
 _Source: [strandsagents.com/docs/api/python/strands.tools.decorator/](https://strandsagents.com/docs/api/python/strands.tools.decorator/index.md)_
 
-### Strands Evals SDK — deterministic evaluators
+### Strands Evals SDK - deterministic evaluators
 
-`pip install strands-agents-evals`. Deterministic evaluators require **no LLM calls** and produce consistent results — ideal as a fast, first-pass CI gate.
+`pip install strands-agents-evals`. Deterministic evaluators require **no LLM calls** and produce consistent results - ideal as a fast, first-pass CI gate.
 
 Available deterministic evaluators:
 
@@ -293,14 +293,14 @@ reports[0].run_display()
 
 _Source: [strandsagents.com/docs/user-guide/evals-sdk/evaluators/deterministic_evaluators/](https://strandsagents.com/docs/user-guide/evals-sdk/evaluators/deterministic_evaluators/index.md)_
 
-### Strands Evals SDK — LLM-based evaluators
+### Strands Evals SDK - LLM-based evaluators
 
 Ten built-in evaluators use an LLM as judge (default: Claude 4 via Amazon Bedrock):
 
 | Evaluator | Dimension |
 |---|---|
 | `OutputEvaluator` | Custom rubric against final response |
-| `TrajectoryEvaluator` | Tool call sequence — supports exact, in-order, any-order scoring |
+| `TrajectoryEvaluator` | Tool call sequence - supports exact, in-order, any-order scoring |
 | `InteractionsEvaluator` | Multi-agent / orchestrator interaction sequences |
 | `HelpfulnessEvaluator` | 7-point scale from user's perspective |
 | `FaithfulnessEvaluator` | Grounding in conversation history (critical for RAG) |
@@ -370,7 +370,7 @@ tool_simulator = ToolSimulator()
 )
 def search_flights(origin: str, destination: str, date: str) -> dict:
     """Search for available flights between two airports on a given date."""
-    pass  # Body never executes — ToolSimulator intercepts calls
+    pass  # Body never executes - ToolSimulator intercepts calls
 
 @tool_simulator.tool(share_state_id="flight_booking")
 def get_booking_status(booking_id: str) -> dict:
@@ -395,7 +395,7 @@ _Source: [strandsagents.com/blog/toolsimulator-scalable-tool-testing-ai-agents/]
 
 ---
 
-## Phase 3 — Pre-production evaluation with AgentCore Evaluations
+## Phase 3 - Pre-production evaluation with AgentCore Evaluations
 
 AgentCore Evaluations (GA) computes goal attainment, tool invocation accuracy, and custom metrics against agent traces stored in CloudWatch. It works with agents hosted on AgentCore Runtime **and** agents hosted externally. It works for any agent emitting OpenTelemetry spans to CloudWatch (Strands, LangGraph, CrewAI, Google ADK, etc.).
 
@@ -408,7 +408,7 @@ On-demand evaluation targets specific sessions or traces by ID. Use it for build
 **Via AgentCore CLI (simplest):**
 
 ```bash
-# Run on a specific session — CLI auto-queries CloudWatch
+# Run on a specific session - CLI auto-queries CloudWatch
 RUNTIME_NAME="your_runtime_name"
 SESSION_ID="your_session_id"
 
@@ -453,7 +453,7 @@ response = agent_core_client.invoke_agent_runtime(
 
 _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-on-demand.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-on-demand.html)_
 
-Built-in evaluator IDs available today (verify current list in console — names may change as the service evolves): `Builtin.Helpfulness`, `Builtin.GoalSuccessRate`, `Builtin.ToolInvocationAccuracy`. Custom evaluators (LLM-as-judge and code-based Lambda) are also supported.
+Built-in evaluator IDs available today (verify current list in console - names may change as the service evolves): `Builtin.Helpfulness`, `Builtin.GoalSuccessRate`, `Builtin.ToolInvocationAccuracy`. Custom evaluators (LLM-as-judge and code-based Lambda) are also supported.
 
 _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluators.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluators.html)_
 
@@ -475,15 +475,15 @@ _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/dataset-evaluati
 
 ---
 
-## Phase 4 — Safe rollout with AgentCore Runtime versioning
+## Phase 4 - Safe rollout with AgentCore Runtime versioning
 
 ### How versions and endpoints work
 
-AgentCore Runtime versions are **immutable** — every configuration change (container image, protocol settings, network settings) automatically creates a new numbered version. _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html)_
+AgentCore Runtime versions are **immutable** - every configuration change (container image, protocol settings, network settings) automatically creates a new numbered version. _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html)_
 
 | Event | Version behavior | DEFAULT endpoint | Custom endpoint |
 |---|---|---|---|
-| Initial creation | V1 created automatically | Points to V1 | — |
+| Initial creation | V1 created automatically | Points to V1 | - |
 | Protocol change | V2 created | Auto-updates to V2 | Stays on V1 |
 | Create `PROD` endpoint pointing to V2 | No new version | V2 | PROD → V2 |
 | Container image update | V3 created | Auto-updates to V3 | PROD stays on V2 |
@@ -544,7 +544,7 @@ response = agent_core_client.invoke_agent_runtime(
 
 _Source: [strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md)_
 
-**AWS CDK — `RuntimeEndpoint` construct (TypeScript / Python):**
+**AWS CDK - `RuntimeEndpoint` construct (TypeScript / Python):**
 
 ```python
 from aws_cdk import aws_bedrockagentcore as agentcore
@@ -574,7 +574,7 @@ _Source: [docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-ve
 
 ---
 
-## Phase 5 — Production traffic management and A/B testing
+## Phase 5 - Production traffic management and A/B testing
 
 ### Online evaluation for continuous monitoring
 
@@ -592,7 +592,7 @@ See [observability.md](observability.md) for viewing evaluation scores in CloudW
 
 > **Note:** AgentCore optimization (including A/B testing) is in **public preview**. CloudTrail audit trail support is not yet available. APIs may change before GA.
 
-A/B tests split live production traffic between two variants (control and treatment) via **AgentCore Gateway**. Session assignment is sticky — a given `runtimeSessionId` always routes to the same variant.
+A/B tests split live production traffic between two variants (control and treatment) via **AgentCore Gateway**. Session assignment is sticky - a given `runtimeSessionId` always routes to the same variant.
 
 Two patterns:
 
@@ -618,7 +618,7 @@ See [gateway-identity.md](gateway-identity.md) for AgentCore Gateway target conf
 
 ### Configuration bundles for rollback
 
-Configuration bundles (Preview) store system prompts, model IDs, and tool descriptions as versioned, immutable snapshots — independent of your container image.
+Configuration bundles (Preview) store system prompts, model IDs, and tool descriptions as versioned, immutable snapshots - independent of your container image.
 
 ```python
 import boto3
@@ -846,7 +846,7 @@ Use this checklist for every agent change before advancing the production endpoi
 **Production rollout:**
 - [ ] Staging eval scores meet or exceed production baseline.
 - [ ] Named production endpoint (`production-endpoint`) is pinned to the new version (not DEFAULT).
-- [ ] (Optional) A/B test running if the change is a prompt/model update — wait for p-value < 0.05 before full rollout.
+- [ ] (Optional) A/B test running if the change is a prompt/model update - wait for p-value < 0.05 before full rollout.
 - [ ] Online evaluation configured to monitor the production endpoint continuously.
 - [ ] Rollback plan documented: previous runtime version ID or config bundle version ID recorded.
 
@@ -854,23 +854,23 @@ Use this checklist for every agent change before advancing the production endpoi
 
 ## Official sources
 
-- [AgentCore CLI get-started tutorial](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html) — full scaffold → dev → deploy → invoke walkthrough (GA)
-- [AgentCore Runtime versioning and endpoints](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html) — immutable versions, DEFAULT vs. named endpoints, boto3 examples (GA)
-- [AgentCore Runtime how it works](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html) — key components, sessions, endpoint lifecycle states (GA)
-- [AgentCore Evaluations overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/how-it-works-evaluations.html) — evaluation architecture (GA)
-- [Evaluation types](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluations-types.html) — online, on-demand, batch (GA)
-- [Dataset evaluations](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/dataset-evaluations.html) — on-demand and batch dataset runners, CI/CD integration (GA)
-- [Getting started with on-demand evaluation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-on-demand.html) — step-by-step CLI and SDK samples (GA)
-- [Evaluators](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluators.html) — built-in and custom evaluators (GA)
-- [AgentCore optimization overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/optimization.html) — recommendations, configuration bundles, A/B testing (Preview)
-- [AgentCore optimization how it works](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/optimization-how-it-works.html) — improvement loop (Preview)
-- [A/B testing](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/ab-testing.html) — traffic split patterns, statistical significance (Preview)
-- [Configuration bundles](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/configuration-bundles.html) — versioned config snapshots, rollback, audit trail (Preview)
-- [RuntimeEndpoint CDK construct (Python)](https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_bedrockagentcore/RuntimeEndpoint.html) — CDK IaC for pinned endpoints (GA)
-- [RuntimeEndpoint CDK construct (TypeScript)](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagentcore.RuntimeEndpoint.html) — CDK IaC for pinned endpoints (GA)
-- [Deploy Python agents to AgentCore — Strands guide](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md) — SDK integration, custom FastAPI, local testing, observability (GA)
-- [Strands Evals SDK quickstart](https://strandsagents.com/docs/user-guide/evals-sdk/quickstart/index.md) — Cases, Experiments, evaluators, async eval, experiment management (GA)
-- [Strands deterministic evaluators](https://strandsagents.com/docs/user-guide/evals-sdk/evaluators/deterministic_evaluators/index.md) — Equals, Contains, ToolCalled, StateEquals (GA)
-- [Evaluating AI agents — practical guide to Strands Evals](https://strandsagents.com/blog/evaluating-ai-agents-practical-guide-strands-evals/index.md) — all 10 built-in evaluators, task functions, multi-turn simulation, CI/CD integration (GA)
-- [ToolSimulator: scalable tool testing for AI agents](https://strandsagents.com/blog/toolsimulator-scalable-tool-testing-ai-agents/index.md) — stateful mocking, schema enforcement, Evals integration (GA)
-- [Strands `@tool` decorator API reference](https://strandsagents.com/docs/api/python/strands.tools.decorator/index.md) — metadata extraction, parameter validation (GA)
+- [AgentCore CLI get-started tutorial](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html) - full scaffold → dev → deploy → invoke walkthrough (GA)
+- [AgentCore Runtime versioning and endpoints](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agent-runtime-versioning.html) - immutable versions, DEFAULT vs. named endpoints, boto3 examples (GA)
+- [AgentCore Runtime how it works](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html) - key components, sessions, endpoint lifecycle states (GA)
+- [AgentCore Evaluations overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/how-it-works-evaluations.html) - evaluation architecture (GA)
+- [Evaluation types](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluations-types.html) - online, on-demand, batch (GA)
+- [Dataset evaluations](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/dataset-evaluations.html) - on-demand and batch dataset runners, CI/CD integration (GA)
+- [Getting started with on-demand evaluation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/getting-started-on-demand.html) - step-by-step CLI and SDK samples (GA)
+- [Evaluators](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluators.html) - built-in and custom evaluators (GA)
+- [AgentCore optimization overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/optimization.html) - recommendations, configuration bundles, A/B testing (Preview)
+- [AgentCore optimization how it works](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/optimization-how-it-works.html) - improvement loop (Preview)
+- [A/B testing](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/ab-testing.html) - traffic split patterns, statistical significance (Preview)
+- [Configuration bundles](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/configuration-bundles.html) - versioned config snapshots, rollback, audit trail (Preview)
+- [RuntimeEndpoint CDK construct (Python)](https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_bedrockagentcore/RuntimeEndpoint.html) - CDK IaC for pinned endpoints (GA)
+- [RuntimeEndpoint CDK construct (TypeScript)](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_bedrockagentcore.RuntimeEndpoint.html) - CDK IaC for pinned endpoints (GA)
+- [Deploy Python agents to AgentCore - Strands guide](https://strandsagents.com/docs/user-guide/deploy/deploy_to_bedrock_agentcore/python/index.md) - SDK integration, custom FastAPI, local testing, observability (GA)
+- [Strands Evals SDK quickstart](https://strandsagents.com/docs/user-guide/evals-sdk/quickstart/index.md) - Cases, Experiments, evaluators, async eval, experiment management (GA)
+- [Strands deterministic evaluators](https://strandsagents.com/docs/user-guide/evals-sdk/evaluators/deterministic_evaluators/index.md) - Equals, Contains, ToolCalled, StateEquals (GA)
+- [Evaluating AI agents - practical guide to Strands Evals](https://strandsagents.com/blog/evaluating-ai-agents-practical-guide-strands-evals/index.md) - all 10 built-in evaluators, task functions, multi-turn simulation, CI/CD integration (GA)
+- [ToolSimulator: scalable tool testing for AI agents](https://strandsagents.com/blog/toolsimulator-scalable-tool-testing-ai-agents/index.md) - stateful mocking, schema enforcement, Evals integration (GA)
+- [Strands `@tool` decorator API reference](https://strandsagents.com/docs/api/python/strands.tools.decorator/index.md) - metadata extraction, parameter validation (GA)

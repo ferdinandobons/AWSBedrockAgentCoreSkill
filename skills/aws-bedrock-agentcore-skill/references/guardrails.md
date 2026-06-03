@@ -1,6 +1,6 @@
 # Amazon Bedrock Guardrails
 
-> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official — re-open it to verify details.
+> Part of the **aws-bedrock-agentcore-skill** skill. See [SKILL.md](../SKILL.md) for the decision tree. Every source below is official - re-open it to verify details.
 
 ## Table of contents
 
@@ -23,13 +23,13 @@
 - [Best practices](#best-practices)
 - [Code](#code)
   - [Create a comprehensive guardrail with all policy types (Python)](#create-a-comprehensive-guardrail-with-all-policy-types-python)
-  - [ApplyGuardrail API — standalone evaluation, all outcome patterns](#applyguardrail-api--standalone-evaluation-all-outcome-patterns)
+  - [ApplyGuardrail API - standalone evaluation, all outcome patterns](#applyguardrail-api--standalone-evaluation-all-outcome-patterns)
   - [Inline guardrail with Converse API](#inline-guardrail-with-converse-api)
-  - [Contextual grounding check with ApplyGuardrail — RAG hallucination detection](#contextual-grounding-check-with-applyguardrail--rag-hallucination-detection)
+  - [Contextual grounding check with ApplyGuardrail - RAG hallucination detection](#contextual-grounding-check-with-applyguardrail--rag-hallucination-detection)
   - [Associate guardrail with a Bedrock Agent via CreateAgent API](#associate-guardrail-with-a-bedrock-agent-via-createagent-api)
   - [IAM policy for creating and using guardrails](#iam-policy-for-creating-and-using-guardrails)
   - [CLI: apply guardrail and manage versions](#cli-apply-guardrail-and-manage-versions)
-  - [Image content filter — create guardrail with inputModalities/outputModalities](#image-content-filter--create-guardrail-with-inputmodalitiesoutputmodalities)
+  - [Image content filter - create guardrail with inputModalities/outputModalities](#image-content-filter--create-guardrail-with-inputmodalitiesoutputmodalities)
 - [Configuration reference](#configuration-reference)
 - [Gotchas](#gotchas)
 - [Official sources](#official-sources)
@@ -38,9 +38,9 @@
 
 ## Overview
 
-Amazon Bedrock Guardrails is a GA service that lets you add customizable safeguards to any generative AI application built on Bedrock. It provides seven independently configurable policy types — content filters (text and image), denied topics, word filters, sensitive information filters (PII), contextual grounding checks, and automated reasoning checks — that evaluate both user inputs and model responses. Guardrails can be applied inline during model inference (`InvokeModel`, `Converse`) or as a standalone evaluation layer via the `ApplyGuardrail` API, decoupled from any foundation model. They integrate natively with Bedrock Agents, Knowledge Bases, and Flows by specifying a `guardrailConfiguration` field in the respective create/update API calls. Cross-region inference via named guardrail profiles (`us.guardrail.v1:0`, `eu.guardrail.v1:0`, etc.) is required for Standard tier and optional for throughput scaling.
+Amazon Bedrock Guardrails is a GA service that lets you add customizable safeguards to any generative AI application built on Bedrock. It provides seven independently configurable policy types - content filters (text and image), denied topics, word filters, sensitive information filters (PII), contextual grounding checks, and automated reasoning checks - that evaluate both user inputs and model responses. Guardrails can be applied inline during model inference (`InvokeModel`, `Converse`) or as a standalone evaluation layer via the `ApplyGuardrail` API, decoupled from any foundation model. They integrate natively with Bedrock Agents, Knowledge Bases, and Flows by specifying a `guardrailConfiguration` field in the respective create/update API calls. Cross-region inference via named guardrail profiles (`us.guardrail.v1:0`, `eu.guardrail.v1:0`, etc.) is required for Standard tier and optional for throughput scaling.
 
-**Maturity:** GA (Generally Available). All policy types are GA. Standard tier (higher accuracy, multilingual, code domain support) is GA and requires cross-Region inference to be enabled via a guardrail profile. Automated Reasoning checks are GA in 6 regions (us-east-1, us-west-2, us-east-2, eu-central-1, eu-west-3, eu-west-1) — English only, detect mode only (does not block content). Image content filters are GA in us-east-1, us-west-2, eu-central-1, ap-northeast-1; available in **preview** in us-east-2, ap-south-1, ap-northeast-2, ap-southeast-1, ap-southeast-2, eu-west-1, eu-west-2, and us-gov-west-1. Cross-account guardrail enforcements via AWS Organizations are GA.
+**Maturity:** GA (Generally Available). All policy types are GA. Standard tier (higher accuracy, multilingual, code domain support) is GA and requires cross-Region inference to be enabled via a guardrail profile. Automated Reasoning checks are GA in 6 regions (us-east-1, us-west-2, us-east-2, eu-central-1, eu-west-3, eu-west-1) - English only, detect mode only (does not block content). Image content filters are GA in us-east-1, us-west-2, eu-central-1, ap-northeast-1; available in **preview** in us-east-2, ap-south-1, ap-northeast-2, ap-southeast-1, ap-southeast-2, eu-west-1, eu-west-2, and us-gov-west-1. Cross-account guardrail enforcements via AWS Organizations are GA.
 
 ---
 
@@ -70,13 +70,13 @@ Up to **30** custom topic definitions per guardrail. Each topic has:
 - `type`: must be `'DENY'` (only valid value)
 - `inputAction` / `outputAction`: `BLOCK` or `NONE`, configurable independently per direction
 
-Uses **semantic/NLU matching** — not keyword matching. In Standard tier, code-related content is also evaluated.
+Uses **semantic/NLU matching** - not keyword matching. In Standard tier, code-related content is also evaluated.
 
 ### Word filters
 
 Exact-match blocking. Two sub-types:
-- `managedWordListsConfig` with `type: 'PROFANITY'` — AWS-maintained, continuously updated profanity list
-- `wordsConfig` — custom words/phrases; each entry limited to **3 words**; list can contain up to **10,000 entries**
+- `managedWordListsConfig` with `type: 'PROFANITY'` - AWS-maintained, continuously updated profanity list
+- `wordsConfig` - custom words/phrases; each entry limited to **3 words**; list can contain up to **10,000 entries**
 
 Actions (`BLOCK` or `NONE`) are configurable per direction via `inputAction`/`outputAction`.
 
@@ -89,8 +89,8 @@ ML-based probabilistic detection of **30+ built-in PII entity types**:
 Plus **custom regex patterns** (up to 30 per guardrail; 10 in me-central-1; max 500 chars each; no regex lookaround syntax).
 
 Two actions per entity:
-- `BLOCK` — reject the entire content block
-- `ANONYMIZE` (also referred to as `MASK`) — replace detected value with a `{PII_TYPE}` token
+- `BLOCK` - reject the entire content block
+- `ANONYMIZE` (also referred to as `MASK`) - replace detected value with a `{PII_TYPE}` token
 
 Works in both natural language and code domains. Supports independent input/output configuration via `inputAction`/`outputAction`.
 
@@ -99,8 +99,8 @@ Works in both natural language and code domains. Supports independent input/outp
 ### Contextual grounding check
 
 Detects hallucinations by scoring model responses for:
-- **GROUNDING** — factual accuracy relative to source material
-- **RELEVANCE** — whether the response answers the user query
+- **GROUNDING** - factual accuracy relative to source material
+- **RELEVANCE** - whether the response answers the user query
 
 Both scores are floats `0.0`–`1.0`. You configure a threshold (`0` to `0.99`) for each; responses with score below threshold are flagged/blocked.
 
@@ -111,7 +111,7 @@ Hard character limits per request:
 
 Requires three content components in the `ApplyGuardrail` call: `grounding_source`, `query`, and the unqualified response text. Supported use cases: summarization, paraphrasing, question answering. **Conversational QA/chatbot use cases are explicitly NOT supported.** When multiple `grounding_source` blocks are provided, they are combined and evaluated together.
 
-**Important:** contextual grounding check runs ONLY on `source='OUTPUT'` — it never triggers on `source='INPUT'`.
+**Important:** contextual grounding check runs ONLY on `source='OUTPUT'` - it never triggers on `source='INPUT'`.
 
 ### Automated reasoning checks
 
@@ -119,7 +119,7 @@ Uses formal mathematical logic to validate model responses against natural langu
 
 - **GA regions:** us-east-1, us-west-2, us-east-2, eu-central-1, eu-west-3 (Paris), eu-west-1 (Ireland)
 - **Language:** English (US) only
-- **Mode:** DETECT ONLY — returns structured findings (`VALID`, `INVALID`, `TRANSLATION_AMBIGUOUS`, `TOO_COMPLEX`) and explanations but **never blocks content**
+- **Mode:** DETECT ONLY - returns structured findings (`VALID`, `INVALID`, `TRANSLATION_AMBIGUOUS`, `TOO_COMPLEX`) and explanations but **never blocks content**
 - Must be combined with other blocking policies for full protection
 - Not supported in guardrail enforcements (cross-account via AWS Organizations)
 - Requires 1–2 Automated Reasoning policy ARNs in `automatedReasoningPolicyConfig`
@@ -134,11 +134,11 @@ Standalone guardrail evaluation endpoint (`bedrock-runtime` service):
 POST /guardrail/{guardrailIdentifier}/version/{guardrailVersion}/apply
 ```
 
-Decoupled from foundation model calls — useful for third-party LLMs, pre-processing pipelines, or when you want to evaluate content without invoking Bedrock FMs.
+Decoupled from foundation model calls - useful for third-party LLMs, pre-processing pipelines, or when you want to evaluate content without invoking Bedrock FMs.
 
 - `source` parameter: `INPUT` (user content) or `OUTPUT` (model response)
 - Returns: `action` (`NONE` or `GUARDRAIL_INTERVENED`), `outputs` array, and detailed `assessments` per policy
-- **When `action=NONE`, the `outputs` array is empty** — not a copy of the input
+- **When `action=NONE`, the `outputs` array is empty** - not a copy of the input
 
 ### Safeguard tiers (Classic vs Standard)
 
@@ -166,11 +166,11 @@ Set `tagSuffix` in the `amazon-bedrock-guardrailConfig` payload to evaluate only
 
 Security note: always use a **random `tagSuffix` per request** to prevent prompt injection attacks (alphanumeric only, 1–20 chars).
 
-For the Converse API, use the `qualifiers` field in `guardContent` blocks instead — the two mechanisms are not interchangeable.
+For the Converse API, use the `qualifiers` field in `guardContent` blocks instead - the two mechanisms are not interchangeable.
 
 ### DRAFT vs versioned guardrail
 
-Every guardrail starts as `DRAFT`. `DRAFT` can be modified at any time but is **mutable** — any change immediately affects all callers referencing it. Calling `CreateGuardrailVersion` publishes an **immutable** numbered version. Maximum **20 versions per guardrail**.
+Every guardrail starts as `DRAFT`. `DRAFT` can be modified at any time but is **mutable** - any change immediately affects all callers referencing it. Calling `CreateGuardrailVersion` publishes an **immutable** numbered version. Maximum **20 versions per guardrail**.
 
 **In production: always reference a numbered version, never `DRAFT`.**
 
@@ -185,7 +185,7 @@ A two-field object included in `CreateAgent` / `UpdateAgent` request body:
 }
 ```
 
-The agent runtime applies the guardrail to user messages sent to the agent and responses returned from the agent. The guardrail is applied to user-facing input and output — **not** to intermediate internal orchestration steps.
+The agent runtime applies the guardrail to user messages sent to the agent and responses returned from the agent. The guardrail is applied to user-facing input and output - **not** to intermediate internal orchestration steps.
 
 ### PII in logs gotcha
 
@@ -215,49 +215,49 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-r
 
 ## Best practices
 
-- **Use a numbered guardrail version in production, never DRAFT** — DRAFT is mutable; any edit immediately changes behavior for all callers. A numbered version (`CreateGuardrailVersion`) is immutable and provides stable, auditable behavior. Reference the version in all inference calls and agent configurations.
+- **Use a numbered guardrail version in production, never DRAFT** - DRAFT is mutable; any edit immediately changes behavior for all callers. A numbered version (`CreateGuardrailVersion`) is immutable and provides stable, auditable behavior. Reference the version in all inference calls and agent configurations.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-components.html_
 
-- **Evaluate inputs early with ApplyGuardrail in RAG pipelines before retrieval** — checking user input before retrieval prevents wasted compute (and cost) on retrieval and generation for blocked queries. `ApplyGuardrail` is decoupled from FMs so it can be called independently at any point in the pipeline.
+- **Evaluate inputs early with ApplyGuardrail in RAG pipelines before retrieval** - checking user input before retrieval prevents wasted compute (and cost) on retrieval and generation for blocked queries. `ApplyGuardrail` is decoupled from FMs so it can be called independently at any point in the pipeline.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html_
 
-- **Use `inputEnabled`/`outputEnabled` and `inputAction`/`outputAction` independently for each policy** — different policies are appropriate for different directions (e.g., PII masking on output but blocking on input; prompt attack detection on input only). Fine-grained direction control reduces false positives and avoids over-blocking.
+- **Use `inputEnabled`/`outputEnabled` and `inputAction`/`outputAction` independently for each policy** - different policies are appropriate for different directions (e.g., PII masking on output but blocking on input; prompt attack detection on input only). Fine-grained direction control reduces false positives and avoids over-blocking.
   _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_CreateGuardrail.html_
 
-- **Set `outputScope=FULL` during development and testing** — by default `ApplyGuardrail` returns only detected (intervened) entries. With `FULL` scope you also receive non-detected entries, making it far easier to debug threshold calibration and confirm which categories are being evaluated.
+- **Set `outputScope=FULL` during development and testing** - by default `ApplyGuardrail` returns only detected (intervened) entries. With `FULL` scope you also receive non-detected entries, making it far easier to debug threshold calibration and confirm which categories are being evaluated.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html_
 
-- **Use random `tagSuffix` per request when using InvokeModel input tagging** — a static tag suffix allows a malicious user to close the XML tag via prompt injection and append content outside the guarded region. A random alphanumeric suffix (1–20 chars) per request makes the tag structure unpredictable.
+- **Use random `tagSuffix` per request when using InvokeModel input tagging** - a static tag suffix allows a malicious user to close the XML tag via prompt injection and append content outside the guarded region. A random alphanumeric suffix (1–20 chars) per request makes the tag structure unpredictable.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-tagging.html_
 
-- **Use contextual grounding check thresholds between 0.5 and 0.8 as starting points, then tune** — a threshold of `0.99` blocks almost everything; `0.0` blocks nothing. The valid range is `0` to `0.99` (1.0 is invalid). Start at `0.7` for grounding and `0.5` for relevance in RAG applications, then adjust based on false positive rates from test runs.
+- **Use contextual grounding check thresholds between 0.5 and 0.8 as starting points, then tune** - a threshold of `0.99` blocks almost everything; `0.0` blocks nothing. The valid range is `0` to `0.99` (1.0 is invalid). Start at `0.7` for grounding and `0.5` for relevance in RAG applications, then adjust based on false positive rates from test runs.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-contextual-grounding-check.html_
 
-- **Do not use denied topics for individual word or entity blocking** — denied topics use NLU-based thematic matching, not keyword matching. Trying to block specific words or entities via topic definitions will be unreliable. Use word filters for exact-match terms and sensitive information filters for entity types.
+- **Do not use denied topics for individual word or entity blocking** - denied topics use NLU-based thematic matching, not keyword matching. Trying to block specific words or entities via topic definitions will be unreliable. Use word filters for exact-match terms and sensitive information filters for entity types.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-denied-topics.html_
 
-- **Use Standard tier for multilingual applications or code-heavy prompts** — Classic tier only supports English, French, and Spanish. Standard tier provides broader language coverage, better accuracy for prompt attack detection, support for code domain (comments, variable names), and prompt leakage detection. Requires cross-region inference configuration via a guardrail profile (e.g., `us.guardrail.v1:0`).
+- **Use Standard tier for multilingual applications or code-heavy prompts** - Classic tier only supports English, French, and Spanish. Standard tier provides broader language coverage, better accuracy for prompt attack detection, support for code domain (comments, variable names), and prompt leakage detection. Requires cross-region inference configuration via a guardrail profile (e.g., `us.guardrail.v1:0`).
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-tiers.html_
 
-- **Encrypt guardrails with a customer-managed KMS key in regulated environments** — by default guardrails are encrypted with an AWS-managed key. For compliance requirements (HIPAA, PCI-DSS), specify `kmsKeyId` in `CreateGuardrail` to use a customer-managed key, giving you key rotation control and audit via CloudTrail.
+- **Encrypt guardrails with a customer-managed KMS key in regulated environments** - by default guardrails are encrypted with an AWS-managed key. For compliance requirements (HIPAA, PCI-DSS), specify `kmsKeyId` in `CreateGuardrail` to use a customer-managed key, giving you key rotation control and audit via CloudTrail.
   _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_CreateGuardrail.html_
 
-- **Protect invocation logs separately from guardrail PII masking** — PII masking in guardrails does NOT apply to CloudWatch invocation logs; the raw input is always logged. Use CloudWatch log data protection or disable model invocation logging if PII in logs is a compliance concern.
+- **Protect invocation logs separately from guardrail PII masking** - PII masking in guardrails does NOT apply to CloudWatch invocation logs; the raw input is always logged. Use CloudWatch log data protection or disable model invocation logging if PII in logs is a compliance concern.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-sensitive-filters.html_
 
-- **Define denied topics with precise descriptive definitions, not instructions or negative definitions** — instructions ("block all content about X") and negative definitions ("everything except Y") reduce detection accuracy. Use concise topic descriptions of the content itself. Include 3–5 representative example phrases to improve accuracy.
+- **Define denied topics with precise descriptive definitions, not instructions or negative definitions** - instructions ("block all content about X") and negative definitions ("everything except Y") reduce detection accuracy. Use concise topic descriptions of the content itself. Include 3–5 representative example phrases to improve accuracy.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-denied-topics.html_
 
-- **For ApplyGuardrail with contextual grounding, always pass all three content blocks: `grounding_source`, `query`, and the content to guard** — the grounding check requires all three components. Without the model response content block (the text to be evaluated), no grounding check is performed. Use the `qualifiers` field to mark each block's role.
+- **For ApplyGuardrail with contextual grounding, always pass all three content blocks: `grounding_source`, `query`, and the content to guard** - the grounding check requires all three components. Without the model response content block (the text to be evaluated), no grounding check is performed. Use the `qualifiers` field to mark each block's role.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-contextual-grounding-check.html_
 
-- **For cross-account enforcement, exclude automated reasoning policy from the guardrail** — Automated Reasoning checks are not supported in guardrail enforcements (AWS Organizations-level). Including an `automatedReasoningPolicyConfig` in a guardrail used for organization-level enforcement will cause runtime failures.
+- **For cross-account enforcement, exclude automated reasoning policy from the guardrail** - Automated Reasoning checks are not supported in guardrail enforcements (AWS Organizations-level). Including an `automatedReasoningPolicyConfig` in a guardrail used for organization-level enforcement will cause runtime failures.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-enforcements.html_
 
-- **Combine Automated Reasoning checks with content filters and topic policies for full coverage** — Automated Reasoning checks operate in detect mode only and never block content. They also do not detect prompt injection or off-topic content. For full protection, always pair them with content filters (for injection detection) and topic policies (for off-topic detection).
+- **Combine Automated Reasoning checks with content filters and topic policies for full coverage** - Automated Reasoning checks operate in detect mode only and never block content. They also do not detect prompt injection or off-topic content. For full protection, always pair them with content filters (for injection detection) and topic policies (for off-topic detection).
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-automated-reasoning-checks.html_
 
-- **Keep contextual grounding responses under 5,000 characters** — the grounding check enforces hard limits of 5,000 characters for the model response, 1,000 characters for the query, and 100,000 characters for the grounding source. Exceeding these limits causes the check to fail.
+- **Keep contextual grounding responses under 5,000 characters** - the grounding check enforces hard limits of 5,000 characters for the model response, 1,000 characters for the query, and 100,000 characters for the grounding source. Exceeding these limits causes the check to fail.
   _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-contextual-grounding-check.html_
 
 ---
@@ -277,7 +277,7 @@ response = bedrock.create_guardrail(
     blockedInputMessaging='I cannot process that request. Please rephrase your question.',  # max 500 chars
     blockedOutputsMessaging='I cannot provide that information.',                             # max 500 chars
 
-    # Content filters — hate, insults, sexual, violence, misconduct, prompt_attack
+    # Content filters - hate, insults, sexual, violence, misconduct, prompt_attack
     # inputModalities/outputModalities enable image filtering per category (GA in select regions)
     contentPolicyConfig={
         'filtersConfig': [
@@ -354,7 +354,7 @@ response = bedrock.create_guardrail(
         }
     },
 
-    # Denied topics — NLU semantic matching, up to 30 topics
+    # Denied topics - NLU semantic matching, up to 30 topics
     topicPolicyConfig={
         'topicsConfig': [
             {
@@ -375,7 +375,7 @@ response = bedrock.create_guardrail(
         'tierConfig': {'tierName': 'STANDARD'}
     },
 
-    # Word filters — exact match, up to 10,000 entries, max 3 words per entry
+    # Word filters - exact match, up to 10,000 entries, max 3 words per entry
     wordPolicyConfig={
         'managedWordListsConfig': [
             {
@@ -466,7 +466,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/APIReference/API_CreateGuard
 
 ---
 
-### ApplyGuardrail API — standalone evaluation, all outcome patterns
+### ApplyGuardrail API - standalone evaluation, all outcome patterns
 
 ```python
 import boto3
@@ -495,7 +495,7 @@ action = response['action']  # 'NONE' or 'GUARDRAIL_INTERVENED'
 
 if action == 'GUARDRAIL_INTERVENED':
     # outputs contains the blocked/masked content to return to the user
-    # IMPORTANT: when action=NONE, outputs array is EMPTY — always check action first
+    # IMPORTANT: when action=NONE, outputs array is EMPTY - always check action first
     blocked_message = response['outputs'][0]['text']
     print(f'Blocked. Message to user: {blocked_message}')
 
@@ -503,16 +503,16 @@ if action == 'GUARDRAIL_INTERVENED':
     for assessment in response['assessments']:
         if 'topicPolicy' in assessment:
             for topic in assessment['topicPolicy']['topics']:
-                print(f'Denied topic: {topic["name"]} — action: {topic["action"]}')
+                print(f'Denied topic: {topic["name"]} - action: {topic["action"]}')
         if 'contentPolicy' in assessment:
             for f in assessment['contentPolicy']['filters']:
                 print(f'Content filter: {f["type"]} confidence={f["confidence"]} action={f["action"]}')
         if 'sensitiveInformationPolicy' in assessment:
             for pii in assessment['sensitiveInformationPolicy']['piiEntities']:
-                # match field returns ORIGINAL (unmasked) PII value — by design
+                # match field returns ORIGINAL (unmasked) PII value - by design
                 print(f'PII detected: type={pii["type"]} match={pii["match"]} action={pii["action"]}')
 else:
-    print('No guardrail intervention — proceed to model invocation')
+    print('No guardrail intervention - proceed to model invocation')
 
 # --- Evaluate model response (after receiving from model) ---
 model_response_text = 'The best way to invest is to put everything in crypto.'
@@ -562,7 +562,7 @@ output_text = response['output']['message']['content'][0]['text']
 
 # Check trace for guardrail details
 # GuardrailTraceAssessment has: actionReason, inputAssessment, outputAssessments, modelOutput
-# It does NOT have an 'action' field — check stopReason on the top-level response instead
+# It does NOT have an 'action' field - check stopReason on the top-level response instead
 if 'trace' in response:
     guardrail_trace = response['trace'].get('guardrail', {})
     action_reason = guardrail_trace.get('actionReason', '')
@@ -575,7 +575,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use.htm
 
 ---
 
-### Contextual grounding check with ApplyGuardrail — RAG hallucination detection
+### Contextual grounding check with ApplyGuardrail - RAG hallucination detection
 
 Limits: grounding source 100,000 chars, query 1,000 chars, response 5,000 chars.
 
@@ -757,7 +757,7 @@ aws bedrock list-guardrails --region us-east-1
 # Create a new immutable version (max 20 versions per guardrail)
 aws bedrock create-guardrail-version \
     --guardrail-identifier 'abc123xyz' \
-    --description 'v2 — added competitor word filter' \
+    --description 'v2 - added competitor word filter' \
     --region us-east-1
 ```
 
@@ -765,7 +765,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-ind
 
 ---
 
-### Image content filter — create guardrail with inputModalities/outputModalities
+### Image content filter - create guardrail with inputModalities/outputModalities
 
 GA in us-east-1, us-west-2, eu-central-1, ap-northeast-1. Preview in additional regions.
 
@@ -844,10 +844,10 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-mmfilte
 | `topicPolicyConfig.topicsConfig[].type` | Must always be `'DENY'`. This is the only valid value. | `DENY` |
 | `topicPolicyConfig.topicsConfig[].definition` | Natural language description of the topic. Classic tier: max 200 characters. Standard tier: max 1,000 characters. | `Investment advice is inquiries or recommendations about fund allocation to generate returns.` |
 | `sensitiveInformationPolicyConfig.piiEntitiesConfig[].action` | Legacy single-action field. Use `inputAction`/`outputAction` for independent directional control. Valid values: `BLOCK` (reject entire content) or `ANONYMIZE` (mask with `{TYPE}` token). Does not apply to `tool_use` output parameters. | `BLOCK` \| `ANONYMIZE` |
-| `contextualGroundingPolicyConfig.filtersConfig[].threshold` | Float `0.0` to `0.99` (`1.0` is invalid — throws `ValidationException`). Responses with score below this threshold are flagged/blocked. Higher = stricter. Limits: source 100,000 chars, query 1,000 chars, response 5,000 chars. | `0.7` |
+| `contextualGroundingPolicyConfig.filtersConfig[].threshold` | Float `0.0` to `0.99` (`1.0` is invalid - throws `ValidationException`). Responses with score below this threshold are flagged/blocked. Higher = stricter. Limits: source 100,000 chars, query 1,000 chars, response 5,000 chars. | `0.7` |
 | `crossRegionConfig.guardrailProfileIdentifier` | Required when using Standard tier. Profile ID or ARN. Available profile IDs: `us.guardrail.v1:0` (US), `eu.guardrail.v1:0` (EU), `uk.guardrail.v1:0` (eu-west-2 only), `au.guardrail.v1:0` (ap-southeast-2 only), `ca.guardrail.v1:0` (Canada), `apac.guardrail.v1:0` (APAC), `us-gov.guardrail.v1:0` (GovCloud). Data stays within the geographic boundary. | `us.guardrail.v1:0` |
 | `crossRegionConfig.guardrailProfileIdentifier` (ARN format) | Full ARN format. Pattern: `arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:[0-9]{12}:guardrail-profile/[profile-id]`. Min 15 chars, max 2048 chars. | `arn:aws:bedrock:us-east-1:123456789012:guardrail-profile/us.guardrail.v1:0` |
-| `automatedReasoningPolicyConfig.policies` | Array of 1–2 Automated Reasoning policy ARNs. Must attach versioned (immutable) policy ARNs. Operates in DETECT MODE ONLY and never blocks content. Not supported in guardrail enforcements. Policy IDs are **system-generated 12-char `[a-z0-9]` strings** (e.g., `lnq5hhz70wgk`) — you cannot choose them. | `arn:aws:bedrock:us-east-1:123456789012:automated-reasoning-policy/lnq5hhz70wgk:1` |
+| `automatedReasoningPolicyConfig.policies` | Array of 1–2 Automated Reasoning policy ARNs. Must attach versioned (immutable) policy ARNs. Operates in DETECT MODE ONLY and never blocks content. Not supported in guardrail enforcements. Policy IDs are **system-generated 12-char `[a-z0-9]` strings** (e.g., `lnq5hhz70wgk`) - you cannot choose them. | `arn:aws:bedrock:us-east-1:123456789012:automated-reasoning-policy/lnq5hhz70wgk:1` |
 | `automatedReasoningPolicyConfig.confidenceThreshold` | Optional. Float `0.0`–`1.0`. Minimum confidence level for policy violations to trigger guardrail actions. | `0.8` |
 | `blockedInputMessaging` | Message returned when the guardrail blocks a prompt. Min 1 char, max 500 chars. Required. | `I cannot process that request. Please rephrase your question.` |
 | `blockedOutputsMessaging` | Message returned when the guardrail blocks a model response. Min 1 char, max 500 chars. Required. | `I cannot provide that information.` |
@@ -874,7 +874,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-mmfilte
 
 - **The trace object field `GuardrailPiiEntityFilter.match` returns the ORIGINAL PII value**, not the masked version. This is by design but can be a surprise when reading API responses.
 
-- **When `action=NONE` in `ApplyGuardrail`, the `outputs` array is EMPTY** — not a copy of the input. Always check the `action` field first before accessing `outputs[0]`.
+- **When `action=NONE` in `ApplyGuardrail`, the `outputs` array is EMPTY** - not a copy of the input. Always check the `action` field first before accessing `outputs[0]`.
 
 - **Contextual grounding check runs only on `OUTPUT`, not `INPUT`.** Setting `source='INPUT'` will not trigger grounding evaluation even if you include `grounding_source` and `query` blocks.
 
@@ -882,15 +882,15 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-mmfilte
 
 - **The correct Standard tier cross-region profile ID for US is `us.guardrail.v1:0`** (not `us.guardrail-standard-v1` or similar variants). Using a fictitious profile ID causes runtime failures.
 
-- **Input tagging with XML tags (`amazon-bedrock-guardrails-guardContent_SUFFIX`) works ONLY with `InvokeModel` and `InvokeModelWithResponseStream` APIs.** For the Converse API, use the `qualifiers` field in `guardContent` blocks instead — the two mechanisms are not interchangeable.
+- **Input tagging with XML tags (`amazon-bedrock-guardrails-guardContent_SUFFIX`) works ONLY with `InvokeModel` and `InvokeModelWithResponseStream` APIs.** For the Converse API, use the `qualifiers` field in `guardContent` blocks instead - the two mechanisms are not interchangeable.
 
-- **`PROMPT_ATTACK` content filter requires Standard tier** — it is NOT available in Classic tier. Additionally, prompt attack detection REQUIRES input tags to be present to function; without input tagging, `PROMPT_ATTACK` has no effect.
+- **`PROMPT_ATTACK` content filter requires Standard tier** - it is NOT available in Classic tier. Additionally, prompt attack detection REQUIRES input tags to be present to function; without input tagging, `PROMPT_ATTACK` has no effect.
 
 - **A static `tagSuffix` in InvokeModel input tagging is a security vulnerability.** A malicious user can close the XML tag and inject unguarded content. Always use a random per-request `tagSuffix` (alphanumeric, 1–20 chars).
 
 - **`CreateGuardrail` returns HTTP 202 (Accepted), not 200.** The guardrail is created asynchronously and starts in `CREATING` state before transitioning to `READY`.
 
-- **Word filters are exact-match only** — no semantic matching, no wildcards. `'invest'` and `'investing'` are treated as different words and both must be explicitly added.
+- **Word filters are exact-match only** - no semantic matching, no wildcards. `'invest'` and `'investing'` are treated as different words and both must be explicitly added.
 
 - **Custom words in word filters are limited to 3 words per entry.** Longer phrases cannot be added.
 
@@ -902,11 +902,11 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-mmfilte
 
 - **Regex lookaround syntax (`(?=...)`, `(?<!...)`, etc.) is NOT supported** in custom regex patterns for sensitive information filters.
 
-- **Contextual grounding check in streaming APIs evaluates the complete response after streaming finishes** — an irrelevant response may be streamed to the user before the check completes and marks it as blocked.
+- **Contextual grounding check in streaming APIs evaluates the complete response after streaming finishes** - an irrelevant response may be streamed to the user before the check completes and marks it as blocked.
 
 - **PII sensitive information filters do NOT detect PII in `tool_use` (function call) output parameters**, only in text inputs and model responses.
 
-- **Automated Reasoning checks operate in DETECT MODE ONLY** — they return findings (`VALID`/`INVALID`/`TRANSLATION_AMBIGUOUS`/`TOO_COMPLEX`) but never block content. To block, you must implement blocking logic in your application based on the findings.
+- **Automated Reasoning checks operate in DETECT MODE ONLY** - they return findings (`VALID`/`INVALID`/`TRANSLATION_AMBIGUOUS`/`TOO_COMPLEX`) but never block content. To block, you must implement blocking logic in your application based on the findings.
 
 - **Automated Reasoning checks are NOT supported in guardrail enforcements (AWS Organizations cross-account).** Including `automatedReasoningPolicyConfig` in an enforcement guardrail causes runtime failures.
 
@@ -916,7 +916,7 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-mmfilte
 
 - **`blockedInputMessaging` and `blockedOutputsMessaging` have a hard maximum of 500 characters.** Longer messages cause a `ValidationException`.
 
-- **When multiple `grounding_source` blocks are provided to `ApplyGuardrail`, they are combined and evaluated together** — they are not evaluated independently per block.
+- **When multiple `grounding_source` blocks are provided to `ApplyGuardrail`, they are combined and evaluated together** - they are not evaluated independently per block.
 
 - **Image content filters are GA only in us-east-1, us-west-2, eu-central-1, ap-northeast-1.** In other listed regions they are in preview with fewer supported categories.
 
@@ -924,25 +924,25 @@ _Source: https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-mmfilte
 
 ## Official sources
 
-- [Detect and filter harmful content — Amazon Bedrock Guardrails overview](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) — Entry point: lists all policy types, links to all sub-pages.
-- [Create your guardrail — all filter types](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-components.html) — Overview of every configurable filter; confirms 7 policy types including automated reasoning.
-- [Configure content filters](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-content-filters-overview.html) — Filter strength levels (None/Low/Medium/High) and confidence classification table.
-- [Block denied topics](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-denied-topics.html) — How to define topics with name, definition, sample phrases; best-practice authoring rules.
-- [Word filters](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-word-filters.html) — Profanity managed list and custom word/phrase configuration.
-- [Sensitive information filters (PII)](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-sensitive-filters.html) — Full list of built-in PII types, block vs. mask modes, custom regex; important notes on log exposure.
-- [Contextual grounding check](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-contextual-grounding-check.html) — Grounding and relevance scoring, threshold configuration (0 to 0.99), character limits, all three API integration patterns.
-- [ApplyGuardrail API reference](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ApplyGuardrail.html) — Full request/response schema, URI params, error codes.
-- [Use the ApplyGuardrail API — usage guide with examples](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) — Request/response examples for all three outcomes: no action, block, mask. CLI example included.
-- [CreateGuardrail API reference](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_CreateGuardrail.html) — Full request syntax; `blockedInputMessaging`/`blockedOutputsMessaging` max 500 chars; response HTTP 202; version=DRAFT.
-- [Use cases for Amazon Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use.html) — Table mapping each integration point (inference, agents, KB, flows) to the correct API field.
-- [Associate guardrail with Bedrock Agent](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-guardrail.html) — `GuardrailConfiguration` field in `CreateAgent` / `UpdateAgent`.
-- [IAM permissions for guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-permissions.html) — Exact IAM statements for create/manage and for invoke (`ApplyGuardrail` only needs `bedrock:ApplyGuardrail`).
-- [Safeguard tiers (Classic vs Standard)](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-tiers.html) — Feature comparison table; Standard tier requires cross-region inference; lists 25+ supported regions.
-- [Apply tags to user input (InvokeModel tagging)](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-tagging.html) — XML tag pattern for selective evaluation of prompt sections; security note on randomized tagSuffix.
-- [Supported Regions for cross-Region guardrail inference](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region-support.html) — Complete list of guardrail profile IDs and ARNs per geographic boundary (US, EU, UK, AU, CA, APAC, US-GOV) with source/destination region mappings.
-- [Distribute guardrail inference across AWS Regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) — How cross-region guardrail inference works and how to configure it.
-- [GuardrailCrossRegionConfig API reference](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_GuardrailCrossRegionConfig.html) — `guardrailProfileIdentifier` pattern: `[a-z0-9-]+[.]{1}guardrail[.]{1}v[0-9:]+` or full ARN; min 15, max 2048 chars.
-- [What are Automated Reasoning checks in Amazon Bedrock Guardrails?](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-automated-reasoning-checks.html) — GA in 6 regions; English only; detect mode only (never blocks content); no streaming support.
-- [Block harmful images with content filters](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-mmfilter.html) — Image content filter GA/preview regions, `inputModalities`/`outputModalities` API fields, limits (4 MB, 20 images, 8000x8000 px).
-- [Apply cross-account safeguards with Amazon Bedrock Guardrails enforcements](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-enforcements.html) — Organization-level and account-level enforcement via AWS Organizations; automated reasoning policy NOT supported in enforcements.
-- [Amazon Bedrock service quotas](https://docs.aws.amazon.com/general/latest/gr/bedrock.html) — All TPS limits and hard quotas for guardrails policies by region.
+- [Detect and filter harmful content - Amazon Bedrock Guardrails overview](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) - Entry point: lists all policy types, links to all sub-pages.
+- [Create your guardrail - all filter types](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-components.html) - Overview of every configurable filter; confirms 7 policy types including automated reasoning.
+- [Configure content filters](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-content-filters-overview.html) - Filter strength levels (None/Low/Medium/High) and confidence classification table.
+- [Block denied topics](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-denied-topics.html) - How to define topics with name, definition, sample phrases; best-practice authoring rules.
+- [Word filters](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-word-filters.html) - Profanity managed list and custom word/phrase configuration.
+- [Sensitive information filters (PII)](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-sensitive-filters.html) - Full list of built-in PII types, block vs. mask modes, custom regex; important notes on log exposure.
+- [Contextual grounding check](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-contextual-grounding-check.html) - Grounding and relevance scoring, threshold configuration (0 to 0.99), character limits, all three API integration patterns.
+- [ApplyGuardrail API reference](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ApplyGuardrail.html) - Full request/response schema, URI params, error codes.
+- [Use the ApplyGuardrail API - usage guide with examples](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) - Request/response examples for all three outcomes: no action, block, mask. CLI example included.
+- [CreateGuardrail API reference](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_CreateGuardrail.html) - Full request syntax; `blockedInputMessaging`/`blockedOutputsMessaging` max 500 chars; response HTTP 202; version=DRAFT.
+- [Use cases for Amazon Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use.html) - Table mapping each integration point (inference, agents, KB, flows) to the correct API field.
+- [Associate guardrail with Bedrock Agent](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-guardrail.html) - `GuardrailConfiguration` field in `CreateAgent` / `UpdateAgent`.
+- [IAM permissions for guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-permissions.html) - Exact IAM statements for create/manage and for invoke (`ApplyGuardrail` only needs `bedrock:ApplyGuardrail`).
+- [Safeguard tiers (Classic vs Standard)](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-tiers.html) - Feature comparison table; Standard tier requires cross-region inference; lists 25+ supported regions.
+- [Apply tags to user input (InvokeModel tagging)](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-tagging.html) - XML tag pattern for selective evaluation of prompt sections; security note on randomized tagSuffix.
+- [Supported Regions for cross-Region guardrail inference](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region-support.html) - Complete list of guardrail profile IDs and ARNs per geographic boundary (US, EU, UK, AU, CA, APAC, US-GOV) with source/destination region mappings.
+- [Distribute guardrail inference across AWS Regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) - How cross-region guardrail inference works and how to configure it.
+- [GuardrailCrossRegionConfig API reference](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_GuardrailCrossRegionConfig.html) - `guardrailProfileIdentifier` pattern: `[a-z0-9-]+[.]{1}guardrail[.]{1}v[0-9:]+` or full ARN; min 15, max 2048 chars.
+- [What are Automated Reasoning checks in Amazon Bedrock Guardrails?](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-automated-reasoning-checks.html) - GA in 6 regions; English only; detect mode only (never blocks content); no streaming support.
+- [Block harmful images with content filters](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-mmfilter.html) - Image content filter GA/preview regions, `inputModalities`/`outputModalities` API fields, limits (4 MB, 20 images, 8000x8000 px).
+- [Apply cross-account safeguards with Amazon Bedrock Guardrails enforcements](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-enforcements.html) - Organization-level and account-level enforcement via AWS Organizations; automated reasoning policy NOT supported in enforcements.
+- [Amazon Bedrock service quotas](https://docs.aws.amazon.com/general/latest/gr/bedrock.html) - All TPS limits and hard quotas for guardrails policies by region.
