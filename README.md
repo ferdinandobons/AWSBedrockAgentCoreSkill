@@ -165,7 +165,7 @@ claude --plugin-dir "/path/to/AWSBedrockAgentCoreSkill"
 
 ## Versioning
 
-Semantic versioning in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). Current: 0.1.1. Bump on every change you ship to installers.
+Semantic versioning in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json). Current: 0.1.1. See [CHANGELOG.md](CHANGELOG.md) and the [releases page](https://github.com/ferdinandobons/AWSBedrockAgentCoreSkill/releases). Bump on every change you ship to installers.
 
 ## License
 
